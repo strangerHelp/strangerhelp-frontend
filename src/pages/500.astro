@@ -1,0 +1,25 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+
+const { error } = Astro.props;
+const message = error instanceof Error ? error.message : "Something went wrong";
+---
+
+<Layout title="500 — Server Error | StrangerHelp">
+  <Navbar />
+  <main class="min-h-[calc(100vh-64px)] flex items-center justify-center px-4">
+    <div class="text-center">
+      <p class="text-6xl font-semibold text-error tracking-tight">500</p>
+      <h1 class="mt-4 text-xl font-semibold text-ink">Internal Server Error</h1>
+      <p class="mt-2 text-sm text-body max-w-sm mx-auto">Something went wrong on our end. Please try again later.</p>
+      {import.meta.env.DEV && (
+        <pre class="mt-4 p-3 bg-canvas-soft-2 rounded-md text-xs text-left text-body max-w-md mx-auto overflow-auto">{message}</pre>
+      )}
+      <div class="mt-8 flex items-center justify-center gap-3">
+        <a href="/" class="inline-flex h-10 items-center px-5 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">Go Home</a>
+        <button onclick="window.location.reload()" class="inline-flex h-10 items-center px-5 text-sm font-medium text-ink border border-hairline rounded-full hover:border-hairline-strong transition-colors">Try Again</button>
+      </div>
+    </div>
+  </main>
+</Layout>

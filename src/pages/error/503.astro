@@ -1,0 +1,18 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+---
+
+<Layout title="503 — Service Unavailable | StrangerHelp">
+  <Navbar />
+  <main class="min-h-[calc(100vh-64px)] flex items-center justify-center px-4">
+    <div class="text-center">
+      <p class="text-6xl font-semibold text-warning tracking-tight">503</p>
+      <h1 class="mt-4 text-xl font-semibold text-ink">Service Unavailable</h1>
+      <p class="mt-2 text-sm text-body max-w-sm mx-auto">We're undergoing maintenance. Please try again in a few minutes.</p>
+      <div class="mt-8">
+        <button onclick="window.location.reload()" class="inline-flex h-10 items-center px-5 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">Retry</button>
+      </div>
+    </div>
+  </main>
+</Layout>

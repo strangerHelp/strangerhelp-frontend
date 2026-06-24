@@ -1,0 +1,91 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+
+const categories = ["All", "Govt. Offices", "Traffic", "Weather", "Schools", "Hospitals", "Emergency", "General"];
+---
+
+<Layout title="Community Q&A — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+      <div>
+        <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Community Q&A</h1>
+        <p class="mt-1 text-sm text-body">Ask anything about your city. Get answers from locals.</p>
+      </div>
+      <a href="/ask/new" class="inline-flex h-10 items-center px-4 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">+ Ask a Question</a>
+    </div>
+
+    <div class="flex gap-2 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0">
+      {categories.map((cat, i) => (
+        <button data-cat={cat} class={`cat-btn shrink-0 px-4 py-2 text-sm rounded-full border transition-colors ${i === 0 ? "bg-primary text-on-primary border-primary" : "bg-canvas text-body border-hairline hover:border-hairline-strong"}`}>{cat}</button>
+      ))}
+    </div>
+
+    <div id="questions-list" class="mt-6 space-y-3">
+      <p class="text-center text-sm text-mute py-12">Loading questions...</p>
+    </div>
+
+    <div id="empty-state" class="hidden text-center py-16">
+      <p class="text-sm text-mute">No questions yet. Be the first to ask!</p>
+      <a href="/ask/new" class="mt-4 inline-flex h-9 items-center px-4 text-sm font-medium text-on-primary bg-primary rounded-full">Ask a Question</a>
+    </div>
+  </main>
+  <Footer />
+</Layout>
+
+<script>
+  async function loadQuestions(category?: string) {
+    const params = new URLSearchParams();
+    if (category && category !== 'All') params.set('category', category);
+
+    const res = await fetch(`/api/questions?${params}`);
+    const questions = await res.json();
+    const container = document.getElementById('questions-list')!;
+    const empty = document.getElementById('empty-state')!;
+
+    if (questions.length === 0) {
+      container.innerHTML = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+
+    empty.classList.add('hidden');
+    container.innerHTML = questions.map((q: any) => {
+      const time = (window as any).timeAgoIST(q.createdAt);
+      return `<a href="/ask/${q._id}" class="group flex items-start gap-4 p-5 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong shadow-[0px_1px_1px_#00000005] transition-colors">
+        <div class="flex flex-col items-center gap-1 shrink-0 min-w-[40px]">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-mute"><path d="M18 15l-6-6-6 6"/></svg>
+          <span class="text-sm font-semibold text-ink">${q.votes || 0}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-mute"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="px-2 py-0.5 text-xs font-medium text-body bg-canvas-soft-2 rounded-full">${q.category}</span>
+          </div>
+          <h3 class="text-sm font-semibold text-ink group-hover:text-link transition-colors">${q.text}</h3>
+          <div class="mt-2 flex items-center gap-3 text-xs text-mute">
+            <span>${q.location}</span>
+            <span>·</span>
+            <span>${time}</span>
+          </div>
+        </div>
+      </a>`;
+    }).join('');
+  }
+
+  document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cat-btn').forEach(b => {
+        b.classList.remove('bg-primary', 'text-on-primary', 'border-primary');
+        b.classList.add('bg-canvas', 'text-body', 'border-hairline');
+      });
+      btn.classList.add('bg-primary', 'text-on-primary', 'border-primary');
+      btn.classList.remove('bg-canvas', 'text-body', 'border-hairline');
+      loadQuestions((btn as HTMLElement).dataset.cat || 'All');
+    });
+  });
+
+  loadQuestions();
+</script>

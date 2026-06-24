@@ -1,0 +1,26 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+---
+
+<Layout title="Account Suspended — StrangerHelp">
+  <Navbar />
+  <main class="min-h-[calc(100vh-64px)] flex items-center justify-center px-4">
+    <div class="text-center max-w-md">
+      <div class="w-16 h-16 mx-auto rounded-full bg-error-soft flex items-center justify-center mb-6">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-error"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93l14.14 14.14"/></svg>
+      </div>
+      <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Account Suspended</h1>
+      <p class="mt-3 text-sm text-body">Your account has been suspended due to multiple reports or violation of our Terms of Service.</p>
+      <div class="mt-6 p-4 bg-canvas-soft rounded-lg border border-hairline text-left">
+        <p class="text-sm font-medium text-ink">What you can do:</p>
+        <ul class="mt-2 space-y-1.5 text-sm text-body list-disc pl-5">
+          <li>Email <a href="mailto:support@strangerhelp.com" class="text-link">support@strangerhelp.com</a> to appeal</li>
+          <li>Provide context or evidence for your case</li>
+          <li>We'll review and respond within 48 hours</li>
+        </ul>
+      </div>
+      <a href="/" class="mt-6 inline-flex h-10 items-center px-5 text-sm font-medium text-ink border border-hairline rounded-full hover:border-hairline-strong transition-colors">Go to Home</a>
+    </div>
+  </main>
+</Layout>

@@ -1,0 +1,52 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+---
+
+<Layout title="Messages — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] h-[calc(100vh-64px)] flex">
+    <aside class="w-full md:w-80 flex flex-col border-r border-hairline bg-canvas">
+      <div class="p-4 border-b border-hairline">
+        <h2 class="text-sm font-semibold text-ink">Messages</h2>
+      </div>
+      <div id="conversations" class="flex-1 overflow-y-auto">
+        <p class="p-4 text-sm text-mute">Loading...</p>
+      </div>
+    </aside>
+    <div class="hidden md:flex flex-1 items-center justify-center bg-canvas-soft">
+      <p class="text-sm text-mute">Select a conversation to start messaging</p>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  async function init() {
+    const authRes = await fetch('/api/auth/me');
+    if (!authRes.ok) { window.location.href = '/login'; return; }
+    const { user } = await authRes.json();
+
+    const res = await fetch('/api/messages');
+    if (!res.ok) return;
+    const convs = await res.json();
+    const container = document.getElementById('conversations')!;
+
+    if (convs.length === 0) {
+      container.innerHTML = '<p class="p-4 text-sm text-mute">No conversations yet. Claim a task to start chatting!</p>';
+      return;
+    }
+
+    container.innerHTML = convs.map((c: any) => {
+      const otherIdx = c.participants.findIndex((p: string) => p !== user.id);
+      const otherName = c.participantNames?.[otherIdx] || 'User';
+      return `<a href="/chat/${c._id}" class="flex items-start gap-3 p-4 border-b border-hairline hover:bg-canvas-soft transition-colors">
+        <div class="w-9 h-9 rounded-full bg-canvas-soft-2 flex items-center justify-center text-xs font-semibold text-body shrink-0">${otherName.slice(0,2).toUpperCase()}</div>
+        <div class="flex-1 min-w-0">
+          <span class="text-sm font-medium text-ink truncate block">${otherName}</span>
+          <p class="text-xs text-mute truncate mt-0.5">${c.lastMessage || 'No messages'}</p>
+        </div>
+      </a>`;
+    }).join('');
+  }
+  init();
+</script>

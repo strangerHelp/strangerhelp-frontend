@@ -1,0 +1,121 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+---
+
+<Layout title="Voice Task — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="max-w-lg mx-auto text-center">
+      <p class="font-mono text-xs text-mute uppercase tracking-wide mb-3">Voice Task Posting</p>
+      <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Speak your task.</h1>
+      <p class="mt-2 text-sm text-body">Say it in Hindi, Tamil, Telugu, Bengali, or any language. We'll handle the rest.</p>
+
+      <!-- Language selector -->
+      <div class="mt-6 flex flex-wrap justify-center gap-2">
+        {["English", "हिन्दी", "தமிழ்", "తెలుగు", "বাংলা", "मराठी", "ગુજરાતી", "ਪੰਜਾਬੀ", "ಕನ್ನಡ", "മലയാളം"].map((lang, i) => (
+          <button class={`px-3 py-1.5 text-xs rounded-full border transition-colors ${i === 0 ? "bg-primary text-on-primary border-primary" : "text-body border-hairline hover:border-hairline-strong"}`} data-lang={["en-IN","hi-IN","ta-IN","te-IN","bn-IN","mr-IN","gu-IN","pa-IN","kn-IN","ml-IN"][i]}>
+            {lang}
+          </button>
+        ))}
+      </div>
+
+      <!-- Mic button -->
+      <div class="mt-10">
+        <button id="mic-btn" class="relative w-24 h-24 rounded-full bg-primary text-on-primary mx-auto flex items-center justify-center hover:opacity-90 transition-all" aria-label="Start recording">
+          <svg id="mic-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+          <div id="mic-pulse" class="hidden absolute inset-0 rounded-full bg-primary animate-ping opacity-30"></div>
+        </button>
+        <p id="mic-status" class="mt-4 text-sm text-mute">Tap to start speaking</p>
+      </div>
+
+      <!-- Transcription output -->
+      <div class="mt-8 text-left">
+        <div class="p-4 min-h-[120px] bg-canvas rounded-lg border border-hairline">
+          <p id="transcript" class="text-sm text-ink whitespace-pre-wrap">Your transcribed task will appear here...</p>
+        </div>
+      </div>
+
+      <!-- Auto-parsed fields -->
+      <div id="parsed-fields" class="hidden mt-6 text-left space-y-3">
+        <div class="p-4 bg-canvas-soft rounded-lg border border-hairline">
+          <p class="text-xs font-mono text-mute uppercase mb-2">AI-Parsed Task</p>
+          <div class="space-y-2">
+            <div class="flex justify-between text-sm"><span class="text-body">Title</span><span class="text-ink font-medium" id="parsed-title">—</span></div>
+            <div class="flex justify-between text-sm"><span class="text-body">Category</span><span class="text-ink font-medium" id="parsed-category">—</span></div>
+            <div class="flex justify-between text-sm"><span class="text-body">Location</span><span class="text-ink font-medium" id="parsed-location">—</span></div>
+            <div class="flex justify-between text-sm"><span class="text-body">Suggested Budget</span><span class="text-ink font-medium" id="parsed-budget">—</span></div>
+          </div>
+        </div>
+        <button class="w-full h-11 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">
+          Confirm & Post Task
+        </button>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  const btn = document.getElementById('mic-btn')!;
+  const status = document.getElementById('mic-status')!;
+  const transcript = document.getElementById('transcript')!;
+  const pulse = document.getElementById('mic-pulse')!;
+  const parsed = document.getElementById('parsed-fields')!;
+  let recognition: any = null;
+  let isRecording = false;
+  let selectedLang = 'en-IN';
+
+  // Language selection
+  document.querySelectorAll('[data-lang]').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('[data-lang]').forEach(x => {
+        x.classList.remove('bg-primary', 'text-on-primary', 'border-primary');
+        x.classList.add('text-body', 'border-hairline');
+      });
+      b.classList.add('bg-primary', 'text-on-primary', 'border-primary');
+      b.classList.remove('text-body', 'border-hairline');
+      selectedLang = (b as HTMLElement).dataset.lang || 'en-IN';
+    });
+  });
+
+  btn.addEventListener('click', () => {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      status.textContent = 'Speech recognition not supported in this browser';
+      return;
+    }
+    if (isRecording) {
+      recognition?.stop();
+      return;
+    }
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    recognition = new SR();
+    recognition.lang = selectedLang;
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onstart = () => {
+      isRecording = true;
+      pulse.classList.remove('hidden');
+      status.textContent = 'Listening... tap again to stop';
+      transcript.textContent = '';
+    };
+    recognition.onresult = (e: any) => {
+      let text = '';
+      for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript;
+      transcript.textContent = text;
+    };
+    recognition.onend = () => {
+      isRecording = false;
+      pulse.classList.add('hidden');
+      status.textContent = 'Tap to start speaking';
+      if (transcript.textContent && transcript.textContent !== 'Your transcribed task will appear here...') {
+        parsed.classList.remove('hidden');
+        document.getElementById('parsed-title')!.textContent = transcript.textContent.slice(0, 50);
+        document.getElementById('parsed-category')!.textContent = 'Document Submission';
+        document.getElementById('parsed-location')!.textContent = 'Detecting...';
+        document.getElementById('parsed-budget')!.textContent = '₹200 - ₹400';
+      }
+    };
+    recognition.start();
+  });
+</script>

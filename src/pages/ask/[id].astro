@@ -1,0 +1,116 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+---
+
+<Layout title="Question — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="max-w-3xl mx-auto">
+      <nav class="flex items-center gap-2 text-sm text-mute mb-6">
+        <a href="/ask" class="hover:text-ink transition-colors">Q&A</a>
+        <span>/</span>
+        <span class="text-body" id="breadcrumb">Loading...</span>
+      </nav>
+      <div id="question-content"><p class="text-sm text-mute text-center py-12">Loading...</p></div>
+    </div>
+  </main>
+  <Footer />
+</Layout>
+
+<script>
+  const questionId = window.location.pathname.split('/ask/')[1];
+  let currentUser: any = null;
+
+  async function init() {
+    const authRes = await fetch('/api/auth/me');
+    if (authRes.ok) { const d = await authRes.json(); currentUser = d.user; }
+
+    const res = await fetch(`/api/questions/${questionId}`);
+    if (!res.ok) { document.getElementById('question-content')!.innerHTML = '<p class="text-center text-sm text-mute py-12">Question not found.</p>'; return; }
+    const q = await res.json();
+    render(q);
+  }
+
+  function render(q: any) {
+    document.getElementById('breadcrumb')!.textContent = q.category;
+    const time = (window as any).timeAgoIST(q.created_at);
+    const answers = q.answers || [];
+
+    document.getElementById('question-content')!.innerHTML = `
+      <div class="p-6 bg-canvas rounded-lg border border-hairline shadow-[0px_2px_2px_#0000000a,0px_8px_8px_-8px_#0000000a]">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="px-2.5 py-0.5 text-xs font-medium bg-canvas-soft-2 text-body rounded-full">${q.category}</span>
+        </div>
+        <h1 class="text-lg font-semibold text-ink tracking-tight">${esc(q.text)}</h1>
+        <div class="mt-3 flex items-center gap-3 text-xs text-mute">
+          <span>${esc(q.location)}</span><span>·</span><span>${time}</span><span>·</span><span>${q.anonymous ? 'Anonymous' : 'Public'}</span>
+        </div>
+        <div class="mt-4 flex items-center gap-4">
+          <div class="flex items-center gap-2">
+            <button id="upvote-btn" class="p-1 text-mute hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg></button>
+            <span class="text-sm font-semibold text-ink" id="vote-count">${q.votes || 0}</span>
+            <button id="downvote-btn" class="p-1 text-mute hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8">
+        <h2 class="text-sm font-semibold text-ink mb-4">${answers.length} Answer${answers.length !== 1 ? 's' : ''}</h2>
+        <div class="space-y-4" id="answers-list">
+          ${answers.length === 0 ? '<p class="text-sm text-mute">No answers yet. Be the first to help!</p>' : answers.map((a: any) => `
+            <div class="p-5 bg-canvas rounded-lg border border-hairline">
+              <p class="text-sm text-ink leading-relaxed">${esc(a.text)}</p>
+              <div class="mt-3 flex items-center gap-3 text-xs text-mute">
+                <span>${a.anonymous ? 'Anonymous' : esc(a.author_name || 'User')}</span><span>·</span><span>${(window as any).timeAgoIST(a.created_at)}</span>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      ${currentUser ? `<div class="mt-8 p-6 bg-canvas-soft rounded-lg border border-hairline">
+        <h3 class="text-sm font-semibold text-ink mb-3">Your Answer</h3>
+        <textarea id="answer-text" rows="3" placeholder="Share what you know..." class="w-full px-3 py-2.5 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute resize-none"></textarea>
+        <div class="mt-3 flex items-center justify-between">
+          <label class="flex items-center gap-2 text-xs text-body"><input type="checkbox" id="answer-anon" class="w-3.5 h-3.5 rounded border-hairline" /> Post anonymously</label>
+          <button id="submit-answer" class="h-9 px-4 text-sm font-medium text-on-primary bg-primary rounded-md hover:opacity-90 transition-opacity">Post Answer</button>
+        </div>
+      </div>` : '<p class="mt-8 text-sm text-mute text-center"><a href="/login" class="text-link">Log in</a> to answer</p>'}`;
+
+    // Event listeners
+    document.getElementById('upvote-btn')?.addEventListener('click', () => vote('up'));
+    document.getElementById('downvote-btn')?.addEventListener('click', () => vote('down'));
+    document.getElementById('submit-answer')?.addEventListener('click', submitAnswer);
+  }
+
+  async function vote(dir: string) {
+    if (!currentUser) { window.location.href = '/login'; return; }
+    await fetch(`/api/questions/${questionId}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'vote', vote: dir }),
+    });
+    const el = document.getElementById('vote-count')!;
+    el.textContent = String(parseInt(el.textContent || '0') + (dir === 'up' ? 1 : -1));
+  }
+
+  async function submitAnswer() {
+    const text = (document.getElementById('answer-text') as HTMLTextAreaElement).value.trim();
+    if (!text) { alert('Please write an answer'); return; }
+
+    const res = await fetch(`/api/questions/${questionId}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'answer', text }),
+    });
+
+    if (res.ok) {
+      window.location.reload();
+    } else {
+      alert('Failed to post answer');
+    }
+  }
+
+  function esc(s: string) { return s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || ''; }
+
+  init();
+</script>

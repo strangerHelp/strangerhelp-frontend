@@ -1,0 +1,115 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+---
+
+<Layout title="Emergency Broadcast — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="max-w-md mx-auto text-center">
+      <p class="font-mono text-xs text-error uppercase tracking-wide mb-2">Emergency</p>
+      <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Emergency Broadcast.</h1>
+      <p class="mt-2 text-sm text-body">One tap alerts all helpers within 1km. They see your live location and can rush to help.</p>
+
+      <!-- SOS Button -->
+      <div class="mt-12">
+        <button id="sos-btn" class="relative w-40 h-40 rounded-full bg-error text-on-primary mx-auto flex items-center justify-center text-2xl font-bold hover:bg-error-deep transition-colors">
+          SOS
+          <div id="sos-pulse" class="hidden absolute inset-0 rounded-full border-4 border-error animate-ping"></div>
+        </button>
+        <p id="sos-status" class="mt-6 text-sm text-mute">Press and hold for 3 seconds to activate</p>
+      </div>
+
+      <!-- Active broadcast panel (hidden by default) -->
+      <div id="broadcast-panel" class="hidden mt-10 text-left">
+        <div class="p-5 bg-error-soft rounded-xl border border-error/20">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="relative flex h-3 w-3">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-error"></span>
+            </span>
+            <span class="text-sm font-semibold text-error-deep">BROADCAST ACTIVE</span>
+          </div>
+          <p class="text-sm text-ink">Your location is being shared with nearby helpers.</p>
+          <div class="mt-3 p-3 bg-canvas rounded-lg">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-body">Helpers alerted</span>
+              <span class="font-semibold text-ink" id="alert-count">0</span>
+            </div>
+            <div class="flex items-center justify-between text-sm mt-2">
+              <span class="text-body">Nearest response</span>
+              <span class="font-semibold text-ink" id="nearest-eta">Calculating...</span>
+            </div>
+          </div>
+          <button id="cancel-sos" class="mt-4 w-full h-10 text-sm font-medium text-error border border-error/30 rounded-md hover:bg-error-soft transition-colors">
+            Cancel Broadcast
+          </button>
+        </div>
+      </div>
+
+      <!-- Emergency types -->
+      <div class="mt-10 text-left">
+        <h2 class="text-sm font-semibold text-ink mb-4">Quick Emergency Types</h2>
+        <div class="grid grid-cols-2 gap-3">
+          {[
+            { label: "Medical Help", icon: "🏥" },
+            { label: "Feeling Unsafe", icon: "🚨" },
+            { label: "Vehicle Breakdown", icon: "🚗" },
+            { label: "Lost / Stranded", icon: "📍" },
+          ].map((type) => (
+            <button class="p-4 bg-canvas rounded-lg border border-hairline hover:border-error/30 hover:bg-error-soft/30 transition-colors text-left">
+              <span class="text-xl">{type.icon}</span>
+              <p class="mt-1 text-sm font-medium text-ink">{type.label}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <!-- Emergency contacts -->
+      <div class="mt-8 text-left p-4 bg-canvas-soft rounded-lg border border-hairline">
+        <h3 class="text-sm font-semibold text-ink mb-3">Quick Contacts</h3>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between"><span class="text-body">Police</span><a href="tel:100" class="text-link font-mono">100</a></div>
+          <div class="flex justify-between"><span class="text-body">Ambulance</span><a href="tel:108" class="text-link font-mono">108</a></div>
+          <div class="flex justify-between"><span class="text-body">Women Helpline</span><a href="tel:1091" class="text-link font-mono">1091</a></div>
+          <div class="flex justify-between"><span class="text-body">Fire</span><a href="tel:101" class="text-link font-mono">101</a></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  const btn = document.getElementById('sos-btn')!;
+  const pulse = document.getElementById('sos-pulse')!;
+  const status = document.getElementById('sos-status')!;
+  const panel = document.getElementById('broadcast-panel')!;
+  const cancel = document.getElementById('cancel-sos')!;
+  let holdTimer: ReturnType<typeof setTimeout>;
+
+  btn.addEventListener('mousedown', () => {
+    holdTimer = setTimeout(() => {
+      pulse.classList.remove('hidden');
+      status.textContent = 'BROADCASTING — sharing your location';
+      status.classList.add('text-error', 'font-semibold');
+      panel.classList.remove('hidden');
+      let count = 0;
+      const interval = setInterval(() => {
+        count += Math.floor(Math.random() * 3) + 1;
+        document.getElementById('alert-count')!.textContent = String(Math.min(count, 14));
+        if (count >= 5) document.getElementById('nearest-eta')!.textContent = '~2 min away';
+        if (count >= 14) clearInterval(interval);
+      }, 1000);
+    }, 3000);
+  });
+
+  btn.addEventListener('mouseup', () => clearTimeout(holdTimer));
+  btn.addEventListener('mouseleave', () => clearTimeout(holdTimer));
+
+  cancel.addEventListener('click', () => {
+    pulse.classList.add('hidden');
+    panel.classList.add('hidden');
+    status.textContent = 'Press and hold for 3 seconds to activate';
+    status.classList.remove('text-error', 'font-semibold');
+  });
+</script>

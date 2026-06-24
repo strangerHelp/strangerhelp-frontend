@@ -1,0 +1,38 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+---
+
+<Layout title="Careers — StrangerHelp" description="Join the StrangerHelp team. Career opportunities coming soon.">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-12 md:px-6">
+    <div class="max-w-lg mx-auto text-center py-16">
+      <div class="w-16 h-16 mx-auto rounded-full bg-canvas-soft-2 flex items-center justify-center mb-6">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-ink"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      </div>
+      <p class="font-mono text-xs text-mute uppercase tracking-wide mb-3">Careers</p>
+      <h1 class="text-3xl font-semibold text-ink tracking-[-1.28px]">Opportunities Coming Soon</h1>
+      <p class="mt-4 text-sm text-body max-w-sm mx-auto">We're building something big. Career openings will be listed here once we scale. Stay tuned!</p>
+
+      <div class="mt-10 p-6 bg-canvas rounded-xl border border-hairline text-left">
+        <h2 class="text-sm font-semibold text-ink mb-3">Want to be notified?</h2>
+        <p class="text-xs text-body mb-4">Drop us an email and we'll reach out when positions open up.</p>
+        <a href="mailto:helpofstranger@gmail.com?subject=Career Interest - StrangerHelp" class="inline-flex h-9 items-center px-4 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">
+          Send Interest Email
+        </a>
+      </div>
+
+      <div class="mt-8 p-5 bg-canvas-soft rounded-lg border border-hairline text-left">
+        <h3 class="text-sm font-semibold text-ink mb-2">What we'll be looking for:</h3>
+        <ul class="space-y-1.5 text-sm text-body list-disc pl-5">
+          <li>Full-stack developers</li>
+          <li>Community managers</li>
+          <li>Growth & marketing</li>
+          <li>Customer support</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Layout>

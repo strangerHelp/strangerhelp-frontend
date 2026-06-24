@@ -1,0 +1,19 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+---
+
+<Layout title="403 — Forbidden | StrangerHelp">
+  <Navbar />
+  <main class="min-h-[calc(100vh-64px)] flex items-center justify-center px-4">
+    <div class="text-center">
+      <p class="text-6xl font-semibold text-error tracking-tight">403</p>
+      <h1 class="mt-4 text-xl font-semibold text-ink">Forbidden</h1>
+      <p class="mt-2 text-sm text-body max-w-sm mx-auto">You don't have permission to access this resource.</p>
+      <div class="mt-8 flex items-center justify-center gap-3">
+        <a href="/" class="inline-flex h-10 items-center px-5 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">Go Home</a>
+        <a href="/dashboard" class="inline-flex h-10 items-center px-5 text-sm font-medium text-ink border border-hairline rounded-full hover:border-hairline-strong transition-colors">Dashboard</a>
+      </div>
+    </div>
+  </main>
+</Layout>

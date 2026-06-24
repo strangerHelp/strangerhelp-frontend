@@ -1,0 +1,84 @@
+---
+import AccountLayout from "../../layouts/AccountLayout.astro";
+---
+
+<AccountLayout title="My Tasks — StrangerHelp">
+  <div class="max-w-3xl">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">My Tasks</h1>
+      <a href="/tasks/new" class="inline-flex h-9 items-center px-4 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">+ New Task</a>
+    </div>
+
+    <div class="flex gap-1 border-b border-hairline mb-6">
+      <button class="tab-btn px-4 py-2.5 text-sm font-medium text-ink border-b-2 border-ink -mb-px" data-tab="all">All</button>
+      <button class="tab-btn px-4 py-2.5 text-sm text-body border-b-2 border-transparent -mb-px hover:text-ink" data-tab="posted">Posted</button>
+      <button class="tab-btn px-4 py-2.5 text-sm text-body border-b-2 border-transparent -mb-px hover:text-ink" data-tab="claimed">Claimed</button>
+      <button class="tab-btn px-4 py-2.5 text-sm text-body border-b-2 border-transparent -mb-px hover:text-ink" data-tab="completed">Completed</button>
+    </div>
+
+    <div id="task-list" class="space-y-3">
+      <p class="text-sm text-mute text-center py-8">Loading...</p>
+    </div>
+  </div>
+</AccountLayout>
+
+<script>
+  let user: any = null;
+  let allTasks: any[] = [];
+  let activeTab = 'all';
+
+  async function init() {
+    const authRes = await fetch('/api/auth/me');
+    if (!authRes.ok) { window.location.href = '/login'; return; }
+    const d = await authRes.json();
+    user = d.user;
+
+    const res = await fetch('/api/tasks?mine=true&limit=100');
+    const tasks = await res.json();
+    allTasks = tasks;
+    renderTasks();
+  }
+
+  function renderTasks() {
+    let filtered = allTasks;
+    if (activeTab === 'posted') filtered = allTasks.filter(t => t.posterId === user.id);
+    else if (activeTab === 'claimed') filtered = allTasks.filter(t => t.claimedBy === user.id && t.status === 'claimed');
+    else if (activeTab === 'completed') filtered = allTasks.filter(t => t.status === 'completed');
+
+    const container = document.getElementById('task-list')!;
+    if (filtered.length === 0) {
+      container.innerHTML = '<p class="text-sm text-mute text-center py-8">No tasks in this category.</p>';
+      return;
+    }
+
+    container.innerHTML = filtered.map(t => {
+      const role = t.posterId === user.id ? 'You posted' : "You're helping";
+      return `<a href="/tasks/${t._id}" class="flex items-center gap-4 p-4 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong transition-colors">
+        <div class="w-2 h-2 rounded-full shrink-0 ${t.status === 'open' ? 'bg-cyan-deep' : t.status === 'claimed' ? 'bg-warning' : 'bg-mute'}"></div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-ink truncate">${t.title}</p>
+          <p class="text-xs text-mute mt-0.5">${role} · ${t.category}</p>
+        </div>
+        <div class="text-right shrink-0">
+          <p class="text-sm font-semibold text-ink">₹${t.budget}</p>
+          <span class="text-xs ${t.status === 'open' ? 'text-cyan-deep' : t.status === 'claimed' ? 'text-warning-deep' : 'text-mute'}">${t.status}</span>
+        </div>
+      </a>`;
+    }).join('');
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('font-medium', 'text-ink', 'border-ink');
+        b.classList.add('text-body', 'border-transparent');
+      });
+      btn.classList.add('font-medium', 'text-ink', 'border-ink');
+      btn.classList.remove('text-body', 'border-transparent');
+      activeTab = (btn as HTMLElement).dataset.tab || 'all';
+      renderTasks();
+    });
+  });
+
+  init();
+</script>

@@ -1,0 +1,165 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+---
+
+<Layout title="Verify Identity — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="max-w-lg mx-auto">
+      <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Verify Your Identity</h1>
+      <p class="mt-2 text-sm text-body">Submit your government ID to get a verified badge. This builds trust with other users.</p>
+
+      <form id="verify-form" class="mt-8 space-y-6">
+        <div id="success-msg" class="hidden p-3 text-sm text-cyan-deep bg-cyan-soft rounded-md">Verification submitted! We'll review within 24-48 hours.</div>
+        <div id="error-msg" class="hidden p-3 text-sm text-error bg-error-soft rounded-md"></div>
+
+        <!-- ID Type -->
+        <div>
+          <label for="id-type" class="block text-sm font-medium text-ink mb-1.5">ID Type</label>
+          <select id="id-type" name="id-type" required class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors">
+            <option value="">Select document type</option>
+            <option>Aadhaar Card</option>
+            <option>PAN Card</option>
+            <option>Passport</option>
+            <option>Driving License</option>
+            <option>Voter ID</option>
+            <option>National ID</option>
+            <option>Other Government ID</option>
+          </select>
+        </div>
+
+        <!-- ID Number -->
+        <div>
+          <label for="id-number" class="block text-sm font-medium text-ink mb-1.5">ID Number</label>
+          <input type="text" id="id-number" name="id-number" required placeholder="Enter your ID number" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute" />
+        </div>
+
+        <!-- ID Front Photo -->
+        <div>
+          <label class="block text-sm font-medium text-ink mb-1.5">ID Front Photo</label>
+          <div id="front-drop" class="flex items-center justify-center h-32 border-2 border-dashed border-hairline rounded-md hover:border-hairline-strong transition-colors cursor-pointer overflow-hidden">
+            <div id="front-placeholder" class="text-center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mx-auto text-mute"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              <p class="mt-2 text-xs text-mute">Click to upload front of ID</p>
+            </div>
+          </div>
+          <input type="file" id="id-front" accept="image/*" capture="environment" class="hidden" />
+        </div>
+
+        <!-- ID Back Photo -->
+        <div>
+          <label class="block text-sm font-medium text-ink mb-1.5">ID Back Photo</label>
+          <div id="back-drop" class="flex items-center justify-center h-32 border-2 border-dashed border-hairline rounded-md hover:border-hairline-strong transition-colors cursor-pointer overflow-hidden">
+            <div id="back-placeholder" class="text-center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mx-auto text-mute"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              <p class="mt-2 text-xs text-mute">Click to upload back of ID</p>
+            </div>
+          </div>
+          <input type="file" id="id-back" accept="image/*" capture="environment" class="hidden" />
+        </div>
+
+        <!-- Selfie -->
+        <div>
+          <label class="block text-sm font-medium text-ink mb-1.5">Selfie (holding your ID)</label>
+          <div id="selfie-drop" class="flex items-center justify-center h-32 border-2 border-dashed border-hairline rounded-md hover:border-hairline-strong transition-colors cursor-pointer overflow-hidden">
+            <div id="selfie-placeholder" class="text-center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mx-auto text-mute"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <p class="mt-2 text-xs text-mute">Take a selfie holding your ID</p>
+            </div>
+          </div>
+          <input type="file" id="selfie" accept="image/*" capture="user" class="hidden" />
+        </div>
+
+        <div class="p-4 bg-canvas-soft rounded-md border border-hairline">
+          <p class="text-xs text-body leading-relaxed">By submitting, you confirm this is your valid government-issued ID. Your data is stored securely and used solely for identity verification. We do not share it with third parties.</p>
+        </div>
+
+        <button type="submit" id="submit-btn" class="w-full h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">
+          Submit for Verification
+        </button>
+      </form>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  // Auth check
+  fetch('/api/auth/me').then(r => { if (!r.ok) window.location.href = '/login?redirect=/verify'; });
+
+  // Check verification status first
+  fetch('/api/auth/verify').then(r => r.json()).then(data => {
+    if (data.verified) {
+      document.getElementById('verify-form')!.innerHTML = `
+        <div class="p-6 bg-cyan-soft/30 rounded-lg border border-cyan/20 text-center">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mx-auto text-cyan-deep mb-3"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+          <h2 class="text-lg font-semibold text-ink">Identity Verified ✓</h2>
+          <p class="mt-2 text-sm text-body">Your identity has been verified. You have a trusted badge on your profile.</p>
+        </div>`;
+    } else if (data.status === 'pending') {
+      document.getElementById('verify-form')!.innerHTML = `
+        <div class="p-6 bg-warning-soft rounded-lg border border-warning/20 text-center">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mx-auto text-warning-deep mb-3"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <h2 class="text-lg font-semibold text-ink">Documents Submitted</h2>
+          <p class="mt-2 text-sm text-body">Your verification is under review. Thank you for your patience — we'll notify you once approved.</p>
+          <p class="mt-3 text-xs text-mute">Typically takes 24-48 hours</p>
+        </div>`;
+    }
+  });
+
+  // File upload previews
+  function setupUpload(dropId: string, inputId: string, placeholderId: string) {
+    const drop = document.getElementById(dropId)!;
+    const input = document.getElementById(inputId) as HTMLInputElement;
+    drop.addEventListener('click', () => input.click());
+    input.addEventListener('change', () => {
+      const file = input.files?.[0];
+      if (file) {
+        drop.innerHTML = `<img src="${URL.createObjectURL(file)}" class="w-full h-full object-cover" />`;
+      }
+    });
+  }
+  setupUpload('front-drop', 'id-front', 'front-placeholder');
+  setupUpload('back-drop', 'id-back', 'back-placeholder');
+  setupUpload('selfie-drop', 'selfie', 'selfie-placeholder');
+
+  // Submit
+  document.getElementById('verify-form')!.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn')!;
+    const idType = (document.getElementById('id-type') as HTMLSelectElement).value;
+    const idNumber = (document.getElementById('id-number') as HTMLInputElement).value;
+    const front = (document.getElementById('id-front') as HTMLInputElement).files?.[0];
+    const back = (document.getElementById('id-back') as HTMLInputElement).files?.[0];
+    const selfie = (document.getElementById('selfie') as HTMLInputElement).files?.[0];
+
+    if (!idType || !idNumber || !front || !selfie) {
+      document.getElementById('error-msg')!.textContent = 'Please fill all required fields and upload front photo + selfie';
+      document.getElementById('error-msg')!.classList.remove('hidden');
+      return;
+    }
+
+    btn.textContent = 'Submitting...';
+    btn.setAttribute('disabled', 'true');
+
+    const fd = new FormData();
+    fd.append('idType', idType);
+    fd.append('idNumber', idNumber);
+    fd.append('front', front);
+    if (back) fd.append('back', back);
+    fd.append('selfie', selfie);
+
+    const res = await fetch('/api/auth/verify', { method: 'POST', body: fd });
+    if (res.ok) {
+      document.getElementById('success-msg')!.classList.remove('hidden');
+      document.getElementById('error-msg')!.classList.add('hidden');
+      btn.textContent = 'Submitted ✓';
+    } else {
+      const d = await res.json();
+      document.getElementById('error-msg')!.textContent = d.error || 'Submission failed';
+      document.getElementById('error-msg')!.classList.remove('hidden');
+      btn.textContent = 'Submit for Verification';
+      btn.removeAttribute('disabled');
+    }
+  });
+</script>

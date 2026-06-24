@@ -1,0 +1,119 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+---
+
+<Layout title="AI Task Estimator — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="max-w-lg mx-auto">
+      <p class="font-mono text-xs text-mute uppercase tracking-wide mb-2">AI-Powered</p>
+      <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Fair Price Estimator.</h1>
+      <p class="mt-2 text-sm text-body">Our AI suggests the right price based on distance, time, difficulty, and market rates. No more guessing.</p>
+
+      <!-- Input form -->
+      <div class="mt-8 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-ink mb-1.5">What needs to be done?</label>
+          <input id="task-desc" type="text" placeholder="e.g., Submit documents at RTO" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink placeholder:text-mute" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-ink mb-1.5">From</label>
+            <input id="from-loc" type="text" placeholder="Your location" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink placeholder:text-mute" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-ink mb-1.5">To</label>
+            <input id="to-loc" type="text" placeholder="Task location" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink placeholder:text-mute" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-ink mb-1.5">Category</label>
+          <select id="task-cat" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink">
+            <option>Document Submission</option>
+            <option>Photo Proof</option>
+            <option>Parcel Pickup</option>
+            <option>Queue Standing</option>
+            <option>Verification</option>
+          </select>
+        </div>
+        <button id="estimate-btn" class="w-full h-11 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">
+          Get AI Estimate
+        </button>
+      </div>
+
+      <!-- Result (hidden by default) -->
+      <div id="estimate-result" class="hidden mt-8">
+        <div class="p-6 bg-canvas rounded-xl border border-hairline shadow-[0px_2px_2px_#0000000a,0px_8px_16px_-4px_#0000000a]">
+          <p class="text-xs font-mono text-mute uppercase mb-1">Suggested Price</p>
+          <div class="flex items-baseline gap-2">
+            <span class="text-3xl font-semibold text-ink" id="price-main">₹280</span>
+            <span class="text-sm text-mute">± ₹50</span>
+          </div>
+
+          <!-- Breakdown -->
+          <div class="mt-5 pt-5 border-t border-hairline space-y-3">
+            <p class="text-xs font-mono text-mute uppercase mb-2">Price Breakdown</p>
+            <div class="flex justify-between text-sm">
+              <span class="text-body flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-gradient-develop-start"></span>Base rate (Document)
+              </span>
+              <span class="text-ink">₹150</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-body flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-gradient-preview-start"></span>Distance (3.2 km)
+              </span>
+              <span class="text-ink">₹60</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-body flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-gradient-ship-start"></span>Time complexity
+              </span>
+              <span class="text-ink">₹40</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-body flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-warning"></span>Demand surge (1.1x)
+              </span>
+              <span class="text-ink">₹30</span>
+            </div>
+          </div>
+
+          <!-- Comparison -->
+          <div class="mt-5 pt-5 border-t border-hairline">
+            <p class="text-xs font-mono text-mute uppercase mb-2">Market Comparison</p>
+            <div class="flex items-center gap-3 text-xs">
+              <div class="flex-1 p-2 bg-error-soft rounded text-center">
+                <p class="text-error-deep font-medium">₹500+</p>
+                <p class="text-mute">Courier service</p>
+              </div>
+              <div class="flex-1 p-2 bg-cyan-soft rounded text-center border border-cyan/30">
+                <p class="text-cyan-deep font-semibold">₹280</p>
+                <p class="text-mute">StrangerHelp</p>
+              </div>
+              <div class="flex-1 p-2 bg-warning-soft rounded text-center">
+                <p class="text-warning-deep font-medium">₹350</p>
+                <p class="text-mute">Competitors</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="mt-4 w-full h-11 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">
+          Use This Price & Post Task
+        </button>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  document.getElementById('estimate-btn')?.addEventListener('click', () => {
+    const result = document.getElementById('estimate-result')!;
+    result.classList.remove('hidden');
+    // Randomize price slightly for demo
+    const base = 200 + Math.floor(Math.random() * 150);
+    document.getElementById('price-main')!.textContent = `₹${base}`;
+  });
+</script>

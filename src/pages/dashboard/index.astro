@@ -1,0 +1,87 @@
+---
+import AccountLayout from "../../layouts/AccountLayout.astro";
+---
+
+<AccountLayout title="Dashboard — StrangerHelp">
+  <div class="max-w-4xl">
+    <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Dashboard</h1>
+    <p class="mt-1 text-sm text-body" id="welcome">Loading...</p>
+
+    <!-- Stats -->
+    <div id="stats" class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+
+    <!-- Quick Actions -->
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a href="/tasks/new" class="inline-flex h-9 items-center px-4 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">+ Post a Task</a>
+      <a href="/pulse" class="inline-flex h-9 items-center gap-1.5 px-4 text-sm font-medium text-ink border border-hairline rounded-full hover:bg-canvas-soft-2 transition-colors">
+        <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-deep"></span></span>
+        Live Pulse
+      </a>
+      <a href="/ask/new" class="inline-flex h-9 items-center px-4 text-sm font-medium text-ink border border-hairline rounded-full hover:bg-canvas-soft-2 transition-colors">Ask a Question</a>
+      <a href="/tasks" class="inline-flex h-9 items-center px-4 text-sm font-medium text-ink border border-hairline rounded-full hover:bg-canvas-soft-2 transition-colors">Browse Tasks</a>
+    </div>
+
+    <!-- My Tasks -->
+    <div class="mt-8">
+      <h2 class="text-sm font-semibold text-ink mb-4">Your Recent Tasks</h2>
+      <div id="my-tasks" class="space-y-2">
+        <p class="text-sm text-mute">Loading...</p>
+      </div>
+    </div>
+  </div>
+</AccountLayout>
+
+<script>
+  async function init() {
+    const authRes = await fetch('/api/auth/me');
+    if (!authRes.ok) { window.location.href = '/login'; return; }
+    const { user } = await authRes.json();
+
+    document.getElementById('welcome')!.textContent = `Welcome back, ${user.name}!`;
+
+    // Fetch user stats from tasks
+    const tasksRes = await fetch('/api/tasks?mine=true&limit=100');
+    const allTasks = await tasksRes.json();
+    
+    const posted = allTasks.filter((t: any) => t.posterId === user.id);
+    const claimed = allTasks.filter((t: any) => t.claimedBy === user.id);
+    const completed = allTasks.filter((t: any) => t.status === 'completed');
+
+    const stats = [
+      { label: 'Tasks Posted', value: posted.length },
+      { label: 'Tasks Claimed', value: claimed.length },
+      { label: 'Completed', value: completed.length },
+      { label: 'City', value: user.city || '—' },
+    ];
+
+    document.getElementById('stats')!.innerHTML = stats.map(s =>
+      `<div class="p-4 bg-canvas rounded-lg border border-hairline">
+        <p class="text-xs text-mute font-mono uppercase">${s.label}</p>
+        <p class="mt-1 text-2xl font-semibold text-ink">${s.value}</p>
+      </div>`
+    ).join('');
+
+    // Show user's tasks
+    const myTasks = allTasks.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
+    const container = document.getElementById('my-tasks')!;
+
+    if (myTasks.length === 0) {
+      container.innerHTML = '<p class="text-sm text-mute">No tasks yet. <a href="/tasks/new" class="text-link">Post your first task</a></p>';
+      return;
+    }
+
+    container.innerHTML = myTasks.map((t: any) => {
+      const role = t.posterId === user.id ? 'Posted' : 'Claimed';
+      return `<a href="/tasks/${t._id}" class="flex items-center gap-4 p-3 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong transition-colors">
+        <div class="w-2 h-2 rounded-full shrink-0 ${t.status === 'open' ? 'bg-cyan-deep' : t.status === 'claimed' ? 'bg-warning' : 'bg-mute'}"></div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-ink truncate">${t.title}</p>
+          <p class="text-xs text-mute">${role} · ${t.status}</p>
+        </div>
+        <span class="text-sm font-semibold text-ink">₹${t.budget}</span>
+      </a>`;
+    }).join('');
+  }
+
+  init();
+</script>

@@ -1,0 +1,215 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+---
+
+<Layout title="Live Pulse — StrangerHelp">
+  <Navbar />
+  <main class="relative h-[calc(100vh-64px)] overflow-hidden">
+    <!-- Map area -->
+    <div id="pulse-map" class="absolute inset-0 bg-canvas-soft-2">
+      <div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(#171717 1px, transparent 1px), linear-gradient(90deg, #171717 1px, transparent 1px); background-size: 40px 40px;"></div>
+      <!-- Dynamic dots rendered here -->
+      <div id="dots-container" class="absolute inset-0"></div>
+    </div>
+
+    <!-- Control panel -->
+    <div class="absolute top-4 left-4 right-4 md:right-auto md:w-80 z-10 space-y-2">
+      <div class="p-4 bg-canvas/95 backdrop-blur-md rounded-lg border border-hairline shadow-[0px_8px_16px_-4px_#0000000a]">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-cyan-deep"></span>
+          </span>
+          <h1 class="text-sm font-semibold text-ink">Live Pulse</h1>
+          <span class="ml-auto text-xs text-mute font-mono" id="online-count">0 online</span>
+        </div>
+        <p class="text-xs text-body mb-3">Real-time view of helpers and open tasks near you.</p>
+
+        <!-- Go online toggle -->
+        <div class="flex items-center justify-between p-2.5 bg-canvas-soft rounded-md border border-hairline mb-3">
+          <div>
+            <p class="text-xs font-medium text-ink">Go Online as Helper</p>
+            <p class="text-[10px] text-mute">Share your location to appear on the map</p>
+          </div>
+          <button id="online-toggle" class="relative w-10 h-6 bg-hairline rounded-full transition-colors" aria-pressed="false">
+            <span class="absolute top-1 left-1 w-4 h-4 bg-canvas rounded-full shadow transition-transform"></span>
+          </button>
+        </div>
+
+        <!-- Legend -->
+        <div class="flex gap-3 text-[10px] text-mute">
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-cyan-deep"></span> Helpers</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-warning"></span> Open Tasks</span>
+        </div>
+      </div>
+
+      <!-- Tooltip -->
+      <div id="tooltip" class="hidden p-3 bg-canvas/95 backdrop-blur-md rounded-lg border border-hairline shadow-[0px_8px_16px_-4px_#0000000a]">
+        <p class="text-sm font-medium text-ink" id="tip-title"></p>
+        <p class="text-xs text-mute" id="tip-detail"></p>
+        <a id="tip-link" href="#" class="mt-2 block w-full h-8 text-xs font-medium text-on-primary bg-primary rounded-md flex items-center justify-center">View</a>
+      </div>
+    </div>
+
+    <!-- Open tasks list -->
+    <div class="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 z-10 space-y-2">
+      <div id="tasks-panel" class="max-h-48 overflow-y-auto p-3 bg-canvas/95 backdrop-blur-md rounded-lg border border-hairline shadow-[0px_8px_16px_-4px_#0000000a]">
+        <p class="text-xs font-semibold text-ink mb-2">Open Tasks Nearby</p>
+        <div id="tasks-list" class="space-y-1.5 text-xs text-body">Loading...</div>
+      </div>
+      <a href="/tasks/new" class="flex items-center justify-center gap-2 h-11 bg-primary text-on-primary text-sm font-medium rounded-full shadow-lg hover:opacity-90 transition-opacity">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Post a Task
+      </a>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .pulse-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    cursor: pointer;
+    position: absolute;
+    box-shadow: 0 0 0 0 rgba(80, 227, 194, 0.7);
+    animation: pulse-ring 2s infinite;
+    transition: transform 0.2s;
+  }
+  .pulse-dot:hover { transform: scale(1.5); }
+  .pulse-dot.helper { background: #29bc9b; }
+  .pulse-dot.task { background: #f5a623; box-shadow: 0 0 0 0 rgba(245, 166, 35, 0.7); }
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(80, 227, 194, 0.7); }
+    70% { box-shadow: 0 0 0 12px rgba(80, 227, 194, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(80, 227, 194, 0); }
+  }
+</style>
+
+<script>
+  let isOnline = false;
+  let watchId: number | null = null;
+  let myLat = 0, myLng = 0;
+  let refreshInterval: ReturnType<typeof setInterval>;
+
+  async function loadPulse() {
+    const res = await fetch('/api/pulse');
+    if (!res.ok) return;
+    const { tasks, helpers } = await res.json();
+
+    document.getElementById('online-count')!.textContent = `${helpers.length} online`;
+
+    const container = document.getElementById('dots-container')!;
+    container.innerHTML = '';
+
+    // Render helper dots
+    helpers.forEach((h: any, i: number) => {
+      const pos = latLngToPercent(h.lat, h.lng);
+      const dot = document.createElement('div');
+      dot.className = 'pulse-dot helper';
+      dot.style.top = pos.y + '%';
+      dot.style.left = pos.x + '%';
+      dot.style.animationDelay = (i * 0.3) + 's';
+      dot.addEventListener('click', () => showTooltip(h.name, `Trust helper · ${h.city}`, '#'));
+      container.appendChild(dot);
+    });
+
+    // Render task dots
+    tasks.forEach((t: any, i: number) => {
+      // Distribute tasks randomly on map (since we don't have precise coords yet)
+      const pos = hashToPosition(t._id);
+      const dot = document.createElement('div');
+      dot.className = 'pulse-dot task';
+      dot.style.top = pos.y + '%';
+      dot.style.left = pos.x + '%';
+      dot.style.animationDelay = (i * 0.2 + 0.5) + 's';
+      dot.addEventListener('click', () => showTooltip(t.title, `₹${t.budget} · ${t.location}`, `/tasks/${t._id}`));
+      container.appendChild(dot);
+    });
+
+    // Tasks list
+    const list = document.getElementById('tasks-list')!;
+    if (tasks.length === 0) {
+      list.innerHTML = '<p class="text-mute">No open tasks right now.</p>';
+    } else {
+      list.innerHTML = tasks.slice(0, 6).map((t: any) =>
+        `<a href="/tasks/${t._id}" class="flex items-center justify-between p-1.5 rounded hover:bg-canvas-soft-2 transition-colors">
+          <span class="truncate">${escapeHtml(t.title)}</span>
+          <span class="shrink-0 ml-2 font-medium text-ink">₹${t.budget}</span>
+        </a>`
+      ).join('');
+    }
+  }
+
+  function showTooltip(title: string, detail: string, link: string) {
+    document.getElementById('tip-title')!.textContent = title;
+    document.getElementById('tip-detail')!.textContent = detail;
+    const tipLink = document.getElementById('tip-link') as HTMLAnchorElement;
+    tipLink.href = link;
+    tipLink.textContent = link === '#' ? 'View Profile' : 'View Task';
+    document.getElementById('tooltip')!.classList.remove('hidden');
+  }
+
+  function latLngToPercent(lat: number, lng: number) {
+    // Simple mapping for India bounds (approx 8-37 lat, 68-97 lng)
+    const y = 100 - ((lat - 8) / 29 * 80 + 10);
+    const x = (lng - 68) / 29 * 80 + 10;
+    return { x: Math.max(5, Math.min(95, x)), y: Math.max(5, Math.min(95, y)) };
+  }
+
+  function hashToPosition(id: string) {
+    // Generate consistent position from ID
+    let h = 0;
+    for (let i = 0; i < id.length; i++) h = ((h << 5) - h) + id.charCodeAt(i);
+    const x = Math.abs(h % 80) + 10;
+    const y = Math.abs((h >> 8) % 70) + 15;
+    return { x, y };
+  }
+
+  // Online toggle
+  const toggle = document.getElementById('online-toggle')!;
+  toggle.addEventListener('click', async () => {
+    isOnline = !isOnline;
+    toggle.setAttribute('aria-pressed', String(isOnline));
+    toggle.classList.toggle('bg-primary', isOnline);
+    toggle.classList.toggle('bg-hairline', !isOnline);
+    toggle.querySelector('span')!.classList.toggle('translate-x-4', isOnline);
+
+    if (isOnline) {
+      // Start sharing location
+      if (navigator.geolocation) {
+        watchId = navigator.geolocation.watchPosition(
+          async (pos) => {
+            myLat = pos.coords.latitude;
+            myLng = pos.coords.longitude;
+            await fetch('/api/pulse', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ lat: myLat, lng: myLng }),
+            });
+          },
+          () => alert('Location access denied'),
+          { enableHighAccuracy: true, maximumAge: 30000 }
+        );
+      }
+    } else {
+      // Go offline
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+      await fetch('/api/pulse', { method: 'DELETE' });
+    }
+  });
+
+  // Close tooltip on map click
+  document.getElementById('pulse-map')!.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).id === 'dots-container' || (e.target as HTMLElement).id === 'pulse-map') {
+      document.getElementById('tooltip')!.classList.add('hidden');
+    }
+  });
+
+  function escapeHtml(s: string) { return s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || ''; }
+
+  // Init
+  loadPulse();
+  refreshInterval = setInterval(loadPulse, 5000);
+</script>

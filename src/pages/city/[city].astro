@@ -1,0 +1,136 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+
+const { city } = Astro.params;
+const cityName = city ? city.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "";
+
+const cityData: Record<string, { tagline: string; description: string; areas: string[]; tasks: string[] }> = {
+  delhi: {
+    tagline: "Get tasks done across Delhi NCR — from Connaught Place to Dwarka",
+    description: "StrangerHelp connects you with verified local helpers across Delhi NCR. Whether you need documents submitted at the South Delhi RTO, photos taken at government offices in Lajpat Nagar, or someone to stand in queue at Passport Seva Kendra — our hyperlocal task marketplace makes it easy. From Nehru Place to Rohini, strangers help strangers every day.",
+    areas: ["Connaught Place", "Lajpat Nagar", "Saket", "Dwarka", "Rohini", "Nehru Place", "Karol Bagh", "Janakpuri"],
+    tasks: ["RTO document submission", "Passport office queue standing", "University form collection", "Court filing pickup"],
+  },
+  mumbai: {
+    tagline: "Hyperlocal task assistance across Mumbai — Bandra to Navi Mumbai",
+    description: "Mumbai never sleeps, and neither does StrangerHelp. Get tasks done from Andheri to Colaba with verified local helpers. Document submissions at BMC offices, photo verification in Bandra, parcel pickups from Delhivery hubs, or queue standing at Mantralaya — Mumbai's busiest errands handled by trusted strangers.",
+    areas: ["Andheri", "Bandra", "Colaba", "Dadar", "Powai", "Borivali", "Thane", "Navi Mumbai"],
+    tasks: ["BMC office submissions", "Railway counter queue standing", "Shop verification in markets", "Courier hub pickups"],
+  },
+  bangalore: {
+    tagline: "Task help across Bangalore — Koramangala to Whitefield",
+    description: "Bangalore's tech-savvy community thrives on StrangerHelp. Need someone to collect documents from Indiranagar, verify a PG in Koramangala, or submit forms at BDA offices in Jayanagar? Our verified helpers across Bangalore handle tasks quickly so you can focus on what matters.",
+    areas: ["Koramangala", "Indiranagar", "HSR Layout", "Whitefield", "Electronic City", "Jayanagar", "Marathahalli", "BTM Layout"],
+    tasks: ["BDA office form submission", "Apartment verification photos", "Parcel collection from warehouses", "University document pickup"],
+  },
+  chennai: {
+    tagline: "Local task assistance in Chennai — T. Nagar to OMR",
+    description: "From Marina Beach to the tech corridor on OMR, StrangerHelp brings hyperlocal task assistance to Chennai. Get help with document submissions at Corporation offices, photo proofs in T. Nagar, queue standing at Regional Transport Office, or parcel pickups across Anna Nagar.",
+    areas: ["T. Nagar", "Anna Nagar", "Adyar", "OMR", "Velachery", "Mylapore", "Tambaram", "Porur"],
+    tasks: ["Corporation office submissions", "RTO queue standing", "Hospital report collection", "Shop survey tasks"],
+  },
+  hyderabad: {
+    tagline: "Stranger help in Hyderabad — HITEC City to Old City",
+    description: "Hyderabad's growing community trusts StrangerHelp for hyperlocal task assistance. Whether it's GHMC office submissions in Begumpet, photo verification in Jubilee Hills, or picking up documents from Secunderabad — verified helpers across the city are ready to assist.",
+    areas: ["HITEC City", "Jubilee Hills", "Begumpet", "Secunderabad", "Madhapur", "Kukatpally", "Gachibowli", "Ameerpet"],
+    tasks: ["GHMC document submissions", "Property photo verification", "Parcel pickups in HITEC City", "Office verification tasks"],
+  },
+  pune: {
+    tagline: "Task marketplace for Pune — Shivaji Nagar to Hinjewadi",
+    description: "Pune's student and IT community relies on StrangerHelp for quick task assistance. From university document collection in Shivaji Nagar to office verifications in Hinjewadi's IT park — our verified helpers make sure your tasks get done on time across Pune.",
+    areas: ["Shivaji Nagar", "Kothrud", "Hinjewadi", "Baner", "Viman Nagar", "Hadapsar", "Wakad", "Aundh"],
+    tasks: ["University form submissions", "IT park document delivery", "Shop survey in Camp area", "PMC office queue standing"],
+  },
+  kolkata: {
+    tagline: "Get local help in Kolkata — Park Street to Salt Lake",
+    description: "From the bustling streets of Park Street to the planned sectors of Salt Lake, StrangerHelp brings task assistance to Kolkata. Government office submissions, photo proofs of properties, document collection from Dalhousie, or queue standing at passport offices — local helpers have you covered.",
+    areas: ["Park Street", "Salt Lake", "New Town", "Howrah", "Ballygunge", "Dalhousie", "Dum Dum", "Gariahat"],
+    tasks: ["Writers' Building submissions", "Property photo documentation", "Passport office queue standing", "Railway ticket counter help"],
+  },
+  ahmedabad: {
+    tagline: "Hyperlocal task help in Ahmedabad — SG Highway to Old City",
+    description: "Ahmedabad's entrepreneurial spirit meets community help on StrangerHelp. Task assistance across the city — AMC office submissions on Ashram Road, shop verifications in SG Highway malls, document pickups from Navrangpura, or queue management at Sabarmati offices.",
+    areas: ["SG Highway", "Navrangpura", "Ashram Road", "Satellite", "Vastrapur", "Bopal", "Maninagar", "Paldi"],
+    tasks: ["AMC office form submissions", "Shop license verification", "University document collection", "Court document filing"],
+  },
+};
+
+const data = cityData[city || ""] || { tagline: `Hyperlocal task assistance in ${cityName}`, description: `Find verified helpers in ${cityName} for document submissions, photo verifications, parcel pickups, and more.`, areas: [], tasks: [] };
+
+const pageTitle = `StrangerHelp ${cityName} — Local Task Help & Verified Helpers | Stranger Help`;
+const pageDesc = `Find verified helpers in ${cityName}. Get documents submitted, photos taken, queues managed, and real-time local information from your community. The hyperlocal task marketplace.`;
+---
+
+<Layout title={pageTitle} description={pageDesc}>
+  <Navbar />
+  <main>
+    <section class="bg-canvas border-b border-hairline">
+      <div class="mx-auto max-w-[1400px] px-4 py-16 md:px-6 md:py-24 text-center">
+        <p class="font-mono text-xs text-mute uppercase tracking-wide mb-3">StrangerHelp in {cityName}</p>
+        <h1 class="text-3xl md:text-[48px] font-semibold leading-tight tracking-[-2.4px] text-ink">
+          {data.tagline}
+        </h1>
+        <p class="mt-4 text-lg text-body max-w-xl mx-auto">{pageDesc}</p>
+        <div class="mt-6 flex justify-center gap-3">
+          <a href="/tasks/new" class="inline-flex h-11 items-center px-5 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">Post a Task in {cityName}</a>
+          <a href="/tasks" class="inline-flex h-11 items-center px-5 text-sm font-medium text-ink border border-hairline rounded-full hover:border-hairline-strong transition-colors">Browse Tasks</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-hairline bg-canvas-soft">
+      <div class="mx-auto max-w-[1400px] px-4 py-16 md:px-6">
+        <h2 class="text-xl font-semibold text-ink tracking-tight mb-4">Task Assistance in {cityName}</h2>
+        <p class="text-sm text-body leading-relaxed max-w-3xl">{data.description}</p>
+      </div>
+    </section>
+
+    {data.areas.length > 0 && (
+      <section class="border-b border-hairline bg-canvas">
+        <div class="mx-auto max-w-[1400px] px-4 py-16 md:px-6">
+          <h2 class="text-xl font-semibold text-ink tracking-tight mb-8">Areas We Cover in {cityName}</h2>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {data.areas.map((area) => (
+              <div class="p-4 bg-canvas-soft rounded-lg border border-hairline text-center">
+                <p class="text-sm font-medium text-ink">{area}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    {data.tasks.length > 0 && (
+      <section class="border-b border-hairline bg-canvas-soft">
+        <div class="mx-auto max-w-[1400px] px-4 py-16 md:px-6">
+          <h2 class="text-xl font-semibold text-ink tracking-tight mb-8">Popular Tasks in {cityName}</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {data.tasks.map((task) => (
+              <div class="flex items-center gap-3 p-4 bg-canvas rounded-lg border border-hairline">
+                <svg class="w-4 h-4 text-cyan-deep shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                <p class="text-sm text-ink">{task}</p>
+              </div>
+            ))}
+          </div>
+          <div class="mt-8 text-center">
+            <a href="/tasks/new" class="text-sm text-link hover:text-link-deep font-medium">Post a task in {cityName} →</a>
+          </div>
+        </div>
+      </section>
+    )}
+
+    <section class="bg-primary text-on-primary">
+      <div class="mx-auto max-w-[1400px] px-4 py-16 md:px-6 text-center">
+        <h2 class="text-2xl font-semibold tracking-[-0.96px]">Get started in {cityName}</h2>
+        <p class="mt-3 text-sm opacity-70">Join the StrangerHelp community. Post tasks or earn by helping others.</p>
+        <div class="mt-6 flex justify-center gap-3">
+          <a href="/register" class="inline-flex h-10 items-center px-5 text-sm font-medium text-ink bg-canvas rounded-full">Create Account</a>
+          <a href="/tasks" class="inline-flex h-10 items-center px-5 text-sm font-medium border border-on-primary/20 rounded-full hover:border-on-primary/40 transition-colors">Browse Tasks</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Layout>

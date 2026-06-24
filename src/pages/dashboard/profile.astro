@@ -1,0 +1,130 @@
+---
+import AccountLayout from "../../layouts/AccountLayout.astro";
+---
+
+<AccountLayout title="Profile — StrangerHelp">
+  <div class="max-w-lg">
+    <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Edit Profile</h1>
+    <p class="mt-1 text-sm text-body">Update your public profile information.</p>
+
+    <form id="profile-form" class="mt-8 space-y-5">
+      <div id="success-msg" class="hidden p-3 text-sm text-cyan-deep bg-cyan-soft rounded-md">Profile updated!</div>
+      <div id="error-msg" class="hidden p-3 text-sm text-error bg-error-soft rounded-md"></div>
+
+      <!-- Avatar -->
+      <div class="flex items-center gap-4">
+        <div class="relative">
+          <div id="avatar-preview" class="w-16 h-16 rounded-full bg-canvas-soft-2 flex items-center justify-center text-xl font-semibold text-body overflow-hidden">
+            <span id="avatar-initials">...</span>
+          </div>
+          <label class="absolute -bottom-1 -right-1 w-6 h-6 flex items-center justify-center bg-primary text-on-primary rounded-full border-2 border-canvas cursor-pointer">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <input type="file" id="avatar" name="avatar" accept="image/*" class="hidden" />
+          </label>
+        </div>
+        <div class="text-sm text-body">Click to upload photo (max 2MB)</div>
+      </div>
+
+      <div>
+        <label for="name" class="block text-sm font-medium text-ink mb-1.5">Full Name</label>
+        <input type="text" id="name" name="name" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors" />
+      </div>
+
+      <div>
+        <label for="bio" class="block text-sm font-medium text-ink mb-1.5">Bio</label>
+        <textarea id="bio" name="bio" rows="3" placeholder="A short description..." class="w-full px-3 py-2.5 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute resize-none"></textarea>
+      </div>
+
+      <div>
+        <label for="city" class="block text-sm font-medium text-ink mb-1.5">City</label>
+        <input type="text" id="city" name="city" placeholder="e.g., Mumbai, London" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute" />
+      </div>
+
+      <div>
+        <label for="address" class="block text-sm font-medium text-ink mb-1.5">Address</label>
+        <input type="text" id="address" name="address" placeholder="Street, locality" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute" />
+      </div>
+
+      <div>
+        <label for="country" class="block text-sm font-medium text-ink mb-1.5">Country</label>
+        <input type="text" id="country" name="country" placeholder="e.g., India, USA" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute" />
+      </div>
+
+      <div>
+        <label for="phone" class="block text-sm font-medium text-ink mb-1.5">Phone</label>
+        <input type="tel" id="phone" name="phone" placeholder="+91 XXXXX XXXXX" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute" />
+      </div>
+
+      <button type="submit" id="submit-btn" class="w-full h-10 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-md hover:opacity-90 transition-opacity">Save Changes</button>
+    </form>
+
+    <!-- Verify Identity Link -->
+    <div class="mt-8 p-5 bg-canvas rounded-lg border border-hairline">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-semibold text-ink">Identity Verification</p>
+          <p class="text-xs text-body mt-0.5">Verify your identity to get a trusted badge</p>
+        </div>
+        <a href="/verify" class="inline-flex h-8 items-center px-3 text-xs font-medium text-on-primary bg-primary rounded-md hover:opacity-90 transition-opacity">Verify Now</a>
+      </div>
+    </div>
+  </div>
+</AccountLayout>
+
+<script>
+  async function init() {
+    const res = await fetch('/api/auth/me');
+    if (!res.ok) { window.location.href = '/login'; return; }
+    const { user } = await res.json();
+
+    (document.getElementById('name') as HTMLInputElement).value = user.name || '';
+    (document.getElementById('bio') as HTMLTextAreaElement).value = user.bio || '';
+    (document.getElementById('city') as HTMLInputElement).value = user.city || '';
+    (document.getElementById('address') as HTMLInputElement).value = user.area || '';
+    (document.getElementById('country') as HTMLInputElement).value = user.country || '';
+    (document.getElementById('phone') as HTMLInputElement).value = user.phone || '';
+
+    if (user.avatar) {
+      document.getElementById('avatar-preview')!.innerHTML = `<img src="${user.avatar}" class="w-full h-full object-cover" />`;
+    } else {
+      document.getElementById('avatar-initials')!.textContent = user.name?.slice(0, 2).toUpperCase() || '?';
+    }
+  }
+
+  document.getElementById('avatar')!.addEventListener('change', (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file) {
+      document.getElementById('avatar-preview')!.innerHTML = `<img src="${URL.createObjectURL(file)}" class="w-full h-full object-cover" />`;
+    }
+  });
+
+  document.getElementById('profile-form')!.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn')!;
+    btn.textContent = 'Saving...';
+
+    const fd = new FormData();
+    fd.append('name', (document.getElementById('name') as HTMLInputElement).value);
+    fd.append('bio', (document.getElementById('bio') as HTMLTextAreaElement).value);
+    fd.append('city', (document.getElementById('city') as HTMLInputElement).value);
+    fd.append('area', (document.getElementById('address') as HTMLInputElement).value);
+    fd.append('country', (document.getElementById('country') as HTMLInputElement).value);
+    fd.append('phone', (document.getElementById('phone') as HTMLInputElement).value);
+
+    const avatarFile = (document.getElementById('avatar') as HTMLInputElement).files?.[0];
+    if (avatarFile) fd.append('avatar', avatarFile);
+
+    const res = await fetch('/api/auth/profile', { method: 'POST', body: fd });
+    if (res.ok) {
+      document.getElementById('success-msg')!.classList.remove('hidden');
+      document.getElementById('error-msg')!.classList.add('hidden');
+      setTimeout(() => document.getElementById('success-msg')!.classList.add('hidden'), 3000);
+    } else {
+      document.getElementById('error-msg')!.textContent = 'Failed to update';
+      document.getElementById('error-msg')!.classList.remove('hidden');
+    }
+    btn.textContent = 'Save Changes';
+  });
+
+  init();
+</script>

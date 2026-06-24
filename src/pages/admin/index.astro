@@ -1,0 +1,258 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Admin Panel — StrangerHelp">
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="w-56 border-r border-hairline bg-canvas shrink-0 flex flex-col">
+      <div class="p-4 border-b border-hairline">
+        <a href="/" class="text-ink font-semibold text-sm">StrangerHelp</a>
+        <p class="text-xs text-mute mt-0.5">Admin Panel</p>
+      </div>
+      <nav class="flex-1 p-3 space-y-1">
+        <button class="admin-tab w-full text-left px-3 py-2 text-sm rounded-md bg-canvas-soft-2 text-ink font-medium" data-tab="overview">Overview</button>
+        <button class="admin-tab w-full text-left px-3 py-2 text-sm rounded-md text-body hover:text-ink hover:bg-canvas-soft" data-tab="users">Users</button>
+        <button class="admin-tab w-full text-left px-3 py-2 text-sm rounded-md text-body hover:text-ink hover:bg-canvas-soft" data-tab="tasks">Tasks</button>
+        <button class="admin-tab w-full text-left px-3 py-2 text-sm rounded-md text-body hover:text-ink hover:bg-canvas-soft" data-tab="reports">Reports</button>
+        <button class="admin-tab w-full text-left px-3 py-2 text-sm rounded-md text-body hover:text-ink hover:bg-canvas-soft" data-tab="verification">Verification</button>
+      </nav>
+      <div class="p-3 border-t border-hairline">
+        <a href="/dashboard" class="text-xs text-body hover:text-ink">← Back to App</a>
+      </div>
+    </aside>
+
+    <!-- Content -->
+    <main class="flex-1 p-6 md:p-8 bg-canvas-soft overflow-auto">
+      <div id="admin-content">
+        <p class="text-sm text-mute">Loading...</p>
+      </div>
+      <div id="access-denied" class="hidden text-center py-20">
+        <p class="text-2xl font-semibold text-ink">403</p>
+        <p class="mt-2 text-sm text-body">You don't have admin access.</p>
+        <a href="/dashboard" class="mt-4 inline-flex h-9 items-center px-4 text-sm font-medium text-on-primary bg-primary rounded-full">Go to Dashboard</a>
+      </div>
+    </main>
+  </div>
+</Layout>
+
+<script>
+  let currentTab = 'overview';
+
+  async function init() {
+    const res = await fetch('/api/admin?resource=stats');
+    if (res.status === 403) {
+      document.getElementById('admin-content')!.classList.add('hidden');
+      document.getElementById('access-denied')!.classList.remove('hidden');
+      return;
+    }
+    if (!res.ok) { window.location.href = '/login'; return; }
+    loadOverview();
+  }
+
+  async function loadOverview() {
+    const res = await fetch('/api/admin?resource=stats');
+    const stats = await res.json();
+    document.getElementById('admin-content')!.innerHTML = `
+      <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Overview</h1>
+      <p class="mt-1 text-sm text-body">Platform statistics at a glance.</p>
+      <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="p-4 bg-canvas rounded-lg border border-hairline">
+          <p class="text-xs text-mute font-mono uppercase">Users</p>
+          <p class="mt-1 text-2xl font-semibold text-ink">${stats.users}</p>
+        </div>
+        <div class="p-4 bg-canvas rounded-lg border border-hairline">
+          <p class="text-xs text-mute font-mono uppercase">Total Tasks</p>
+          <p class="mt-1 text-2xl font-semibold text-ink">${stats.tasks}</p>
+        </div>
+        <div class="p-4 bg-canvas rounded-lg border border-hairline">
+          <p class="text-xs text-mute font-mono uppercase">Messages</p>
+          <p class="mt-1 text-2xl font-semibold text-ink">${stats.messages}</p>
+        </div>
+        <div class="p-4 bg-canvas rounded-lg border border-hairline">
+          <p class="text-xs text-mute font-mono uppercase">Conversations</p>
+          <p class="mt-1 text-2xl font-semibold text-ink">${stats.conversations}</p>
+        </div>
+      </div>
+      <div class="mt-4 grid grid-cols-3 gap-4">
+        <div class="p-4 bg-canvas rounded-lg border border-hairline">
+          <p class="text-xs text-mute font-mono uppercase">Open</p>
+          <p class="mt-1 text-xl font-semibold text-cyan-deep">${stats.openTasks}</p>
+        </div>
+        <div class="p-4 bg-canvas rounded-lg border border-hairline">
+          <p class="text-xs text-mute font-mono uppercase">Claimed</p>
+          <p class="mt-1 text-xl font-semibold text-warning">${stats.claimedTasks}</p>
+        </div>
+        <div class="p-4 bg-canvas rounded-lg border border-hairline">
+          <p class="text-xs text-mute font-mono uppercase">Completed</p>
+          <p class="mt-1 text-xl font-semibold text-ink">${stats.completedTasks}</p>
+        </div>
+      </div>`;
+  }
+
+  async function loadUsers() {
+    const res = await fetch('/api/admin?resource=users');
+    const users = await res.json();
+    document.getElementById('admin-content')!.innerHTML = `
+      <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Users</h1>
+      <p class="mt-1 text-sm text-body">${users.length} registered users</p>
+      <div class="mt-6 bg-canvas rounded-lg border border-hairline overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-canvas-soft-2 text-xs text-mute uppercase">
+            <tr><th class="text-left px-4 py-3">Name</th><th class="text-left px-4 py-3">Email</th><th class="text-left px-4 py-3">City</th><th class="text-left px-4 py-3">Status</th><th class="px-4 py-3">Actions</th></tr>
+          </thead>
+          <tbody class="divide-y divide-hairline">
+            ${users.map((u: any) => `<tr>
+              <td class="px-4 py-3 font-medium text-ink">${esc(u.name)}</td>
+              <td class="px-4 py-3 text-body">${esc(u.email)}</td>
+              <td class="px-4 py-3 text-body">${esc(u.city || '—')}</td>
+              <td class="px-4 py-3">${u.banned ? '<span class="text-error text-xs font-medium">Banned</span>' : u.isAdmin ? '<span class="text-cyan-deep text-xs font-medium">Admin</span>' : '<span class="text-xs text-mute">Active</span>'}</td>
+              <td class="px-4 py-3 text-center">
+                ${u.banned
+                  ? `<button onclick="adminAction('unban_user','${u._id}')" class="text-xs text-link hover:underline">Unban</button>`
+                  : `<button onclick="adminAction('ban_user','${u._id}')" class="text-xs text-error hover:underline">Ban</button>`}
+                ${!u.isAdmin ? ` <button onclick="adminAction('make_admin','${u._id}')" class="text-xs text-link hover:underline ml-2">Make Admin</button>` : ''}
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  async function loadTasks() {
+    const res = await fetch('/api/admin?resource=tasks');
+    const tasks = await res.json();
+    document.getElementById('admin-content')!.innerHTML = `
+      <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Tasks</h1>
+      <p class="mt-1 text-sm text-body">${tasks.length} total tasks</p>
+      <div class="mt-6 space-y-2">
+        ${tasks.map((t: any) => `<div class="flex items-center gap-4 p-4 bg-canvas rounded-lg border border-hairline">
+          <div class="w-2 h-2 rounded-full shrink-0 ${t.status === 'open' ? 'bg-cyan-deep' : t.status === 'claimed' ? 'bg-warning' : 'bg-mute'}"></div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-ink truncate">${esc(t.title)}</p>
+            <p class="text-xs text-mute">${esc(t.category)} · ${esc(t.location)} · ₹${t.budget} · ${t.status}</p>
+          </div>
+          <div class="flex gap-2 shrink-0">
+            <a href="/tasks/${t._id}" class="text-xs text-link hover:underline">View</a>
+            <button onclick="adminAction('delete_task','${t._id}')" class="text-xs text-error hover:underline">Delete</button>
+          </div>
+        </div>`).join('')}
+      </div>`;
+  }
+
+  async function loadReports() {
+    const res = await fetch('/api/reports');
+    const allReports = await res.json();
+    const reports = allReports.filter((r: any) => r.type !== 'verification');
+    const statusColors: Record<string, string> = { open: 'bg-warning-soft text-warning-deep', reviewing: 'bg-link-bg-soft text-link', resolved: 'bg-cyan-soft text-cyan-deep', dismissed: 'bg-canvas-soft-2 text-mute' };
+
+    document.getElementById('admin-content')!.innerHTML = `
+      <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Reports</h1>
+      <p class="mt-1 text-sm text-body">${reports.length} reports</p>
+      <div class="mt-6 space-y-3">
+        ${reports.length === 0 ? '<p class="text-sm text-mute py-8 text-center">No reports yet.</p>' : reports.map((r: any) => `<div class="p-4 bg-canvas rounded-lg border border-hairline overflow-hidden">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-medium uppercase text-mute">${r.type}</span>
+              <span class="px-2 py-0.5 text-xs font-medium rounded-full ${statusColors[r.status] || ''}">${r.status}</span>
+            </div>
+            <span class="text-xs text-mute">${new Date(r.createdAt).toLocaleDateString()}</span>
+          </div>
+          <p class="text-sm font-medium text-ink truncate">${esc(r.reason)}</p>
+          <p class="text-xs text-body mt-1">By: ${esc(r.reporterName)}</p>
+          ${r.description ? `<p class="text-xs text-body mt-1 p-2 bg-canvas-soft rounded overflow-hidden max-h-12 break-all">${esc(r.description.slice(0, 150))}</p>` : ''}
+          ${r.adminNote ? `<p class="text-xs text-link mt-2 truncate">Note: ${esc(r.adminNote)}</p>` : ''}
+          <div class="mt-3 flex gap-2">
+            <button onclick="updateReport('${r._id}','reviewing','')" class="text-xs px-2 py-1 rounded border border-hairline hover:bg-canvas-soft-2">Reviewing</button>
+            <button onclick="updateReport('${r._id}','resolved',prompt('Admin note:') || '')" class="text-xs px-2 py-1 rounded border border-hairline text-cyan-deep hover:bg-cyan-soft">Resolve</button>
+            <button onclick="updateReport('${r._id}','dismissed',prompt('Reason for dismissal:') || '')" class="text-xs px-2 py-1 rounded border border-hairline text-mute hover:bg-canvas-soft-2">Dismiss</button>
+          </div>
+        </div>`).join('')}
+      </div>`;
+  }
+
+  async function loadVerification() {
+    const res = await fetch('/api/reports');
+    const reports = await res.json();
+    const verifications = reports.filter((r: any) => r.type === 'verification');
+
+    document.getElementById('admin-content')!.innerHTML = `
+      <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Verification Requests</h1>
+      <p class="mt-1 text-sm text-body">${verifications.length} verification requests</p>
+      <div class="mt-6 space-y-3">
+        ${verifications.length === 0 ? '<p class="text-sm text-mute py-8 text-center">No verification requests.</p>' : verifications.map((v: any) => {
+          let docs: any = {};
+          try { docs = JSON.parse(v.description || '{}'); } catch {}
+          return `<div class="p-4 bg-canvas rounded-lg border border-hairline">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-ink">${esc(v.reporter_name)} — ${esc(v.reason)}</span>
+              <span class="px-2 py-0.5 text-xs rounded-full ${v.status === 'open' ? 'bg-warning-soft text-warning-deep' : 'bg-cyan-soft text-cyan-deep'}">${v.status}</span>
+            </div>
+            <p class="text-xs text-mute mb-2">User ID: ${v.reporter_id}</p>
+            ${docs.front ? `<div class="flex gap-2 flex-wrap mb-3 overflow-hidden"><img src="${docs.front}" class="w-24 h-24 object-cover rounded border border-hairline shrink-0" />${docs.back ? `<img src="${docs.back}" class="w-24 h-24 object-cover rounded border border-hairline shrink-0" />` : ''}${docs.selfie ? `<img src="${docs.selfie}" class="w-24 h-24 object-cover rounded border border-hairline shrink-0" />` : ''}</div>` : `<p class="text-xs text-mute mb-2">Documents uploaded (stored securely)</p>`}
+            ${v.status === 'open' ? `<div class="flex gap-2">
+              <button onclick="approveVerification('${v.reporter_id}','${v.id}')" class="text-xs px-3 py-1.5 rounded bg-primary text-on-primary hover:opacity-90">Approve</button>
+              <button onclick="rejectVerification('${v.reporter_id}','${v.id}')" class="text-xs px-3 py-1.5 rounded border border-hairline text-error hover:bg-error-soft">Reject</button>
+            </div>` : ''}
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  (window as any).approveVerification = async function(userId: string, reportId: string) {
+    const db = await fetch('/api/admin', { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'verify_user', id: userId }) });
+    await fetch('/api/reports', { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ id: reportId, status: 'resolved', adminNote: 'Verification approved' }) });
+    loadVerification();
+  };
+
+  (window as any).rejectVerification = async function(userId: string, reportId: string) {
+    const reason = prompt('Rejection reason:') || 'Documents unclear';
+    await fetch('/api/admin', { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'reject_verification', id: userId }) });
+    await fetch('/api/reports', { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ id: reportId, status: 'dismissed', adminNote: reason }) });
+    loadVerification();
+  };
+
+  (window as any).updateReport = async function(id: string, status: string, adminNote: string) {
+    await fetch('/api/reports', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status, adminNote }),
+    });
+    loadReports();
+  };
+
+  (window as any).adminAction = async function(action: string, id: string) {
+    if (!confirm(`Are you sure you want to ${action.replace('_', ' ')}?`)) return;
+    await fetch('/api/admin', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, id }),
+    });
+    // Reload current tab
+    if (currentTab === 'users') loadUsers();
+    else if (currentTab === 'tasks') loadTasks();
+    else loadOverview();
+  };
+
+  function esc(s: string) { return s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || ''; }
+
+  // Tab switching
+  document.querySelectorAll('.admin-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.admin-tab').forEach(b => {
+        b.classList.remove('bg-canvas-soft-2', 'text-ink', 'font-medium');
+        b.classList.add('text-body');
+      });
+      btn.classList.add('bg-canvas-soft-2', 'text-ink', 'font-medium');
+      btn.classList.remove('text-body');
+      currentTab = (btn as HTMLElement).dataset.tab || 'overview';
+      if (currentTab === 'overview') loadOverview();
+      else if (currentTab === 'users') loadUsers();
+      else if (currentTab === 'tasks') loadTasks();
+      else if (currentTab === 'reports') loadReports();
+      else if (currentTab === 'verification') loadVerification();
+    });
+  });
+
+  init();
+</script>

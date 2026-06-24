@@ -1,0 +1,79 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+---
+
+<Layout title="Refund Policy — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-12 md:px-6">
+    <div class="max-w-2xl mx-auto">
+      <p class="font-mono text-xs text-mute uppercase tracking-wide mb-2">Legal</p>
+      <h1 class="text-3xl font-semibold text-ink tracking-[-1.28px]">Refund Policy</h1>
+      <p class="mt-2 text-sm text-mute">Last updated: June 21, 2026</p>
+
+      <div class="mt-10 space-y-8 text-sm text-body leading-relaxed">
+        <section>
+          <h2 class="text-lg font-semibold text-ink mb-3">1. Current Payment Model</h2>
+          <div class="p-4 bg-warning-soft rounded-lg border border-warning/20">
+            <p class="font-medium text-warning-deep">⚠️ Direct Payments Between Users</p>
+            <p class="mt-2 text-body">StrangerHelp currently operates on a direct payment model. All payments are made directly between the task poster and the task claimer outside our platform (via UPI, cash, or other agreed methods).</p>
+            <p class="mt-2 text-body"><strong>Since StrangerHelp does not process or hold any payments, we cannot issue refunds.</strong></p>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="text-lg font-semibold text-ink mb-3">2. Payment Disputes</h2>
+          <p>If a payment dispute arises between a task poster and claimer:</p>
+          <ul class="mt-2 space-y-1.5 list-disc pl-5">
+            <li><strong>Step 1:</strong> Communicate with the other party via in-app messages</li>
+            <li><strong>Step 2:</strong> Share payment proofs (screenshots, UPI transaction IDs) via messages</li>
+            <li><strong>Step 3:</strong> If unresolved, report the issue to us — we can review stored messages and completion proofs</li>
+            <li><strong>Step 4:</strong> Accounts violating payment agreements may be suspended</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 class="text-lg font-semibold text-ink mb-3">3. Protecting Yourself</h2>
+          <div class="p-4 bg-canvas-soft rounded-lg border border-hairline">
+            <p class="font-medium text-ink mb-2">Tips for Task Claimers:</p>
+            <ul class="space-y-1.5 list-disc pl-5">
+              <li>Verify payment terms with the poster via messages <strong>before</strong> starting work</li>
+              <li>Confirm the payment method (UPI ID, etc.) in the chat</li>
+              <li>For larger tasks, request partial payment upfront</li>
+              <li>Always upload completion proofs as evidence</li>
+              <li>Keep payment confirmation screenshots in the chat</li>
+            </ul>
+          </div>
+          <div class="mt-4 p-4 bg-canvas-soft rounded-lg border border-hairline">
+            <p class="font-medium text-ink mb-2">Tips for Task Posters:</p>
+            <ul class="space-y-1.5 list-disc pl-5">
+              <li>Only pay after verifying completion proofs</li>
+              <li>Use the in-app chat for all payment-related communication</li>
+              <li>Send payment confirmation via messages for your records</li>
+              <li>Report users who don't complete tasks properly</li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="text-lg font-semibold text-ink mb-3">4. Upcoming: Karma Wallet Escrow</h2>
+          <p>We are building the <strong>Karma Wallet</strong> — a secure escrow system where:</p>
+          <ul class="mt-2 space-y-1.5 list-disc pl-5">
+            <li>Task poster's payment will be held securely by StrangerHelp</li>
+            <li>Payment released to claimer only after task completion is verified</li>
+            <li>Automatic refunds if task is not completed</li>
+            <li>Built-in dispute resolution with evidence review</li>
+          </ul>
+          <p class="mt-3 text-xs text-mute">Karma Wallet is coming soon. Until then, please use the direct payment model carefully.</p>
+        </section>
+
+        <section>
+          <h2 class="text-lg font-semibold text-ink mb-3">5. Contact</h2>
+          <p>For disputes or concerns, email <a href="mailto:support@strangerhelp.com" class="text-link">support@strangerhelp.com</a></p>
+        </section>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Layout>

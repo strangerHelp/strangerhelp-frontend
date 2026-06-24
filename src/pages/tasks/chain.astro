@@ -1,0 +1,93 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+---
+
+<Layout title="Task Chain — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="max-w-xl mx-auto">
+      <p class="font-mono text-xs text-mute uppercase tracking-wide mb-2">Multi-Step Workflow</p>
+      <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Task Chain.</h1>
+      <p class="mt-2 text-sm text-body">Link multiple steps together. One helper can do all, or different helpers handle each step.</p>
+
+      <!-- Chain visualization -->
+      <div id="chain-steps" class="mt-8 space-y-0">
+        <div class="chain-step" data-step="1">
+          <div class="flex items-start gap-3">
+            <div class="flex flex-col items-center">
+              <div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center text-xs font-mono font-semibold">1</div>
+              <div class="w-0.5 h-8 bg-hairline chain-connector"></div>
+            </div>
+            <div class="flex-1 p-4 bg-canvas rounded-lg border border-hairline">
+              <input type="text" placeholder="Step 1: e.g., Pick up documents from my office" class="w-full text-sm text-ink bg-transparent focus:outline-none placeholder:text-mute" />
+              <div class="mt-2 flex gap-2">
+                <input type="text" placeholder="Location" class="flex-1 h-8 px-2 text-xs bg-canvas-soft border border-hairline rounded-md placeholder:text-mute focus:outline-none focus:border-ink" />
+                <input type="text" placeholder="₹ Budget" class="w-20 h-8 px-2 text-xs bg-canvas-soft border border-hairline rounded-md placeholder:text-mute focus:outline-none focus:border-ink" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chain-step" data-step="2">
+          <div class="flex items-start gap-3">
+            <div class="flex flex-col items-center">
+              <div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center text-xs font-mono font-semibold">2</div>
+              <div class="w-0.5 h-8 bg-hairline chain-connector"></div>
+            </div>
+            <div class="flex-1 p-4 bg-canvas rounded-lg border border-hairline">
+              <input type="text" placeholder="Step 2: e.g., Submit at RTO office counter 3" class="w-full text-sm text-ink bg-transparent focus:outline-none placeholder:text-mute" />
+              <div class="mt-2 flex gap-2">
+                <input type="text" placeholder="Location" class="flex-1 h-8 px-2 text-xs bg-canvas-soft border border-hairline rounded-md placeholder:text-mute focus:outline-none focus:border-ink" />
+                <input type="text" placeholder="₹ Budget" class="w-20 h-8 px-2 text-xs bg-canvas-soft border border-hairline rounded-md placeholder:text-mute focus:outline-none focus:border-ink" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chain-step" data-step="3">
+          <div class="flex items-start gap-3">
+            <div class="flex flex-col items-center">
+              <div class="w-8 h-8 rounded-full bg-canvas-soft-2 text-mute border border-hairline flex items-center justify-center text-xs font-mono font-semibold">3</div>
+            </div>
+            <div class="flex-1 p-4 bg-canvas rounded-lg border border-dashed border-hairline">
+              <input type="text" placeholder="Step 3: e.g., Bring receipt back to my office" class="w-full text-sm text-ink bg-transparent focus:outline-none placeholder:text-mute" />
+              <div class="mt-2 flex gap-2">
+                <input type="text" placeholder="Location" class="flex-1 h-8 px-2 text-xs bg-canvas-soft border border-hairline rounded-md placeholder:text-mute focus:outline-none focus:border-ink" />
+                <input type="text" placeholder="₹ Budget" class="w-20 h-8 px-2 text-xs bg-canvas-soft border border-hairline rounded-md placeholder:text-mute focus:outline-none focus:border-ink" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add step -->
+      <button id="add-step" class="mt-4 w-full h-10 flex items-center justify-center gap-2 text-sm text-body border border-dashed border-hairline rounded-lg hover:border-hairline-strong hover:text-ink transition-colors">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Add Step
+      </button>
+
+      <!-- Options -->
+      <div class="mt-6 p-4 bg-canvas-soft rounded-lg border border-hairline space-y-3">
+        <label class="flex items-center justify-between">
+          <span class="text-sm text-ink">Same helper for all steps</span>
+          <input type="checkbox" checked class="w-4 h-4 rounded border-hairline" />
+        </label>
+        <label class="flex items-center justify-between">
+          <span class="text-sm text-ink">Sequential (wait for each step)</span>
+          <input type="checkbox" checked class="w-4 h-4 rounded border-hairline" />
+        </label>
+      </div>
+
+      <!-- Total -->
+      <div class="mt-6 flex items-center justify-between p-4 bg-canvas rounded-lg border border-hairline">
+        <span class="text-sm text-body">Total Chain Budget</span>
+        <span class="text-lg font-semibold text-ink">₹0</span>
+      </div>
+
+      <button class="mt-4 w-full h-11 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">
+        Post Task Chain
+      </button>
+    </div>
+  </main>
+</Layout>

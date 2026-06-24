@@ -1,0 +1,84 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+---
+
+<Layout title="Privacy Policy — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-12 md:px-6">
+    <div class="max-w-2xl mx-auto">
+      <p class="font-mono text-xs text-mute uppercase tracking-wide mb-2">Legal</p>
+      <h1 class="text-3xl font-semibold text-ink tracking-[-1.28px]">Privacy Policy</h1>
+      <p class="mt-2 text-sm text-mute">Last updated: June 21, 2026</p>
+
+      <div class="mt-10 space-y-8 text-sm text-body leading-relaxed">
+        <section>
+          <h2 class="text-lg font-semibold text-ink mb-3">1. Information We Collect</h2>
+          <p>When you use StrangerHelp, we collect:</p>
+          <ul class="mt-2 space-y-1.5 list-disc pl-5">
+            <li><strong>Account Information:</strong> Name, email address, password (encrypted), city, address, country, phone number, and profile photo.</li>
+            <li><strong>Task Data:</strong> Task titles, descriptions, categories, locations, budgets, attachments, and completion proofs you upload.</li>
+            <li><strong>Messages:</strong> All direct messages between task posters and claimers are stored in our database to ensure accountability and dispute resolution.</li>
+            <li><strong>Transaction Records:</strong> We store records of task postings, claims, completions, and payment confirmations exchanged via messages.</li>
+            <li><strong>Location Data:</strong> When you use Live Pulse or post/claim tasks, your approximate location may be stored.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 class="text-lg font-semibold text-ink mb-3">2. How We Use Your Data</h2>
+          <ul class="space-y-1.5 list-disc pl-5">
+            <li>To facilitate task matching between posters and claimers</li>
+            <li>To store messages for accountability and dispute resolution</li>
+            <li>To maintain transaction history of completed tasks</li>
+            <li>To verify task completion through uploaded proofs</li>
+            <li>To improve our platform and user experience</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 class="text-lg font-semibold text-ink mb-3">3. Data Sharing — We Do NOT Share</h2>
+          <div class="p-4 bg-canvas-soft rounded-lg border border-hairline">
+            <p class="font-medium text-ink">We do not share, sell, or transfer your personal data to any third parties.</p>
+            <p class="mt-2">Your messages, task data, transaction records, and personal information remain strictly within our platform. No third-party analytics, advertising networks, or data brokers have access to your data.</p>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="text-lg font-semibold text-ink mb-3">4. Payment Information</h2>
+          <div class="p-4 bg-warning-soft rounded-lg border border-warning/20">
+            <p class="font-medium text-warning-deep">Important: Direct Payment Model</p>
+            <p class="mt-2 text-body">Currently, payments are made directly between the task poster and the claimer. StrangerHelp does not process, hold, or intermediate any payments. We do not store your UPI IDs, bank details, or payment credentials.</p>
+            <p class="mt-2 text-body">The Karma Wallet (escrow-based payment system) is coming soon and will provide secure payment intermediation.</p>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="text-lg font-semibold text-ink mb-3">5. Data Storage & Security</h2>
+          <ul class="space-y-1.5 list-disc pl-5">
+            <li>Passwords are encrypted using bcrypt hashing</li>
+            <li>All data is stored in our secure MongoDB database</li>
+            <li>Session cookies are httpOnly and expire after 7 days</li>
+            <li>Uploaded files are stored on our servers and not shared externally</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 class="text-lg font-semibold text-ink mb-3">6. Your Rights</h2>
+          <p>You can:</p>
+          <ul class="mt-2 space-y-1.5 list-disc pl-5">
+            <li>Access and update your profile data at any time</li>
+            <li>Delete your account (Settings → Danger Zone)</li>
+            <li>Request a copy of your stored data by contacting us</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 class="text-lg font-semibold text-ink mb-3">7. Contact</h2>
+          <p>For privacy concerns, email us at <a href="mailto:privacy@strangerhelp.com" class="text-link">privacy@strangerhelp.com</a></p>
+        </section>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Layout>

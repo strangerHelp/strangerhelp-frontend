@@ -1,0 +1,76 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+
+const leaders = [
+  { rank: 1, name: "Ravi Patel", city: "Delhi", score: 2450, tasks: 187, badge: "Information Guru" },
+  { rank: 2, name: "Sneha Iyer", city: "Mumbai", score: 2180, tasks: 156, badge: "Verified Helper" },
+  { rank: 3, name: "Mohit Singh", city: "Bangalore", score: 1920, tasks: 132, badge: "100 Tasks" },
+  { rank: 4, name: "Priya Sharma", city: "Delhi", score: 1780, tasks: 121, badge: "Verified Helper" },
+  { rank: 5, name: "Karthik R.", city: "Chennai", score: 1640, tasks: 108, badge: "Trusted Source" },
+  { rank: 6, name: "Ananya Das", city: "Kolkata", score: 1520, tasks: 95, badge: "Verified Helper" },
+  { rank: 7, name: "Vikram Joshi", city: "Pune", score: 1410, tasks: 89, badge: "Rising Star" },
+  { rank: 8, name: "Deepa Nair", city: "Hyderabad", score: 1350, tasks: 82, badge: "Information Guru" },
+  { rank: 9, name: "Arun Kumar", city: "Jaipur", score: 1280, tasks: 76, badge: "Verified Helper" },
+  { rank: 10, name: "Meera Reddy", city: "Bangalore", score: 1190, tasks: 71, badge: "Rising Star" },
+];
+---
+
+<Layout title="Leaderboard — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-10">
+        <p class="font-mono text-xs text-mute uppercase tracking-wide mb-3">Community</p>
+        <h1 class="text-2xl md:text-[32px] font-semibold text-ink tracking-[-1.28px]">Top Helpers</h1>
+        <p class="mt-2 text-sm text-body">The most trusted and active helpers across India.</p>
+      </div>
+
+      <!-- Top 3 podium -->
+      <div class="grid grid-cols-3 gap-3 mb-8">
+        {leaders.slice(0, 3).map((l) => (
+          <div class={`p-5 rounded-lg text-center border ${l.rank === 1 ? "bg-primary text-on-primary border-primary" : "bg-canvas border-hairline"}`}>
+            <div class={`text-2xl font-mono font-semibold mb-2 ${l.rank === 1 ? "text-warning" : "text-hairline-strong"}`}>#{l.rank}</div>
+            <p class={`text-sm font-semibold ${l.rank === 1 ? "" : "text-ink"}`}>{l.name}</p>
+            <p class={`text-xs mt-0.5 ${l.rank === 1 ? "opacity-70" : "text-mute"}`}>{l.city}</p>
+            <p class={`text-lg font-semibold mt-2 ${l.rank === 1 ? "" : "text-ink"}`}>{l.score.toLocaleString()}</p>
+            <p class={`text-xs ${l.rank === 1 ? "opacity-60" : "text-mute"}`}>trust score</p>
+          </div>
+        ))}
+      </div>
+
+      <!-- Full table -->
+      <div class="bg-canvas rounded-lg border border-hairline overflow-hidden">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-hairline bg-canvas-soft">
+              <th class="text-left px-4 py-3 text-xs font-mono uppercase text-mute">#</th>
+              <th class="text-left px-4 py-3 text-xs font-mono uppercase text-mute">Helper</th>
+              <th class="text-left px-4 py-3 text-xs font-mono uppercase text-mute hidden sm:table-cell">Badge</th>
+              <th class="text-right px-4 py-3 text-xs font-mono uppercase text-mute">Score</th>
+              <th class="text-right px-4 py-3 text-xs font-mono uppercase text-mute hidden sm:table-cell">Tasks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {leaders.map((l) => (
+              <tr class="border-b border-hairline last:border-0 hover:bg-canvas-soft transition-colors">
+                <td class="px-4 py-3 text-sm font-mono text-mute">{l.rank}</td>
+                <td class="px-4 py-3">
+                  <p class="text-sm font-medium text-ink">{l.name}</p>
+                  <p class="text-xs text-mute">{l.city}</p>
+                </td>
+                <td class="px-4 py-3 hidden sm:table-cell">
+                  <span class="px-2 py-0.5 text-xs font-medium bg-canvas-soft-2 text-body rounded-full">{l.badge}</span>
+                </td>
+                <td class="px-4 py-3 text-right text-sm font-semibold text-ink">{l.score.toLocaleString()}</td>
+                <td class="px-4 py-3 text-right text-sm text-body hidden sm:table-cell">{l.tasks}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Layout>

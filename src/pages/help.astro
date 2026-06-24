@@ -1,0 +1,126 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+---
+
+<Layout title="Help Center — StrangerHelp" description="Get help with StrangerHelp. Learn how to post tasks, claim tasks, use messaging, manage your account, and more.">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-12 md:px-6">
+    <div class="max-w-2xl mx-auto">
+      <p class="font-mono text-xs text-mute uppercase tracking-wide mb-2">Support</p>
+      <h1 class="text-3xl font-semibold text-ink tracking-[-1.28px]">Help Center</h1>
+      <p class="mt-2 text-sm text-body">Find answers to common questions or reach out to our team.</p>
+
+      <!-- Quick Links -->
+      <div class="mt-8 grid grid-cols-2 gap-3">
+        <a href="/how-it-works" class="p-4 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong transition-colors text-center">
+          <p class="text-sm font-medium text-ink">How It Works</p>
+          <p class="text-xs text-mute mt-1">Step-by-step guide</p>
+        </a>
+        <a href="/report" class="p-4 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong transition-colors text-center">
+          <p class="text-sm font-medium text-ink">Report Issue</p>
+          <p class="text-xs text-mute mt-1">Submit a complaint</p>
+        </a>
+        <a href="/contact" class="p-4 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong transition-colors text-center">
+          <p class="text-sm font-medium text-ink">Contact Us</p>
+          <p class="text-xs text-mute mt-1">Email & socials</p>
+        </a>
+        <a href="/trust-safety" class="p-4 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong transition-colors text-center">
+          <p class="text-sm font-medium text-ink">Trust & Safety</p>
+          <p class="text-xs text-mute mt-1">Staying safe on StrangerHelp</p>
+        </a>
+      </div>
+
+      <!-- FAQ Topics -->
+      <div class="mt-12 space-y-6">
+        <div>
+          <h2 class="text-lg font-semibold text-ink mb-4">Getting Started</h2>
+          <div class="space-y-2">
+            {[
+              { q: "How do I create an account?", a: "Go to /register, enter your name, email, password, and city. You'll be logged in immediately." },
+              { q: "How do I post a task?", a: "Click '+ Post a Task' from the dashboard or tasks page. Fill in the title, category, budget, location, and description. You can also attach photos." },
+              { q: "How do I claim a task?", a: "Browse available tasks at /tasks. Click on any task and press 'Claim This Task'. You'll be connected with the poster via chat." },
+            ].map(faq => (
+              <details class="p-4 bg-canvas rounded-lg border border-hairline group">
+                <summary class="text-sm font-medium text-ink cursor-pointer flex items-center justify-between">
+                  {faq.q}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 transition-transform group-open:rotate-180"><path d="M6 9l6 6 6-6"/></svg>
+                </summary>
+                <p class="mt-2 text-sm text-body">{faq.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h2 class="text-lg font-semibold text-ink mb-4">Payments & Billing</h2>
+          <div class="space-y-2">
+            {[
+              { q: "How do payments work?", a: "Currently, payments are made directly between the task poster and claimer (via UPI, bank transfer, PayPal, etc.). Verify payment terms in the chat before starting work." },
+              { q: "What is Karma Wallet?", a: "Karma Wallet is our upcoming escrow payment system. It will hold payments securely and release them only after task completion is verified. Coming soon." },
+              { q: "What if the poster doesn't pay?", a: "Use the Report page to file a complaint. We store all messages as evidence. Repeat offenders get banned." },
+            ].map(faq => (
+              <details class="p-4 bg-canvas rounded-lg border border-hairline group">
+                <summary class="text-sm font-medium text-ink cursor-pointer flex items-center justify-between">
+                  {faq.q}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 transition-transform group-open:rotate-180"><path d="M6 9l6 6 6-6"/></svg>
+                </summary>
+                <p class="mt-2 text-sm text-body">{faq.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h2 class="text-lg font-semibold text-ink mb-4">Account & Profile</h2>
+          <div class="space-y-2">
+            {[
+              { q: "How do I edit my profile?", a: "Go to Dashboard → Profile. You can update your name, photo, city, area, phone, and bio." },
+              { q: "How do I change my password?", a: "Go to Dashboard → Settings. Enter your current password and new password." },
+              { q: "How do I delete my account?", a: "Go to Dashboard → Settings → Danger Zone. Click 'Delete My Account'. This action is permanent." },
+            ].map(faq => (
+              <details class="p-4 bg-canvas rounded-lg border border-hairline group">
+                <summary class="text-sm font-medium text-ink cursor-pointer flex items-center justify-between">
+                  {faq.q}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 transition-transform group-open:rotate-180"><path d="M6 9l6 6 6-6"/></svg>
+                </summary>
+                <p class="mt-2 text-sm text-body">{faq.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h2 class="text-lg font-semibold text-ink mb-4">Safety & Reporting</h2>
+          <div class="space-y-2">
+            {[
+              { q: "How do I report a user?", a: "Go to /report and select 'A user' as the type. Describe the issue and submit. Our team reviews all reports within 48 hours." },
+              { q: "Are messages private?", a: "Messages are stored securely and only visible to participants. They may be reviewed by our team only in case of reported disputes." },
+              { q: "What happens to banned users?", a: "Banned users cannot log in or access any features. They can appeal via email at support@strangerhelp.com." },
+            ].map(faq => (
+              <details class="p-4 bg-canvas rounded-lg border border-hairline group">
+                <summary class="text-sm font-medium text-ink cursor-pointer flex items-center justify-between">
+                  {faq.q}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 transition-transform group-open:rotate-180"><path d="M6 9l6 6 6-6"/></svg>
+                </summary>
+                <p class="mt-2 text-sm text-body">{faq.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <!-- Still need help -->
+      <div class="mt-12 p-6 bg-canvas-soft rounded-xl border border-hairline text-center">
+        <h2 class="text-lg font-semibold text-ink">Still need help?</h2>
+        <p class="mt-2 text-sm text-body">Reach out to us directly — we're happy to assist.</p>
+        <div class="mt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <span class="text-sm text-body">helpofstranger@gmail.com · support@strangerhelp.com</span>
+          <a href="https://x.com/strangerhelp07" target="_blank" rel="noopener" class="inline-flex h-10 items-center px-5 text-sm font-medium text-ink border border-hairline rounded-full hover:border-hairline-strong transition-colors">Message on X</a>
+        </div>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Layout>

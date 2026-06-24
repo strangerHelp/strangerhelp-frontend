@@ -1,0 +1,114 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+---
+
+<Layout title="Ask a Question — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="max-w-lg mx-auto">
+      <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Ask your community.</h1>
+      <p class="mt-2 text-sm text-body">Get real-time answers from people who are there right now.</p>
+
+      <form class="mt-8 space-y-5">
+        <div>
+          <label for="question" class="block text-sm font-medium text-ink mb-1.5">Your Question</label>
+          <textarea
+            id="question"
+            name="question"
+            rows="3"
+            required
+            placeholder="e.g., Is the passport office at Nehru Place open today?"
+            class="w-full px-3 py-2.5 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute resize-none"
+          ></textarea>
+        </div>
+
+        <div>
+          <label for="category" class="block text-sm font-medium text-ink mb-1.5">Category</label>
+          <select id="category" name="category" required class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors">
+            <option value="">Select category</option>
+            <option>Govt. Offices</option>
+            <option>Traffic</option>
+            <option>Weather</option>
+            <option>Schools</option>
+            <option>Hospitals</option>
+            <option>Emergency</option>
+            <option>General</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="location" class="block text-sm font-medium text-ink mb-1.5">Location / Area</label>
+          <input
+            type="text"
+            id="location"
+            name="location"
+            required
+            placeholder="e.g., Nehru Place, South Delhi"
+            class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute"
+          />
+        </div>
+
+        <!-- Anonymous toggle -->
+        <div class="flex items-center justify-between p-4 bg-canvas-soft rounded-md border border-hairline">
+          <div>
+            <p class="text-sm font-medium text-ink">Ask anonymously</p>
+            <p class="text-xs text-mute mt-0.5">Only your area will be shown.</p>
+          </div>
+          <button type="button" class="relative w-10 h-6 bg-primary rounded-full transition-colors" aria-pressed="true" id="anon-toggle">
+            <span class="absolute top-1 left-1 w-4 h-4 bg-canvas rounded-full shadow transition-transform translate-x-4"></span>
+          </button>
+        </div>
+
+        <button
+          type="submit"
+          class="w-full h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity"
+        >
+          Post Question
+        </button>
+      </form>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  // Auth check
+  fetch('/api/auth/me').then(r => { if (!r.ok) window.location.href = '/login?redirect=/ask/new'; });
+
+  const toggle = document.getElementById("anon-toggle");
+  toggle?.addEventListener("click", () => {
+    const pressed = toggle.getAttribute("aria-pressed") === "true";
+    toggle.setAttribute("aria-pressed", String(!pressed));
+    toggle.classList.toggle("bg-primary");
+    toggle.classList.toggle("bg-hairline");
+    const dot = toggle.querySelector("span");
+    dot?.classList.toggle("translate-x-4");
+  });
+
+  document.querySelector('form')!.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = (document.getElementById('question') as HTMLTextAreaElement).value;
+    const category = (document.getElementById('category') as HTMLSelectElement).value;
+    const location = (document.getElementById('location') as HTMLInputElement).value;
+    const anonymous = document.getElementById('anon-toggle')?.getAttribute('aria-pressed') === 'true';
+
+    if (!text || !category || !location) {
+      alert('Please fill all fields');
+      return;
+    }
+
+    const res = await fetch('/api/questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, category, location, anonymous }),
+    });
+
+    if (res.ok) {
+      const { id } = await res.json();
+      window.location.href = `/ask/${id}`;
+    } else {
+      const d = await res.json();
+      alert(d.error || 'Failed to post question');
+    }
+  });
+</script>

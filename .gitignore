@@ -16,9 +16,19 @@ pnpm-debug.log*
 # environment variables
 .env
 .env.production
+.dev.vars
 
 # macOS-specific files
 .DS_Store
 
 # jetbrains setting folder
 .idea/
+
+# wrangler local state
+.wrangler/
+
+# uploads (user-generated content)
+public/uploads/
+
+# editor
+.vscode/

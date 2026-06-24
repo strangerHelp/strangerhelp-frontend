@@ -1,0 +1,60 @@
+---
+import AccountLayout from "../../layouts/AccountLayout.astro";
+---
+
+<AccountLayout title="Settings — StrangerHelp">
+  <div class="max-w-lg">
+    <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Settings</h1>
+    <p class="mt-1 text-sm text-body">Manage your account preferences.</p>
+
+    <!-- Change Password -->
+    <section class="mt-8">
+      <h2 class="text-sm font-semibold text-ink mb-4">Change Password</h2>
+      <form class="space-y-4 p-5 bg-canvas rounded-lg border border-hairline">
+        <div>
+          <label for="current" class="block text-sm font-medium text-ink mb-1.5">Current Password</label>
+          <input type="password" id="current" name="current" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors" />
+        </div>
+        <div>
+          <label for="new-pass" class="block text-sm font-medium text-ink mb-1.5">New Password</label>
+          <input type="password" id="new-pass" name="new-pass" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors" />
+        </div>
+        <button type="submit" class="h-9 px-4 text-sm font-medium text-on-primary bg-primary rounded-md hover:opacity-90 transition-opacity">Update Password</button>
+      </form>
+    </section>
+
+    <!-- Notifications -->
+    <section class="mt-8">
+      <h2 class="text-sm font-semibold text-ink mb-4">Notifications</h2>
+      <div class="space-y-3 p-5 bg-canvas rounded-lg border border-hairline">
+        {[
+          { id: "email-notifs", label: "Email notifications", desc: "Task updates and messages", checked: true },
+          { id: "whatsapp", label: "WhatsApp alerts", desc: "Instant task claim notifications", checked: false },
+          { id: "marketing", label: "Marketing emails", desc: "Tips, features, and offers", checked: false },
+        ].map((item) => (
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-ink">{item.label}</p>
+              <p class="text-xs text-mute">{item.desc}</p>
+            </div>
+            <button type="button" class={`relative w-10 h-6 rounded-full transition-colors ${item.checked ? "bg-primary" : "bg-hairline"}`} aria-pressed={String(item.checked)}>
+              <span class={`absolute top-1 left-1 w-4 h-4 bg-canvas rounded-full shadow transition-transform ${item.checked ? "translate-x-4" : ""}`}></span>
+            </button>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Danger Zone -->
+    <section class="mt-8">
+      <h2 class="text-sm font-semibold text-error mb-4">Danger Zone</h2>
+      <div class="p-5 bg-canvas rounded-lg border border-error/20">
+        <p class="text-sm text-ink font-medium">Delete Account</p>
+        <p class="text-xs text-body mt-1">Permanently remove your account and all associated data. This action cannot be undone.</p>
+        <button type="button" class="mt-4 h-9 px-4 text-sm font-medium text-error border border-error/30 rounded-md hover:bg-error-soft transition-colors">
+          Delete My Account
+        </button>
+      </div>
+    </section>
+  </div>
+</AccountLayout>

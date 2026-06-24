@@ -1,0 +1,78 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+---
+
+<Layout title="How It Works — StrangerHelp">
+  <Navbar />
+  <main>
+    <!-- Hero -->
+    <section class="bg-canvas border-b border-hairline">
+      <div class="mx-auto max-w-[1400px] px-4 py-20 md:px-6 md:py-28 text-center">
+        <p class="font-mono text-xs text-mute uppercase tracking-wide mb-3">How it works</p>
+        <h1 class="text-3xl md:text-[48px] font-semibold leading-tight md:leading-[48px] tracking-[-2.4px] text-ink max-w-2xl mx-auto">
+          Simple. Safe. Fast.
+        </h1>
+        <p class="mt-5 text-lg text-body max-w-xl mx-auto">
+          Whether you need a task done or want to earn by helping others, here's how StrangerHelp works.
+        </p>
+      </div>
+    </section>
+
+    <!-- For Task Posters -->
+    <section class="border-b border-hairline bg-canvas-soft">
+      <div class="mx-auto max-w-[1400px] px-4 py-20 md:px-6 md:py-28">
+        <h2 class="text-xl font-semibold text-ink tracking-tight mb-12">For Task Posters</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {[
+            { step: "01", title: "Post your task", desc: "Describe what you need, set location and budget. Takes 30 seconds." },
+            { step: "02", title: "Helper claims it", desc: "A verified helper near the location sees and claims your task." },
+            { step: "03", title: "Coordinate via chat", desc: "Real-time messaging to share details, documents, or instructions." },
+            { step: "04", title: "Verify & pay", desc: "Helper submits photo proof. You verify and release escrow payment." },
+          ].map((item) => (
+            <div>
+              <div class="text-2xl font-mono font-semibold text-hairline-strong mb-3">{item.step}</div>
+              <h3 class="text-base font-semibold text-ink">{item.title}</h3>
+              <p class="mt-2 text-sm text-body leading-relaxed">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- For Helpers -->
+    <section class="border-b border-hairline bg-canvas">
+      <div class="mx-auto max-w-[1400px] px-4 py-20 md:px-6 md:py-28">
+        <h2 class="text-xl font-semibold text-ink tracking-tight mb-12">For Helpers</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {[
+            { step: "01", title: "Browse tasks nearby", desc: "See open tasks in your area. Filter by category and budget." },
+            { step: "02", title: "Claim a task", desc: "Tap to claim. The poster is notified and chat opens instantly." },
+            { step: "03", title: "Complete the task", desc: "Do the task, take a geotagged photo as proof of completion." },
+            { step: "04", title: "Get paid instantly", desc: "Payment released from escrow to your wallet. Build your Trust Score." },
+          ].map((item) => (
+            <div>
+              <div class="text-2xl font-mono font-semibold text-hairline-strong mb-3">{item.step}</div>
+              <h3 class="text-base font-semibold text-ink">{item.title}</h3>
+              <p class="mt-2 text-sm text-body leading-relaxed">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="bg-primary text-on-primary">
+      <div class="mx-auto max-w-[1400px] px-4 py-20 md:px-6 text-center">
+        <h2 class="text-2xl font-semibold tracking-[-0.96px]">Ready to start?</h2>
+        <p class="mt-3 text-sm opacity-70">Join thousands in your city helping each other every day.</p>
+        <div class="mt-6 flex items-center justify-center gap-3">
+          <a href="/register" class="inline-flex h-10 items-center px-5 text-sm font-medium text-ink bg-canvas rounded-full">Create Account</a>
+          <a href="/tasks" class="inline-flex h-10 items-center px-5 text-sm font-medium border border-on-primary/20 rounded-full hover:border-on-primary/40 transition-colors">Browse Tasks</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Layout>

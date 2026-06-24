@@ -1,0 +1,103 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+
+const categories = ["All", "Simple Survey", "Task", "Document Submission", "Photo Proof", "Parcel Pickup", "Queue Standing", "Verification", "Receipt Collection", "Other"];
+---
+
+<Layout title="Browse Tasks — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+      <div>
+        <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Available Tasks</h1>
+        <p class="mt-1 text-sm text-body">Tasks waiting to be claimed.</p>
+      </div>
+      <a href="/tasks/new" class="inline-flex h-10 items-center px-4 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">+ Post a Task</a>
+    </div>
+
+    <!-- Filters -->
+    <div class="flex gap-2 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0">
+      {categories.map((cat, i) => (
+        <button data-cat={cat} class={`cat-btn shrink-0 px-4 py-2 text-sm rounded-full border transition-colors ${i === 0 ? "bg-primary text-on-primary border-primary active" : "bg-canvas text-body border-hairline hover:border-hairline-strong"}`}>
+          {cat}
+        </button>
+      ))}
+    </div>
+
+    <!-- Task Grid -->
+    <div id="tasks-grid" class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <p class="col-span-full text-center text-sm text-mute py-12">Loading tasks...</p>
+    </div>
+
+    <div id="empty-state" class="hidden text-center py-16">
+      <p class="text-sm text-mute">No tasks found. Be the first to post one!</p>
+      <a href="/tasks/new" class="mt-4 inline-flex h-9 items-center px-4 text-sm font-medium text-on-primary bg-primary rounded-full">Post a Task</a>
+    </div>
+  </main>
+  <Footer />
+</Layout>
+
+<script>
+  let activeCategory = 'All';
+
+  async function loadTasks(category?: string) {
+    const params = new URLSearchParams();
+    if (category && category !== 'All') params.set('category', category);
+    
+    const res = await fetch(`/api/tasks?${params}`);
+    const tasks = await res.json();
+    const grid = document.getElementById('tasks-grid')!;
+    const empty = document.getElementById('empty-state')!;
+
+    if (tasks.length === 0) {
+      grid.innerHTML = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+
+    empty.classList.add('hidden');
+    grid.innerHTML = tasks.map((t: any) => {
+      const time = (window as any).timeAgoIST(t.createdAt);
+      return `<a href="/tasks/${t._id}" class="group p-5 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong shadow-[0px_1px_1px_#00000005,0px_2px_2px_#0000000a] transition-colors">
+        <div class="flex items-center justify-between mb-3">
+          <span class="px-2 py-0.5 text-xs font-medium text-body bg-canvas-soft-2 rounded-full">${t.category}</span>
+          <span class="text-base font-semibold text-ink">₹${t.budget}</span>
+        </div>
+        <h3 class="text-sm font-semibold text-ink group-hover:text-link transition-colors leading-snug">${escapeHtml(t.title)}</h3>
+        <div class="mt-3 flex items-center gap-3 text-xs text-mute">
+          <span class="flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            ${escapeHtml(t.location)}
+          </span>
+          <span>${time}</span>
+        </div>
+        <div class="mt-3 pt-3 border-t border-hairline flex items-center justify-between">
+          <span class="text-xs text-body">${t.anonymous ? 'Anonymous' : escapeHtml(t.posterName || 'User')}</span>
+          <span class="px-2 py-0.5 text-xs rounded-full ${t.status === 'open' ? 'bg-cyan-soft text-cyan-deep' : t.status === 'claimed' ? 'bg-warning-soft text-warning-deep' : 'bg-canvas-soft-2 text-mute'}">${t.status}</span>
+        </div>
+      </a>`;
+    }).join('');
+  }
+
+  function escapeHtml(s: string) {
+    return s?.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') || '';
+  }
+
+  // Category filter
+  document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cat-btn').forEach(b => {
+        b.classList.remove('bg-primary', 'text-on-primary', 'border-primary', 'active');
+        b.classList.add('bg-canvas', 'text-body', 'border-hairline');
+      });
+      btn.classList.add('bg-primary', 'text-on-primary', 'border-primary', 'active');
+      btn.classList.remove('bg-canvas', 'text-body', 'border-hairline');
+      activeCategory = (btn as HTMLElement).dataset.cat || 'All';
+      loadTasks(activeCategory);
+    });
+  });
+
+  loadTasks();
+</script>

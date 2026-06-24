@@ -1,0 +1,70 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+---
+
+<Layout title="About — StrangerHelp">
+  <Navbar />
+  <main>
+    <section class="bg-canvas border-b border-hairline">
+      <div class="mx-auto max-w-[1400px] px-4 py-20 md:px-6 md:py-28 text-center">
+        <p class="font-mono text-xs text-mute uppercase tracking-wide mb-3">About</p>
+        <h1 class="text-3xl md:text-[48px] font-semibold leading-tight md:leading-[48px] tracking-[-2.4px] text-ink max-w-3xl mx-auto">
+          Turning strangers into neighbors.
+        </h1>
+        <p class="mt-5 text-lg text-body max-w-xl mx-auto">
+          StrangerHelp is building a world where anyone can get anything done, anywhere — powered by the kindness and initiative of everyday people.
+        </p>
+      </div>
+    </section>
+
+    <section class="bg-canvas-soft border-b border-hairline">
+      <div class="mx-auto max-w-3xl px-4 py-20 md:px-6 md:py-28 space-y-8">
+        <div>
+          <h2 class="text-xl font-semibold text-ink tracking-tight">The Problem</h2>
+          <p class="mt-3 text-sm text-body leading-relaxed">
+            In India, millions of tasks require physical presence — submitting documents, standing in queues, verifying addresses, picking up parcels. When you're not in the right location, these simple tasks become impossible without expensive courier services or unreliable contacts.
+          </p>
+        </div>
+        <div>
+          <h2 class="text-xl font-semibold text-ink tracking-tight">Our Solution</h2>
+          <p class="mt-3 text-sm text-body leading-relaxed">
+            StrangerHelp connects people who need tasks done with verified volunteers who are already nearby. With escrow payments, photo proof verification, and real-time chat, we've built a trust-first platform where strangers can safely help each other.
+          </p>
+        </div>
+        <div>
+          <h2 class="text-xl font-semibold text-ink tracking-tight">Beyond Tasks</h2>
+          <p class="mt-3 text-sm text-body leading-relaxed">
+            We're also building a crowdsourced knowledge hub — think of it as a real-time community wiki. Ask "Is the passport office open today?" and get verified answers from people who are physically there. No more calling offices that don't pick up.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="bg-primary text-on-primary">
+      <div class="mx-auto max-w-[1400px] px-4 py-16 md:px-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div>
+            <p class="text-3xl font-semibold tracking-tight">50+</p>
+            <p class="mt-1 text-sm opacity-60">Cities</p>
+          </div>
+          <div>
+            <p class="text-3xl font-semibold tracking-tight">12K+</p>
+            <p class="mt-1 text-sm opacity-60">Tasks Completed</p>
+          </div>
+          <div>
+            <p class="text-3xl font-semibold tracking-tight">8K+</p>
+            <p class="mt-1 text-sm opacity-60">Active Helpers</p>
+          </div>
+          <div>
+            <p class="text-3xl font-semibold tracking-tight">4.8</p>
+            <p class="mt-1 text-sm opacity-60">Avg. Rating</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Layout>

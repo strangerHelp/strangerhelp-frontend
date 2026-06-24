@@ -1,0 +1,145 @@
+---
+const navLinks = [
+  { href: "/tasks", label: "Tasks" },
+  { href: "/ask", label: "Ask" },
+  { href: "/pulse", label: "Live Pulse" },
+  { href: "/how-it-works", label: "How It Works" },
+];
+---
+
+<header class="sticky top-0 z-50 border-b border-hairline bg-canvas/80 backdrop-blur-md">
+  <nav class="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-4 md:px-6">
+    <a href="/" class="flex items-center gap-2 text-ink font-semibold text-base tracking-tight">
+      <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+        <rect width="32" height="32" rx="8" fill="#171717"/>
+        <circle cx="11" cy="12" r="3" fill="#50e3c2"/>
+        <circle cx="21" cy="12" r="3" fill="#00dfd8"/>
+        <path d="M14 18h4" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      StrangerHelp
+    </a>
+
+    <div class="hidden md:flex items-center gap-1">
+      {navLinks.map((link) => (
+        <a href={link.href} class="px-3 py-1.5 text-sm text-body rounded-full hover:text-ink hover:bg-canvas-soft-2 transition-colors">{link.label}</a>
+      ))}
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button id="theme-toggle" class="p-2 text-body hover:text-ink transition-colors" aria-label="Toggle dark mode">
+        <svg id="sun-icon" class="hidden w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg id="moon-icon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
+
+      <!-- Logged out state -->
+      <div id="auth-logged-out" class="flex items-center gap-2">
+        <a href="/login" class="hidden sm:inline-flex h-7 items-center px-3 text-sm font-medium text-ink rounded-md hover:bg-canvas-soft-2 transition-colors">Log In</a>
+        <a href="/register" class="inline-flex h-7 items-center px-3 text-sm font-medium text-on-primary bg-primary rounded-md hover:opacity-90 transition-opacity">Sign Up</a>
+      </div>
+
+      <!-- Logged in state -->
+      <div id="auth-logged-in" class="hidden flex items-center gap-2">
+        <a href="/dashboard" class="hidden sm:inline-flex h-7 items-center px-3 text-sm font-medium text-ink rounded-md hover:bg-canvas-soft-2 transition-colors">Dashboard</a>
+        <button id="notif-btn" class="relative p-2 text-body hover:text-ink transition-colors" aria-label="Notifications">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span id="notif-badge" class="hidden absolute -top-0.5 -right-0.5 w-4 h-4 text-[10px] font-bold text-on-primary bg-error rounded-full flex items-center justify-center">0</span>
+        </button>
+        <a href="/dashboard/profile" id="user-avatar-link" class="w-8 h-8 rounded-full bg-canvas-soft-2 flex items-center justify-center text-xs font-semibold text-body overflow-hidden border border-hairline">
+          <span id="nav-initials">?</span>
+        </a>
+      </div>
+
+      <!-- Notification dropdown -->
+      <div id="notif-dropdown" class="hidden absolute top-14 right-4 w-80 max-h-96 overflow-y-auto bg-canvas border border-hairline rounded-lg shadow-[0px_8px_16px_-4px_#0000000a] z-50">
+        <div class="flex items-center justify-between p-3 border-b border-hairline">
+          <span class="text-sm font-semibold text-ink">Notifications</span>
+          <button id="mark-all-read" class="text-xs text-link hover:text-link-deep">Mark all read</button>
+        </div>
+        <div id="notif-list" class="divide-y divide-hairline">
+          <p class="p-4 text-sm text-mute text-center">No notifications</p>
+        </div>
+      </div>
+
+      <button class="md:hidden ml-1 p-2 text-body hover:text-ink" aria-label="Open menu" id="mobile-menu-btn">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <div id="mobile-menu" class="hidden md:hidden border-t border-hairline bg-canvas px-4 py-4">
+    {navLinks.map((link) => (
+      <a href={link.href} class="block py-2 text-sm text-body hover:text-ink">{link.label}</a>
+    ))}
+    <div id="mobile-auth" class="mt-3 pt-3 border-t border-hairline flex gap-2">
+      <a href="/login" class="flex-1 text-center py-2 text-sm font-medium text-ink border border-hairline rounded-md">Log In</a>
+      <a href="/register" class="flex-1 text-center py-2 text-sm font-medium text-on-primary bg-primary rounded-md">Sign Up</a>
+    </div>
+  </div>
+</header>
+
+<script>
+  // Mobile menu
+  document.getElementById("mobile-menu-btn")?.addEventListener("click", () => document.getElementById("mobile-menu")?.classList.toggle("hidden"));
+
+  // Dark mode
+  const toggle = document.getElementById("theme-toggle");
+  const sun = document.getElementById("sun-icon");
+  const moon = document.getElementById("moon-icon");
+  function applyTheme(dark: boolean) {
+    document.documentElement.classList.toggle("dark", dark);
+    sun?.classList.toggle("hidden", !dark);
+    moon?.classList.toggle("hidden", dark);
+  }
+  const stored = localStorage.getItem("theme");
+  applyTheme(stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches));
+  toggle?.addEventListener("click", () => {
+    const isDark = document.documentElement.classList.toggle("dark");
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+    sun?.classList.toggle("hidden", !isDark);
+    moon?.classList.toggle("hidden", isDark);
+  });
+
+  // Auth state
+  fetch('/api/auth/me').then(async r => {
+    if (r.ok) {
+      const { user } = await r.json();
+      document.getElementById('auth-logged-out')!.classList.add('hidden');
+      document.getElementById('auth-logged-in')!.classList.remove('hidden');
+      document.getElementById('auth-logged-in')!.classList.add('flex');
+      document.getElementById('nav-initials')!.textContent = user.name?.slice(0, 2).toUpperCase() || '?';
+      if (user.avatar) {
+        document.getElementById('user-avatar-link')!.innerHTML = `<img src="${user.avatar}" class="w-full h-full object-cover" />`;
+      }
+      document.getElementById('mobile-auth')!.innerHTML = `<a href="/dashboard" class="flex-1 text-center py-2 text-sm font-medium text-ink border border-hairline rounded-md">Dashboard</a><a href="/chat" class="flex-1 text-center py-2 text-sm font-medium text-on-primary bg-primary rounded-md">Messages</a>`;
+      loadNotifications();
+    }
+  }).catch(() => {});
+
+  async function loadNotifications() {
+    try {
+      const res = await fetch('/api/notifications');
+      if (!res.ok) return;
+      const { notifications, unreadCount } = await res.json();
+      const badge = document.getElementById('notif-badge');
+      if (badge) {
+        if (unreadCount > 0) { badge.textContent = unreadCount > 9 ? '9+' : String(unreadCount); badge.classList.remove('hidden'); }
+        else { badge.classList.add('hidden'); }
+      }
+      const list = document.getElementById('notif-list');
+      if (list) {
+        list.innerHTML = notifications.length === 0
+          ? '<p class="p-4 text-sm text-mute text-center">No notifications yet</p>'
+          : notifications.slice(0, 10).map((n: any) => `<a href="${n.link || '#'}" class="block p-3 hover:bg-canvas-soft transition-colors ${n.read ? '' : 'bg-canvas-soft-2'}"><div class="flex justify-between items-start"><p class="text-sm font-medium text-ink">${n.title}</p><span class="text-[10px] text-mute shrink-0 ml-2">${(window as any).timeAgoIST(n.created_at)}</span></div><p class="text-xs text-body mt-0.5 truncate">${n.message}</p></a>`).join('');
+      }
+    } catch {}
+  }
+
+  document.getElementById('notif-btn')?.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('notif-dropdown')?.classList.toggle('hidden'); });
+  document.addEventListener('click', () => document.getElementById('notif-dropdown')?.classList.add('hidden'));
+  document.getElementById('notif-dropdown')?.addEventListener('click', (e) => e.stopPropagation());
+  document.getElementById('mark-all-read')?.addEventListener('click', async () => {
+    await fetch('/api/notifications', { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ all: true }) });
+    loadNotifications();
+  });
+  setInterval(loadNotifications, 30000);
+</script>

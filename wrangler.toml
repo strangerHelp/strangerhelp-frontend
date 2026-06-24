@@ -1,0 +1,11 @@
+name = "strangerhelp"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "strangerhelp-db"
+database_id = "a9db1970-174b-46fd-bb18-a2d3453e7c98"
+
+[observability]
+enabled = true

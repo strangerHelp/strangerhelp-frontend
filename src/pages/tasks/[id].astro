@@ -1,0 +1,307 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+---
+
+<Layout title="Task Detail — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="max-w-3xl mx-auto">
+      <nav class="flex items-center gap-2 text-sm text-mute mb-6">
+        <a href="/tasks" class="hover:text-ink transition-colors">Tasks</a>
+        <span>/</span>
+        <span class="text-body" id="breadcrumb-cat">Loading...</span>
+      </nav>
+
+      <div id="task-content">
+        <p class="text-sm text-mute py-12 text-center">Loading task...</p>
+      </div>
+
+      <div id="not-found" class="hidden text-center py-16">
+        <p class="text-lg font-semibold text-ink">Task not found</p>
+        <a href="/tasks" class="mt-4 inline-flex h-9 items-center px-4 text-sm font-medium text-link">← Back to tasks</a>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Layout>
+
+<script>
+  const taskId = window.location.pathname.split('/tasks/')[1];
+  let currentUser: any = null;
+  let task: any = null;
+
+  async function init() {
+    const authRes = await fetch('/api/auth/me');
+    if (authRes.ok) {
+      const d = await authRes.json();
+      currentUser = d.user;
+    }
+
+    const res = await fetch(`/api/tasks/${taskId}`);
+    if (!res.ok) {
+      document.getElementById('task-content')!.classList.add('hidden');
+      document.getElementById('not-found')!.classList.remove('hidden');
+      return;
+    }
+
+    task = await res.json();
+    render();
+  }
+
+  function render() {
+    document.getElementById('breadcrumb-cat')!.textContent = task.category;
+    const isOwner = currentUser && task.posterId === currentUser.id;
+    const isClaimer = currentUser && task.claimedBy === currentUser.id;
+    const time = (window as any).formatIST(task.createdAt);
+
+    let actionsHtml = '';
+    let messageBtn = '';
+
+    // Message button — available to any logged-in user who isn't the owner
+    if (currentUser && !isOwner) {
+      messageBtn = `<button id="message-btn" class="h-11 px-6 flex items-center justify-center text-sm font-medium text-ink border border-hairline rounded-full hover:bg-canvas-soft-2 transition-colors">Message Poster</button>`;
+    }
+    // Message button for owner when task is claimed
+    if (currentUser && isOwner && task.claimedBy) {
+      messageBtn = `<button id="message-btn" class="h-11 px-6 flex items-center justify-center text-sm font-medium text-ink border border-hairline rounded-full hover:bg-canvas-soft-2 transition-colors">Message Helper</button>`;
+    }
+
+    if (task.status === 'open' && currentUser && !isOwner) {
+      actionsHtml = `<button id="claim-btn" class="flex-1 h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">Claim This Task</button>${messageBtn}`;
+    } else if (task.status === 'open' && !currentUser) {
+      actionsHtml = `<a href="/login?redirect=/tasks/${taskId}" class="flex-1 h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full">Login to Claim</a>`;
+    } else if (task.status === 'claimed' && isClaimer) {
+      actionsHtml = `
+        <div class="w-full">
+          <p class="text-sm font-medium text-ink mb-2">Upload completion proof:</p>
+          <input type="file" id="proof-files" accept="image/*,.pdf" multiple class="text-sm text-body" />
+          <button id="complete-btn" class="mt-3 w-full h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">Submit Proof & Complete</button>
+          <div class="mt-3">${messageBtn}</div>
+        </div>`;
+    } else if (task.status === 'claimed' && isOwner) {
+      actionsHtml = `<p class="text-sm text-cyan-deep font-medium">✓ Claimed by ${escapeHtml(task.claimedByName || 'a helper')}</p>${messageBtn}`;
+    } else if (task.status === 'completed') {
+      actionsHtml = `<p class="text-sm text-mute font-medium">✓ Task completed</p>${messageBtn}`;
+    }
+
+    let attachmentsHtml = '';
+    if (task.attachments?.length > 0) {
+      attachmentsHtml = `<div class="mt-4"><p class="text-xs text-mute font-mono uppercase mb-2">Attachments</p><div class="flex gap-2 flex-wrap">${task.attachments.map((a: string, i: number) => {
+        const isImage = a.startsWith('data:image') || a.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+        return isImage
+          ? `<a href="${a}" target="_blank"><img src="${a}" class="w-24 h-24 object-cover rounded-md border border-hairline" /></a>`
+          : `<a href="${a}" target="_blank" class="inline-flex h-9 items-center px-3 text-xs font-medium text-link border border-hairline rounded-md hover:bg-canvas-soft-2">View File ${i + 1}</a>`;
+      }).join('')}</div></div>`;
+    }
+
+    let proofHtml = '';
+    if (task.completionProof?.length > 0) {
+      proofHtml = `<div class="mt-6 p-4 bg-cyan-soft/30 rounded-lg border border-cyan/20">
+        <p class="text-sm font-medium text-ink mb-2">Completion Proof</p>
+        <div class="flex gap-2 flex-wrap">${task.completionProof.map((p: string, i: number) => {
+          const isImage = p.startsWith('data:image') || p.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+          return isImage
+            ? `<a href="${p}" target="_blank" class="block"><img src="${p}" class="w-24 h-24 object-cover rounded-md border border-hairline" /></a>`
+            : `<a href="${p}" target="_blank" class="inline-flex h-9 items-center px-3 text-xs font-medium text-link border border-hairline rounded-md hover:bg-canvas-soft-2">View Proof ${i + 1}</a>`;
+        }).join('')}</div>
+      </div>`;
+    }
+
+    document.getElementById('task-content')!.innerHTML = `
+      <div class="p-6 md:p-8 bg-canvas rounded-lg border border-hairline shadow-[0px_2px_2px_#0000000a,0px_8px_16px_-4px_#0000000a]">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="px-2.5 py-0.5 text-xs font-medium bg-canvas-soft-2 text-body rounded-full">${escapeHtml(task.category)}</span>
+          <span class="px-2.5 py-0.5 text-xs font-medium rounded-full ${task.status === 'open' ? 'bg-cyan-soft text-cyan-deep' : task.status === 'claimed' ? 'bg-warning-soft text-warning-deep' : 'bg-canvas-soft-2 text-mute'}">${task.status.charAt(0).toUpperCase() + task.status.slice(1)}</span>
+        </div>
+        <h1 class="text-xl md:text-2xl font-semibold text-ink tracking-[-0.96px]">${escapeHtml(task.title)}</h1>
+        ${task.description ? `<p class="mt-4 text-sm text-body leading-relaxed">${escapeHtml(task.description)}</p>` : ''}
+        ${attachmentsHtml}
+        <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-mono uppercase">Budget</p><p class="mt-1 text-lg font-semibold text-ink">₹${task.budget}</p></div>
+          <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-mono uppercase">Deadline</p><p class="mt-1 text-sm font-medium text-ink">${escapeHtml(task.deadline || 'Today')}</p></div>
+          <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-mono uppercase">Location</p><p class="mt-1 text-sm font-medium text-ink">${escapeHtml(task.location)}</p></div>
+          <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-mono uppercase">Posted</p><p class="mt-1 text-sm font-medium text-ink">${time}</p></div>
+        </div>
+        <div class="mt-6 pt-6 border-t border-hairline flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-canvas-soft-2 flex items-center justify-center text-sm font-semibold text-body">${task.anonymous ? '?' : (task.posterName || 'U').slice(0, 2).toUpperCase()}</div>
+            <div>
+              <p class="text-sm font-medium text-ink">${task.anonymous ? 'Anonymous' : escapeHtml(task.posterName || 'User')}</p>
+              <p class="text-xs text-mute">${escapeHtml(task.city || '')}</p>
+            </div>
+          </div>
+        </div>
+        <div class="mt-6 pt-6 border-t border-hairline flex flex-col sm:flex-row gap-3">
+          ${actionsHtml}
+        </div>
+        ${proofHtml}
+      </div>
+      <div class="mt-4 p-4 bg-warning-soft rounded-lg border border-warning/20 flex items-start gap-3">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-warning-deep shrink-0 mt-0.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div>
+          <p class="text-sm font-medium text-ink">Direct Payment — Escrow Coming Soon</p>
+          <p class="text-xs text-body mt-0.5">Payment of ₹${task.budget} is made directly by the poster to the claimer. Verify payment terms via messages before starting. <a href="/refund" class="text-link">Learn more</a></p>
+        </div>
+      </div>`;
+
+    // Add review section for completed tasks
+    if (task.status === 'completed' && currentUser && (isOwner || isClaimer)) {
+      const revieweeId = isOwner ? task.claimedBy : task.posterId;
+      const revieweeName = isOwner ? task.claimedByName : task.posterName;
+      document.getElementById('task-content')!.innerHTML += `
+      <div id="review-section" class="mt-4 p-5 bg-canvas rounded-lg border border-hairline">
+        <h3 class="text-sm font-semibold text-ink mb-3">Rate ${escapeHtml(revieweeName || 'the other party')}</h3>
+        <div id="existing-review"></div>
+        <div id="review-form-container">
+          <div class="flex gap-1 mb-3" id="star-rating">
+            ${[1,2,3,4,5].map(i => `<button type="button" data-star="${i}" class="star-btn text-2xl text-hairline hover:text-warning transition-colors">★</button>`).join('')}
+          </div>
+          <textarea id="review-comment" rows="2" placeholder="Leave a comment (optional)" class="w-full px-3 py-2 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink placeholder:text-mute resize-none mb-3"></textarea>
+          <button id="submit-review" data-reviewee="${revieweeId}" class="h-9 px-4 text-sm font-medium text-on-primary bg-primary rounded-md hover:opacity-90 transition-opacity">Submit Review</button>
+        </div>
+      </div>`;
+      initReviewUI();
+    }
+
+    // Attach event listeners
+    document.getElementById('claim-btn')?.addEventListener('click', claimTask);
+    document.getElementById('complete-btn')?.addEventListener('click', completeTask);
+    document.getElementById('message-btn')?.addEventListener('click', messageUser);
+  }
+
+  let selectedRating = 0;
+
+  function initReviewUI() {
+    // Check if already reviewed
+    fetch(`/api/reviews?taskId=${taskId}`).then(r => r.json()).then(data => {
+      const myReview = data.reviews?.find((r: any) => r.reviewer_id === currentUser.id);
+      if (myReview) {
+        document.getElementById('review-form-container')!.innerHTML = `<p class="text-sm text-body">You rated ${'★'.repeat(myReview.rating)}${'☆'.repeat(5 - myReview.rating)} ${myReview.comment ? `— "${myReview.comment}"` : ''}</p>`;
+      }
+    });
+
+    // Star rating interaction
+    document.querySelectorAll('.star-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedRating = parseInt((btn as HTMLElement).dataset.star || '0');
+        document.querySelectorAll('.star-btn').forEach((b, i) => {
+          (b as HTMLElement).classList.toggle('text-warning', i < selectedRating);
+          (b as HTMLElement).classList.toggle('text-hairline', i >= selectedRating);
+        });
+      });
+    });
+
+    // Submit review
+    document.getElementById('submit-review')?.addEventListener('click', async () => {
+      if (selectedRating === 0) { alert('Please select a rating'); return; }
+      const revieweeId = (document.getElementById('submit-review') as HTMLElement).dataset.reviewee;
+      const comment = (document.getElementById('review-comment') as HTMLTextAreaElement).value;
+
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId, revieweeId, rating: selectedRating, comment }),
+      });
+
+      if (res.ok) {
+        document.getElementById('review-form-container')!.innerHTML = `<p class="text-sm text-cyan-deep font-medium">✓ Review submitted! Thank you.</p>`;
+      } else {
+        const d = await res.json();
+        alert(d.error || 'Failed to submit review');
+      }
+    });
+  }
+
+  async function claimTask() {
+    // Show payment warning
+    const confirmed = confirm(
+      '⚠️ IMPORTANT: Payment Notice\n\n' +
+      '• The task poster will pay you directly (UPI, cash, etc.)\n' +
+      '• StrangerHelp does NOT hold or process payments\n' +
+      '• Verify payment terms with the poster via messages BEFORE starting work\n' +
+      '• Karma Wallet (escrow) is coming soon\n\n' +
+      'Do you want to proceed and claim this task?'
+    );
+    if (!confirmed) return;
+
+    const btn = document.getElementById('claim-btn')!;
+    btn.textContent = 'Claiming...';
+    const res = await fetch(`/api/tasks/${taskId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'claim' }),
+    });
+    if (res.ok) {
+      // Reload task
+      const r = await fetch(`/api/tasks/${taskId}`);
+      task = await r.json();
+      render();
+    } else {
+      const d = await res.json();
+      alert(d.error || 'Failed to claim');
+      btn.textContent = 'Claim This Task';
+    }
+  }
+
+  async function completeTask() {
+    const files = (document.getElementById('proof-files') as HTMLInputElement).files;
+    if (!files || files.length === 0) {
+      alert('Please upload at least one proof photo');
+      return;
+    }
+    const btn = document.getElementById('complete-btn')!;
+    btn.textContent = 'Submitting...';
+
+    const fd = new FormData();
+    fd.append('action', 'complete');
+    for (let i = 0; i < files.length; i++) fd.append('proof', files[i]);
+
+    const res = await fetch(`/api/tasks/${taskId}`, { method: 'PATCH', body: fd });
+    if (res.ok) {
+      const r = await fetch(`/api/tasks/${taskId}`);
+      task = await r.json();
+      render();
+    } else {
+      alert('Failed to complete task');
+      btn.textContent = 'Submit Proof & Complete';
+    }
+  }
+
+  async function messageUser() {
+    const btn = document.getElementById('message-btn')!;
+    btn.textContent = 'Opening chat...';
+    
+    // Determine who to message
+    const isOwner = task.posterId === currentUser.id;
+    const recipientId = isOwner ? task.claimedBy : task.posterId;
+    
+    if (!recipientId) {
+      alert('Cannot message: no recipient found');
+      btn.textContent = 'Message Poster';
+      return;
+    }
+
+    // Create or get existing conversation
+    const res = await fetch('/api/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipientId, taskId }),
+    });
+
+    if (res.ok) {
+      const conv = await res.json();
+      window.location.href = `/chat/${conv._id}`;
+    } else {
+      alert('Failed to start conversation');
+      btn.textContent = isOwner ? 'Message Helper' : 'Message Poster';
+    }
+  }
+
+  function escapeHtml(s: string) {
+    return s?.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') || '';
+  }
+
+  init();
+</script>

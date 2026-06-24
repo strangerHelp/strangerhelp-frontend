@@ -1,0 +1,125 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+---
+
+<Layout title="Report an Issue — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="max-w-lg mx-auto">
+      <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Report an Issue</h1>
+      <p class="mt-2 text-sm text-body">Let us know about any problems. We'll review and take action.</p>
+
+      <form id="report-form" class="mt-8 space-y-5">
+        <div id="success-msg" class="hidden p-3 text-sm text-cyan-deep bg-cyan-soft rounded-md">Report submitted. We'll review it shortly.</div>
+        <div id="error-msg" class="hidden p-3 text-sm text-error bg-error-soft rounded-md"></div>
+
+        <div>
+          <label for="type" class="block text-sm font-medium text-ink mb-1.5">What are you reporting?</label>
+          <select id="type" name="type" required class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors">
+            <option value="">Select type</option>
+            <option value="user">A user (harassment, fraud, fake account)</option>
+            <option value="task">A task (scam, misleading, inappropriate)</option>
+            <option value="payment">Payment issue (non-payment, dispute)</option>
+            <option value="bug">Bug or technical issue</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="reason" class="block text-sm font-medium text-ink mb-1.5">Reason</label>
+          <select id="reason" name="reason" required class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors">
+            <option value="">Select reason</option>
+            <option>Non-payment after task completion</option>
+            <option>Task not completed properly</option>
+            <option>Harassment or abusive messages</option>
+            <option>Fake or misleading task</option>
+            <option>Scam or fraud attempt</option>
+            <option>Inappropriate content</option>
+            <option>Account impersonation</option>
+            <option>Technical bug</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="description" class="block text-sm font-medium text-ink mb-1.5">Description</label>
+          <textarea id="description" name="description" rows="4" placeholder="Describe the issue in detail. Include task IDs, usernames, or any relevant info..." class="w-full px-3 py-2.5 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute resize-none"></textarea>
+        </div>
+
+        <button type="submit" id="submit-btn" class="w-full h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">
+          Submit Report
+        </button>
+      </form>
+
+      <!-- My Reports -->
+      <div class="mt-12">
+        <h2 class="text-sm font-semibold text-ink mb-4">Your Reports</h2>
+        <div id="my-reports" class="space-y-2">
+          <p class="text-sm text-mute">Loading...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Layout>
+
+<script>
+  // Check auth
+  fetch('/api/auth/me').then(r => { if (!r.ok) window.location.href = '/login?redirect=/report'; });
+
+  // Load my reports
+  async function loadReports() {
+    const res = await fetch('/api/reports');
+    if (!res.ok) return;
+    const reports = await res.json();
+    const container = document.getElementById('my-reports')!;
+    if (reports.length === 0) {
+      container.innerHTML = '<p class="text-sm text-mute">No reports submitted yet.</p>';
+      return;
+    }
+    container.innerHTML = reports.map((r: any) => {
+      const statusColors: Record<string, string> = { open: 'bg-warning-soft text-warning-deep', reviewing: 'bg-link-bg-soft text-link', resolved: 'bg-cyan-soft text-cyan-deep', dismissed: 'bg-canvas-soft-2 text-mute' };
+      return `<div class="p-4 bg-canvas rounded-lg border border-hairline">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-medium uppercase text-mute">${r.type}</span>
+          <span class="px-2 py-0.5 text-xs font-medium rounded-full ${statusColors[r.status] || ''}">${r.status}</span>
+        </div>
+        <p class="text-sm font-medium text-ink">${r.reason}</p>
+        ${r.description ? `<p class="text-xs text-body mt-1">${r.description.slice(0, 100)}</p>` : ''}
+        ${r.adminNote ? `<p class="mt-2 text-xs text-link bg-link-bg-soft p-2 rounded">Admin: ${r.adminNote}</p>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('report-form')!.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn')!;
+    btn.textContent = 'Submitting...';
+
+    const type = (document.getElementById('type') as HTMLSelectElement).value;
+    const reason = (document.getElementById('reason') as HTMLSelectElement).value;
+    const description = (document.getElementById('description') as HTMLTextAreaElement).value;
+
+    const res = await fetch('/api/reports', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, reason, description }),
+    });
+
+    if (res.ok) {
+      document.getElementById('success-msg')!.classList.remove('hidden');
+      document.getElementById('error-msg')!.classList.add('hidden');
+      (document.getElementById('report-form') as HTMLFormElement).reset();
+      loadReports();
+    } else {
+      const d = await res.json();
+      document.getElementById('error-msg')!.textContent = d.error || 'Failed to submit';
+      document.getElementById('error-msg')!.classList.remove('hidden');
+    }
+    btn.textContent = 'Submit Report';
+  });
+
+  loadReports();
+</script>

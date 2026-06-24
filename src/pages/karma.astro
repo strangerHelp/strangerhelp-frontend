@@ -1,0 +1,108 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+---
+
+<Layout title="Karma Wallet — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="max-w-lg mx-auto">
+      <!-- Balance Card -->
+      <div class="p-6 bg-primary rounded-xl text-on-primary relative overflow-hidden">
+        <div class="absolute top-3 right-3 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider bg-warning text-ink rounded-full">Coming Soon</div>
+        <p class="text-xs font-mono uppercase opacity-60">Karma Balance</p>
+        <p class="mt-2 text-4xl font-semibold tracking-tight">— <span class="text-lg opacity-60">karma</span></p>
+        <p class="mt-2 text-sm opacity-70">Karma Wallet is coming soon! Complete tasks and help the community to earn karma points.</p>
+        <div class="mt-5 flex gap-2">
+          <button disabled class="flex-1 h-9 text-xs font-medium text-ink/50 bg-canvas/50 rounded-md cursor-not-allowed">Withdraw ₹</button>
+          <button disabled class="flex-1 h-9 text-xs font-medium text-on-primary/50 border border-on-primary/20 rounded-md cursor-not-allowed">Donate</button>
+          <button disabled class="flex-1 h-9 text-xs font-medium text-on-primary/50 border border-on-primary/20 rounded-md cursor-not-allowed">Transfer</button>
+        </div>
+      </div>
+
+      <!-- Karma exchange rate -->
+      <div class="mt-4 p-3 bg-canvas-soft rounded-lg border border-hairline text-center text-xs text-body">
+        1 Karma = ₹1 • Minimum withdrawal: 100 Karma • Instant UPI transfer
+      </div>
+
+      <!-- Earn & Spend -->
+      <div class="mt-8 grid grid-cols-2 gap-4">
+        <div class="p-4 bg-canvas rounded-lg border border-hairline">
+          <h3 class="text-sm font-semibold text-ink mb-3">Earn Karma</h3>
+          <ul class="space-y-2 text-xs text-body">
+            <li class="flex justify-between"><span>Complete a task</span><span class="text-cyan-deep font-medium">+10-50</span></li>
+            <li class="flex justify-between"><span>Answer a question</span><span class="text-cyan-deep font-medium">+5</span></li>
+            <li class="flex justify-between"><span>Get upvoted</span><span class="text-cyan-deep font-medium">+2</span></li>
+            <li class="flex justify-between"><span>Verify identity</span><span class="text-cyan-deep font-medium">+100</span></li>
+            <li class="flex justify-between"><span>Emergency help</span><span class="text-cyan-deep font-medium">+75</span></li>
+          </ul>
+        </div>
+        <div class="p-4 bg-canvas rounded-lg border border-hairline">
+          <h3 class="text-sm font-semibold text-ink mb-3">Spend Karma</h3>
+          <ul class="space-y-2 text-xs text-body">
+            <li class="flex justify-between"><span>Withdraw as ₹</span><span class="text-ink font-medium">1:1</span></li>
+            <li class="flex justify-between"><span>Boost your task</span><span class="text-ink font-medium">-20</span></li>
+            <li class="flex justify-between"><span>Priority matching</span><span class="text-ink font-medium">-15</span></li>
+            <li class="flex justify-between"><span>Donate to cause</span><span class="text-ink font-medium">Any</span></li>
+            <li class="flex justify-between"><span>Gift to user</span><span class="text-ink font-medium">Any</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Donate Section -->
+      <div class="mt-8">
+        <h2 class="text-sm font-semibold text-ink mb-4">Donate Karma to a Cause</h2>
+        <div class="p-3 mb-4 bg-warning-soft rounded-md border border-warning/20 text-xs text-warning-deep font-medium text-center">🚀 Donation feature coming soon — causes shown below are examples</div>
+        <div class="space-y-3">
+          {[
+            { cause: "Education for underprivileged kids", org: "Teach India Foundation", raised: 12400, goal: 20000 },
+            { cause: "Clean water for rural villages", org: "WaterAid India", raised: 8200, goal: 15000 },
+            { cause: "Plant trees in Delhi NCR", org: "Green Delhi", raised: 5100, goal: 10000 },
+          ].map((c) => (
+            <div class="p-4 bg-canvas rounded-lg border border-hairline">
+              <div class="flex items-start justify-between">
+                <div>
+                  <p class="text-sm font-medium text-ink">{c.cause}</p>
+                  <p class="text-xs text-mute mt-0.5">{c.org}</p>
+                </div>
+                <button disabled class="h-7 px-3 text-xs font-medium text-on-primary/50 bg-primary/50 rounded-md cursor-not-allowed">Donate</button>
+              </div>
+              <div class="mt-3">
+                <div class="flex justify-between text-xs text-mute mb-1">
+                  <span>{c.raised.toLocaleString()} karma raised</span>
+                  <span>{Math.round(c.raised / c.goal * 100)}%</span>
+                </div>
+                <div class="h-1.5 bg-canvas-soft-2 rounded-full overflow-hidden">
+                  <div class="h-full bg-cyan-deep rounded-full" style={`width: ${c.raised / c.goal * 100}%`}></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Transaction history -->
+      <div class="mt-8">
+        <h2 class="text-sm font-semibold text-ink mb-4">Recent Activity</h2>
+        <div class="space-y-2">
+          {[
+            { desc: "Task completed: RTO submission", amount: "+35", time: "2 hr ago" },
+            { desc: "Question upvote received", amount: "+2", time: "5 hr ago" },
+            { desc: "Donated to Teach India", amount: "-50", time: "1 day ago" },
+            { desc: "Withdrew to UPI", amount: "-200", time: "3 days ago" },
+          ].map((t) => (
+            <div class="flex items-center justify-between p-3 bg-canvas rounded-lg border border-hairline">
+              <div>
+                <p class="text-sm text-ink">{t.desc}</p>
+                <p class="text-xs text-mute">{t.time}</p>
+              </div>
+              <span class={`text-sm font-semibold ${t.amount.startsWith('+') ? 'text-cyan-deep' : 'text-body'}`}>{t.amount}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Layout>

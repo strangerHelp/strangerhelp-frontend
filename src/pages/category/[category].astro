@@ -1,0 +1,67 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+
+const { category } = Astro.params;
+const categoryName = category ? category.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "";
+
+const cities = ["Delhi", "Mumbai", "Bangalore", "Chennai", "Hyderabad", "Kolkata", "Pune", "Jaipur"];
+const tasks = [
+  { id: 1, title: `${categoryName} at South Delhi RTO`, budget: "₹350", location: "Delhi", time: "1h ago", poster: "Arjun K." },
+  { id: 2, title: `${categoryName} near Central Mumbai`, budget: "₹400", location: "Mumbai", time: "2h ago", poster: "Priya S." },
+  { id: 3, title: `${categoryName} in Koramangala`, budget: "₹250", location: "Bangalore", time: "3h ago", poster: "Anonymous" },
+  { id: 4, title: `${categoryName} at Government Office`, budget: "₹300", location: "Chennai", time: "5h ago", poster: "Ravi M." },
+];
+---
+
+<Layout title={`${categoryName} Tasks — StrangerHelp`} description={`Browse and post ${categoryName.toLowerCase()} tasks. Get help from verified strangers in your area.`}>
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <!-- Header -->
+    <div class="mb-8">
+      <nav class="flex items-center gap-2 text-sm text-mute mb-4">
+        <a href="/tasks" class="hover:text-ink transition-colors">Tasks</a>
+        <span>/</span>
+        <span class="text-body">{categoryName}</span>
+      </nav>
+      <h1 class="text-2xl md:text-[32px] font-semibold text-ink tracking-[-1.28px]">{categoryName}</h1>
+      <p class="mt-2 text-sm text-body">Find verified helpers for {categoryName.toLowerCase()} tasks in your area.</p>
+    </div>
+
+    <!-- City filters -->
+    <div class="flex gap-2 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0">
+      <button class="shrink-0 px-4 py-2 text-sm rounded-full bg-primary text-on-primary border border-primary">All Cities</button>
+      {cities.map((c) => (
+        <a href={`/city/${c.toLowerCase()}`} class="shrink-0 px-4 py-2 text-sm rounded-full bg-canvas text-body border border-hairline hover:border-hairline-strong transition-colors">{c}</a>
+      ))}
+    </div>
+
+    <!-- Tasks grid -->
+    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {tasks.map((task) => (
+        <a href={`/tasks/${task.id}`} class="group p-5 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong shadow-[0px_1px_1px_#00000005,0px_2px_2px_#0000000a] transition-colors">
+          <div class="flex items-center justify-between mb-3">
+            <span class="px-2 py-0.5 text-xs font-medium text-body bg-canvas-soft-2 rounded-full">{categoryName}</span>
+            <span class="text-base font-semibold text-ink">{task.budget}</span>
+          </div>
+          <h3 class="text-sm font-semibold text-ink group-hover:text-link transition-colors">{task.title}</h3>
+          <div class="mt-3 flex items-center gap-3 text-xs text-mute">
+            <span>{task.location}</span>
+            <span>·</span>
+            <span>{task.time}</span>
+          </div>
+          <div class="mt-3 pt-3 border-t border-hairline text-xs text-body">{task.poster}</div>
+        </a>
+      ))}
+    </div>
+
+    <!-- CTA -->
+    <div class="mt-12 text-center p-8 bg-canvas-soft rounded-xl border border-hairline">
+      <h2 class="text-lg font-semibold text-ink">Need {categoryName.toLowerCase()} help?</h2>
+      <p class="mt-2 text-sm text-body">Post your task and get matched with a verified helper in minutes.</p>
+      <a href="/tasks/new" class="mt-4 inline-flex h-10 items-center px-5 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">Post a Task</a>
+    </div>
+  </main>
+  <Footer />
+</Layout>

@@ -1,0 +1,80 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+---
+
+<Layout title="Log In — StrangerHelp">
+  <Navbar />
+  <main class="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-16">
+    <div class="w-full max-w-sm">
+      <div class="text-center mb-8">
+        <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Welcome back.</h1>
+        <p class="mt-2 text-sm text-body">Log in to your StrangerHelp account.</p>
+      </div>
+
+      <div class="p-6 bg-canvas rounded-lg border border-hairline shadow-[0px_2px_2px_#0000000a,0px_8px_8px_-8px_#0000000a]">
+        <form id="login-form" class="space-y-4">
+          <div id="error-msg" class="hidden p-3 text-sm text-error bg-error-soft rounded-md"></div>
+          <div>
+            <label for="email" class="block text-sm font-medium text-ink mb-1.5">Email</label>
+            <input type="email" id="email" name="email" required placeholder="you@example.com" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute" />
+          </div>
+          <div>
+            <label for="password" class="block text-sm font-medium text-ink mb-1.5">Password</label>
+            <input type="password" id="password" name="password" required placeholder="••••••••" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute" />
+          </div>
+          <button type="submit" id="submit-btn" class="w-full h-10 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-md hover:opacity-90 transition-opacity">
+            Log In
+          </button>
+        </form>
+      </div>
+
+      <p class="mt-6 text-center text-sm text-body">
+        Don't have an account? <a href="/register" class="text-link hover:text-link-deep font-medium">Sign up</a>
+      </p>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  const form = document.getElementById('login-form') as HTMLFormElement;
+  const errorMsg = document.getElementById('error-msg')!;
+  const submitBtn = document.getElementById('submit-btn')!;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorMsg.classList.add('hidden');
+    submitBtn.textContent = 'Logging in...';
+    submitBtn.setAttribute('disabled', 'true');
+
+    const email = (document.getElementById('email') as HTMLInputElement).value;
+    const password = (document.getElementById('password') as HTMLInputElement).value;
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        errorMsg.textContent = data.error || 'Login failed';
+        errorMsg.classList.remove('hidden');
+        submitBtn.textContent = 'Log In';
+        submitBtn.removeAttribute('disabled');
+        return;
+      }
+
+      // Redirect to dashboard or original page
+      const params = new URLSearchParams(window.location.search);
+      window.location.href = params.get('redirect') || '/dashboard';
+    } catch {
+      errorMsg.textContent = 'Network error. Please try again.';
+      errorMsg.classList.remove('hidden');
+      submitBtn.textContent = 'Log In';
+      submitBtn.removeAttribute('disabled');
+    }
+  });
+</script>
