@@ -75,7 +75,7 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
           <span>${time}</span>
         </div>
         <div class="mt-3 pt-3 border-t border-hairline flex items-center justify-between">
-          <span class="text-xs text-body">${t.anonymous ? 'Anonymous' : escapeHtml(t.posterName || 'User')}${!t.anonymous && t.posterVerified ? ' <span class="text-link" title="Verified">✓</span>' : ''}</span>
+          <span class="text-xs text-body">${t.anonymous ? 'Anonymous' : escapeHtml(t.posterName || 'User')}${t.posterVerified ? ' <span class="text-link" title="Verified">✓</span>' : ''}</span>
           <span class="px-2 py-0.5 text-xs rounded-full ${t.status === 'open' ? 'bg-cyan-soft text-cyan-deep' : t.status === 'claimed' ? 'bg-warning-soft text-warning-deep' : 'bg-canvas-soft-2 text-mute'}">${t.status}</span>
         </div>
       </a>`;
