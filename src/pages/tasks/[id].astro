@@ -304,7 +304,7 @@ import Footer from "../../components/Footer.astro";
 
     const fd = new FormData();
     fd.append('action', 'complete');
-    for (let i = 0; i < files.length; i++) fd.append('proof', files[i]);
+    for (let i = 0; i < files.length; i++) fd.append('proof', await (window as any).compressImage(files[i]));
 
     const res = await fetch(`/api/tasks/${taskId}`, { method: 'PATCH', body: fd });
     if (res.ok) {

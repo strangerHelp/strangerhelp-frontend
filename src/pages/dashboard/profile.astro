@@ -112,7 +112,7 @@ import AccountLayout from "../../layouts/AccountLayout.astro";
     fd.append('phone', (document.getElementById('phone') as HTMLInputElement).value);
 
     const avatarFile = (document.getElementById('avatar') as HTMLInputElement).files?.[0];
-    if (avatarFile) fd.append('avatar', avatarFile);
+    if (avatarFile) fd.append('avatar', await (window as any).compressImage(avatarFile));
 
     const res = await fetch('/api/auth/profile', { method: 'POST', body: fd });
     if (res.ok) {

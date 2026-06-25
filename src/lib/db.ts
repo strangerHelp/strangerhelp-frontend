@@ -24,7 +24,7 @@ export function arrayBufferToBase64(buffer: ArrayBuffer): string {
 
 export async function fileToDataUrl(file: File): Promise<string> {
   if (!file || file.size === 0) return '';
-  if (file.size > 5 * 1024 * 1024) return ''; // 5MB limit
+  if (file.size > 10 * 1024 * 1024) return ''; // 10MB hard limit
   const buffer = await file.arrayBuffer();
   const base64 = arrayBufferToBase64(buffer);
   return `data:${file.type || 'application/octet-stream'};base64,${base64}`;
