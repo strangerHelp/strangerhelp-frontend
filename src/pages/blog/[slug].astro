@@ -1,0 +1,202 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+
+const { slug } = Astro.params;
+
+const posts: Record<string, { title: string; date: string; category: string; content: string }> = {
+  "how-strangerhelp-works": {
+    title: "How StrangerHelp Works: Get Tasks Done by Verified Helpers Near You",
+    date: "2026-06-20",
+    category: "Guide",
+    content: `
+      <p>StrangerHelp is India's first hyperlocal task marketplace where anyone can post a task that requires physical presence, and a nearby verified helper completes it for a reward.</p>
+      <h2>The Problem We Solve</h2>
+      <p>Every day, millions of people need simple tasks done at specific locations — submitting documents at a government office, standing in a queue, picking up a parcel, or taking a photo for verification. But they can't always be there physically.</p>
+      <h2>How It Works</h2>
+      <ol>
+        <li><strong>Post a Task</strong> — Describe what you need, set a budget, deadline, and location. You can post anonymously if you prefer.</li>
+        <li><strong>Helper Claims It</strong> — A verified helper near the location sees your task and claims it. A chat window opens automatically.</li>
+        <li><strong>Task Gets Done</strong> — The helper completes the task, uploads photo proof, and you verify completion.</li>
+        <li><strong>Payment & Review</strong> — You pay the helper directly (UPI/cash). Both parties leave reviews to build trust.</li>
+      </ol>
+      <h2>What Makes Us Different</h2>
+      <ul>
+        <li><strong>Hyperlocal</strong> — Tasks are location-specific. Helpers are always nearby.</li>
+        <li><strong>Verified Users</strong> — ID verification builds trust between strangers.</li>
+        <li><strong>Karma System</strong> — Your trust score grows with every successful task.</li>
+        <li><strong>Real-time Pulse</strong> — See available helpers on a live map before posting.</li>
+      </ul>
+    `,
+  },
+  "why-trust-matters": {
+    title: "Why Trust & Verification Matter in Peer-to-Peer Task Platforms",
+    date: "2026-06-18",
+    category: "Trust & Safety",
+    content: `
+      <p>When strangers help strangers, trust isn't optional — it's the foundation. Here's how StrangerHelp builds trust at every step.</p>
+      <h2>ID Verification</h2>
+      <p>Users can submit their government ID (Aadhaar, PAN, Passport, etc.) for verification. Once approved, they receive a blue "✓ Verified" badge visible on all their activity — tasks posted, tasks claimed, and messages.</p>
+      <h2>The Karma System</h2>
+      <p>Every completed task, positive review, and on-time delivery increases your Karma score. Higher Karma means:</p>
+      <ul>
+        <li>More visibility when claiming tasks</li>
+        <li>Trust from task posters who see your track record</li>
+        <li>Priority access to high-budget tasks</li>
+      </ul>
+      <h2>Mutual Reviews</h2>
+      <p>After every task, both the poster and helper rate each other (1-5 stars). These reviews are public and help the community identify reliable users.</p>
+      <h2>Reporting & Moderation</h2>
+      <p>If something goes wrong, users can report tasks or other users. Our moderation team reviews reports within 24-48 hours and takes action — from warnings to permanent bans.</p>
+    `,
+  },
+  "top-tasks-you-can-post": {
+    title: "10 Tasks You Didn't Know You Could Outsource to a Stranger",
+    date: "2026-06-15",
+    category: "Tips",
+    content: `
+      <p>StrangerHelp isn't just for document submissions. Here are creative ways people use the platform every day:</p>
+      <ol>
+        <li><strong>Government Office Queues</strong> — Need a form submitted at the RTO, passport office, or municipal corporation? Post it.</li>
+        <li><strong>Photo Verification</strong> — Need a photo of a location, property, or product before you buy/rent? A helper takes it for you.</li>
+        <li><strong>Parcel Pickup & Delivery</strong> — Courier failed delivery? A helper picks it up from the depot.</li>
+        <li><strong>Bill Payments</strong> — Some bills still need in-person payment. Helpers handle it.</li>
+        <li><strong>Event Check-ins</strong> — Need someone to check in at an event, collect badges, or grab freebies?</li>
+        <li><strong>Store Availability Checks</strong> — "Is this item in stock at XYZ store?" Get a real-time answer with photos.</li>
+        <li><strong>Wait in Line</strong> — New iPhone launch? Restaurant with no reservations? Hire someone to hold your spot.</li>
+        <li><strong>Receipt Collection</strong> — Forgot to collect a receipt? A helper grabs it.</li>
+        <li><strong>Local Information</strong> — "What are the office hours at this place?" Use the Ask feature for instant local intel.</li>
+        <li><strong>Simple Surveys</strong> — Need opinions from people at a specific location? Post a survey task.</li>
+      </ol>
+      <p>The possibilities are endless. If it requires someone to be physically present somewhere, StrangerHelp can handle it.</p>
+    `,
+  },
+  "earn-money-as-helper": {
+    title: "How to Earn ₹2000+ Daily as a StrangerHelp Helper",
+    date: "2026-06-12",
+    category: "Earning",
+    content: `
+      <p>StrangerHelp is a flexible way to earn money while moving around your city. Here's how top helpers maximize their earnings.</p>
+      <h2>1. Verify Your Identity</h2>
+      <p>Verified helpers get claimed more often. The blue "✓ Verified" badge instantly builds trust with task posters. Complete your ID verification first.</p>
+      <h2>2. Go Online on Pulse</h2>
+      <p>The Live Pulse map shows task posters that you're available and nearby. Stay online in busy areas — markets, government offices, universities.</p>
+      <h2>3. Claim Urgent Tasks</h2>
+      <p>Tasks marked ⚡ Urgent typically have higher budgets. Posters need things done fast and are willing to pay more.</p>
+      <h2>4. Build Your Rating</h2>
+      <p>5-star reviews lead to more claims being accepted. Always:</p>
+      <ul>
+        <li>Communicate clearly via chat</li>
+        <li>Upload clear completion proof</li>
+        <li>Complete tasks before the deadline</li>
+      </ul>
+      <h2>5. Focus on High-Density Areas</h2>
+      <p>Government offices, courier depots, universities, and commercial areas generate the most tasks. Position yourself near these locations during peak hours (9 AM - 1 PM, 3 PM - 6 PM).</p>
+      <h2>Earning Potential</h2>
+      <p>Average task: ₹200-500. Completing 5-10 tasks daily puts you at ₹1000-5000. Top helpers earn ₹3000+ on busy days.</p>
+    `,
+  },
+  "safety-tips-for-helpers": {
+    title: "Safety Tips: What Every Helper Should Know Before Claiming a Task",
+    date: "2026-06-10",
+    category: "Trust & Safety",
+    content: `
+      <p>Your safety comes first. Follow these guidelines when completing tasks for strangers.</p>
+      <h2>Before Claiming</h2>
+      <ul>
+        <li>Check the poster's profile — look for verified badge, ratings, and task history</li>
+        <li>Read the full task description carefully</li>
+        <li>If something feels off, don't claim it. Report it instead.</li>
+      </ul>
+      <h2>During the Task</h2>
+      <ul>
+        <li>Keep all communication within the StrangerHelp chat (it's logged)</li>
+        <li>Never share personal details like home address or bank PIN</li>
+        <li>Take photos of everything — they serve as your proof</li>
+        <li>If asked to do something illegal or uncomfortable, cancel and report</li>
+      </ul>
+      <h2>Payment Safety</h2>
+      <ul>
+        <li>Confirm payment method before starting work</li>
+        <li>For UPI payments, verify you received the money before marking complete</li>
+        <li>Never accept checks or "pay later" promises</li>
+      </ul>
+      <h2>Red Flags to Watch For</h2>
+      <ul>
+        <li>Tasks that ask you to receive/send money on someone's behalf</li>
+        <li>Requests to meet at isolated locations at odd hours</li>
+        <li>Posters who refuse to communicate via chat</li>
+        <li>Tasks that seem too good to be true (very high pay for minimal work)</li>
+      </ul>
+      <p>When in doubt, trust your instincts and report suspicious activity.</p>
+    `,
+  },
+  "building-strangerhelp": {
+    title: "Building StrangerHelp: From Idea to India's First Hyperlocal Task Network",
+    date: "2026-06-08",
+    category: "Company",
+    content: `
+      <p>StrangerHelp started with a simple frustration: needing to submit a document at a government office 20km away, knowing someone nearby could do it in 5 minutes.</p>
+      <h2>The Problem</h2>
+      <p>India runs on physical presence. Despite digitization, millions of tasks still require someone to physically be somewhere — collect a receipt, verify a property, stand in a queue, pick up a parcel. Most people can't always be where they need to be.</p>
+      <h2>The Insight</h2>
+      <p>At any given moment, there are people near those locations who have free time and would happily earn ₹200-500 for 15 minutes of work. The connection was missing.</p>
+      <h2>What We've Built</h2>
+      <p>StrangerHelp connects these two groups through:</p>
+      <ul>
+        <li>A location-aware task marketplace</li>
+        <li>Real-time helper availability (Pulse map)</li>
+        <li>Trust infrastructure (verification, karma, reviews)</li>
+        <li>Instant messaging between poster and helper</li>
+        <li>Photo-proof completion system</li>
+      </ul>
+      <h2>What's Next</h2>
+      <p>We're building escrow payments (Karma Wallet), expanding to more cities, and adding features like task chaining and voice task posting. Our goal: make "getting things done" as easy as sending a message.</p>
+      <p>If you believe in what we're building, <a href="/tasks/new">post your first task</a> or <a href="/register">sign up as a helper</a> today.</p>
+    `,
+  },
+};
+
+const post = posts[slug as string];
+if (!post) return Astro.redirect('/blog');
+---
+
+<Layout title={`${post.title} — StrangerHelp Blog`}>
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="max-w-2xl mx-auto">
+      <nav class="flex items-center gap-2 text-sm text-mute mb-6">
+        <a href="/blog" class="hover:text-ink transition-colors">Blog</a>
+        <span>/</span>
+        <span class="text-body">{post.category}</span>
+      </nav>
+
+      <article>
+        <div class="flex items-center gap-2 mb-3">
+          <span class="px-2 py-0.5 text-xs font-medium text-body bg-canvas-soft-2 rounded-full">{post.category}</span>
+          <span class="text-xs text-mute">{post.date}</span>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-semibold text-ink tracking-[-1.28px] leading-tight">{post.title}</h1>
+        <div class="mt-8 prose" set:html={post.content} />
+      </article>
+
+      <div class="mt-12 pt-6 border-t border-hairline">
+        <a href="/blog" class="text-sm text-link hover:text-link-deep">← Back to all posts</a>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Layout>
+
+<style>
+  .prose { @apply text-sm text-body leading-relaxed; }
+  .prose h2 { @apply text-lg font-semibold text-ink mt-8 mb-3 tracking-[-0.6px]; }
+  .prose p { @apply mb-4; }
+  .prose ul, .prose ol { @apply mb-4 pl-5 space-y-1.5; }
+  .prose ul { @apply list-disc; }
+  .prose ol { @apply list-decimal; }
+  .prose li { @apply text-sm text-body; }
+  .prose a { @apply text-link hover:text-link-deep underline; }
+  .prose strong { @apply text-ink font-medium; }
+</style>

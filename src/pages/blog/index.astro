@@ -1,0 +1,74 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+
+const blogs = [
+  {
+    slug: "how-strangerhelp-works",
+    title: "How StrangerHelp Works: Get Tasks Done by Verified Helpers Near You",
+    excerpt: "Learn how our hyperlocal task marketplace connects people who need errands done with trusted helpers in their area.",
+    date: "2026-06-20",
+    category: "Guide",
+  },
+  {
+    slug: "why-trust-matters",
+    title: "Why Trust & Verification Matter in Peer-to-Peer Task Platforms",
+    excerpt: "How our ID verification, karma system, and reviews create a safe environment for strangers helping strangers.",
+    date: "2026-06-18",
+    category: "Trust & Safety",
+  },
+  {
+    slug: "top-tasks-you-can-post",
+    title: "10 Tasks You Didn't Know You Could Outsource to a Stranger",
+    excerpt: "From standing in government queues to collecting parcels — discover creative ways people use StrangerHelp every day.",
+    date: "2026-06-15",
+    category: "Tips",
+  },
+  {
+    slug: "earn-money-as-helper",
+    title: "How to Earn ₹2000+ Daily as a StrangerHelp Helper",
+    excerpt: "A practical guide to maximizing your earnings by claiming tasks, building trust score, and getting repeat clients.",
+    date: "2026-06-12",
+    category: "Earning",
+  },
+  {
+    slug: "safety-tips-for-helpers",
+    title: "Safety Tips: What Every Helper Should Know Before Claiming a Task",
+    excerpt: "Protect yourself while helping others. Essential safety guidelines for meeting strangers and completing tasks.",
+    date: "2026-06-10",
+    category: "Trust & Safety",
+  },
+  {
+    slug: "building-strangerhelp",
+    title: "Building StrangerHelp: From Idea to India's First Hyperlocal Task Network",
+    excerpt: "The story behind StrangerHelp — why we built it, the problems we're solving, and where we're headed next.",
+    date: "2026-06-08",
+    category: "Company",
+  },
+];
+---
+
+<Layout title="Blog — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="max-w-3xl mx-auto">
+      <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Blog</h1>
+      <p class="mt-2 text-sm text-body">Guides, tips, and stories from the StrangerHelp community.</p>
+
+      <div class="mt-8 space-y-6">
+        {blogs.map((post) => (
+          <a href={`/blog/${post.slug}`} class="block p-5 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong shadow-[0px_1px_1px_#00000005,0px_2px_2px_#0000000a] transition-colors group">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="px-2 py-0.5 text-xs font-medium text-body bg-canvas-soft-2 rounded-full">{post.category}</span>
+              <span class="text-xs text-mute">{post.date}</span>
+            </div>
+            <h2 class="text-base font-semibold text-ink group-hover:text-link transition-colors">{post.title}</h2>
+            <p class="mt-1.5 text-sm text-body leading-relaxed">{post.excerpt}</p>
+          </a>
+        ))}
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Layout>
