@@ -84,6 +84,12 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
   const session = await getSessionUserId(cookies);
   if (!session) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   const db = (env as any).DB as D1Database;
-  await db.prepare("DELETE FROM tasks WHERE id = ? AND poster_id = ?").bind(params.id, session).run();
+  const user: any = await db.prepare("SELECT is_admin FROM users WHERE id = ?").bind(session).first();
+  const task: any = await db.prepare("SELECT poster_id FROM tasks WHERE id = ?").bind(params.id).first();
+  if (!task) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
+  if (task.poster_id !== session && !user?.is_admin) {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+  }
+  await db.prepare("DELETE FROM tasks WHERE id = ?").bind(params.id).run();
   return new Response(JSON.stringify({ ok: true }));
 };

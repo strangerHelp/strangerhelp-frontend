@@ -46,15 +46,27 @@ import Navbar from "../../components/Navbar.astro";
             <input type="number" id="budget" name="budget" required min="10" placeholder="e.g., 350" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute" />
           </div>
           <div>
-            <label for="deadline" class="block text-sm font-medium text-ink mb-1.5">Deadline</label>
-            <select id="deadline" name="deadline" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors">
-              <option>Within 1 hour</option>
-              <option>Within 2 hours</option>
-              <option>Within 4 hours</option>
-              <option>Within 6 hours</option>
-              <option>Today</option>
-              <option>Tomorrow</option>
+            <label class="block text-sm font-medium text-ink mb-1.5">Deadline</label>
+            <select id="deadline-select" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors">
+              <option value="Within 1 hour">Within 1 hour</option>
+              <option value="Within 2 hours">Within 2 hours</option>
+              <option value="Within 4 hours">Within 4 hours</option>
+              <option value="Today" selected>Today</option>
+              <option value="Tomorrow">Tomorrow</option>
+              <option value="custom">Custom</option>
             </select>
+          </div>
+        </div>
+
+        <!-- Custom date/time picker (hidden by default) -->
+        <div id="custom-deadline" class="hidden grid grid-cols-2 gap-4">
+          <div>
+            <label for="custom-date" class="block text-sm font-medium text-ink mb-1.5">Date</label>
+            <input type="date" id="custom-date" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors" />
+          </div>
+          <div>
+            <label for="custom-time" class="block text-sm font-medium text-ink mb-1.5">Time</label>
+            <input type="time" id="custom-time" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors" />
           </div>
         </div>
 
@@ -75,6 +87,15 @@ import Navbar from "../../components/Navbar.astro";
           <div id="file-list" class="mt-2 flex flex-wrap gap-2"></div>
         </div>
 
+        <!-- Urgent toggle -->
+        <div class="flex items-center justify-between p-4 bg-error-soft/50 rounded-md border border-error/20">
+          <div>
+            <p class="text-sm font-medium text-ink">⚡ Mark as Urgent</p>
+            <p class="text-xs text-mute mt-0.5">Helpers will prioritize your task.</p>
+          </div>
+          <input type="checkbox" id="urgent" name="urgent" class="w-5 h-5 rounded border-hairline accent-error" />
+        </div>
+
         <!-- Anonymous toggle -->
         <div class="flex items-center justify-between p-4 bg-canvas-soft rounded-md border border-hairline">
           <div>
@@ -92,8 +113,22 @@ import Navbar from "../../components/Navbar.astro";
   </main>
 </Layout>
 
+<!-- Urgent budget popup modal -->
+<div id="urgent-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-ink/50 backdrop-blur-sm">
+  <div class="bg-canvas rounded-lg border border-hairline shadow-xl p-6 max-w-sm mx-4">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="text-xl">⚡</span>
+      <h3 class="text-base font-semibold text-ink">Urgent Task Tip</h3>
+    </div>
+    <p class="text-sm text-body leading-relaxed">Consider setting a <strong>higher budget</strong> for urgent tasks. Helpers are more likely to claim and complete your task quickly when the reward is higher.</p>
+    <div class="mt-4 flex gap-2">
+      <button id="urgent-increase" class="flex-1 h-9 text-sm font-medium text-on-primary bg-primary rounded-md hover:opacity-90">Increase Budget</button>
+      <button id="urgent-dismiss" class="flex-1 h-9 text-sm font-medium text-ink border border-hairline rounded-md hover:bg-canvas-soft-2">Keep Current</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  // Check auth
   fetch('/api/auth/me').then(r => { if (!r.ok) window.location.href = '/login?redirect=/tasks/new'; });
 
   const form = document.getElementById('task-form') as HTMLFormElement;
@@ -103,6 +138,39 @@ import Navbar from "../../components/Navbar.astro";
   const errorMsg = document.getElementById('error-msg')!;
   const successMsg = document.getElementById('success-msg')!;
   const submitBtn = document.getElementById('submit-btn')!;
+  const deadlineSelect = document.getElementById('deadline-select') as HTMLSelectElement;
+  const customDeadline = document.getElementById('custom-deadline')!;
+  const urgentCheckbox = document.getElementById('urgent') as HTMLInputElement;
+  const urgentModal = document.getElementById('urgent-modal')!;
+
+  // Set min date to today
+  const today = new Date().toISOString().split('T')[0];
+  (document.getElementById('custom-date') as HTMLInputElement).min = today;
+  (document.getElementById('custom-date') as HTMLInputElement).value = today;
+
+  // Deadline: show/hide custom picker
+  deadlineSelect.addEventListener('change', () => {
+    customDeadline.classList.toggle('hidden', deadlineSelect.value !== 'custom');
+  });
+
+  // Urgent: show popup when checked
+  urgentCheckbox.addEventListener('change', () => {
+    if (urgentCheckbox.checked) {
+      urgentModal.classList.remove('hidden');
+    }
+  });
+
+  document.getElementById('urgent-increase')!.addEventListener('click', () => {
+    const budgetInput = document.getElementById('budget') as HTMLInputElement;
+    const current = parseInt(budgetInput.value) || 0;
+    budgetInput.value = String(Math.max(current + 100, Math.round(current * 1.5)));
+    budgetInput.focus();
+    urgentModal.classList.add('hidden');
+  });
+
+  document.getElementById('urgent-dismiss')!.addEventListener('click', () => {
+    urgentModal.classList.add('hidden');
+  });
 
   fileDrop.addEventListener('click', () => fileInput.click());
   fileInput.addEventListener('change', () => {
@@ -118,27 +186,34 @@ import Navbar from "../../components/Navbar.astro";
     submitBtn.textContent = 'Posting...';
     submitBtn.setAttribute('disabled', 'true');
 
+    // Build deadline value
+    let deadline = deadlineSelect.value;
+    if (deadline === 'custom') {
+      const date = (document.getElementById('custom-date') as HTMLInputElement).value;
+      const time = (document.getElementById('custom-time') as HTMLInputElement).value;
+      if (!date) { errorMsg.textContent = 'Please select a date'; errorMsg.classList.remove('hidden'); submitBtn.textContent = 'Post Task'; submitBtn.removeAttribute('disabled'); return; }
+      deadline = time ? `${date} ${time}` : date;
+    }
+
     const fd = new FormData();
     fd.append('title', (document.getElementById('title') as HTMLInputElement).value);
     fd.append('description', (document.getElementById('description') as HTMLTextAreaElement).value);
     fd.append('category', (document.getElementById('category') as HTMLSelectElement).value);
     fd.append('budget', (document.getElementById('budget') as HTMLInputElement).value);
-    fd.append('deadline', (document.getElementById('deadline') as HTMLSelectElement).value);
+    fd.append('deadline', deadline);
     fd.append('location', (document.getElementById('location') as HTMLInputElement).value);
     fd.append('anonymous', (document.getElementById('anonymous') as HTMLInputElement).checked ? 'true' : 'false');
+    fd.append('urgent', urgentCheckbox.checked ? 'true' : 'false');
 
     const files = fileInput.files;
     if (files && files.length > 0) {
-      const compressed = await window.compressFiles(files);
-      for (const f of compressed) {
-        fd.append('files', f);
-      }
+      const compressed = await (window as any).compressFiles(files);
+      for (const f of compressed) fd.append('files', f);
     }
 
     try {
       const res = await fetch('/api/tasks', { method: 'POST', body: fd });
       const data = await res.json();
-
       if (!res.ok) {
         errorMsg.textContent = data.error || 'Failed to post task';
         errorMsg.classList.remove('hidden');

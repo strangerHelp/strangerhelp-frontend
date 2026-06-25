@@ -53,6 +53,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const deadline = formData.get('deadline') as string || 'Today';
   const location = formData.get('location') as string;
   const anonymous = formData.get('anonymous') === 'true' ? 1 : 0;
+  const urgent = formData.get('urgent') === 'true' ? 1 : 0;
 
   if (!title || !category || !budget || !location) {
     return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
@@ -67,8 +68,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
   const id = genId();
   await db.prepare(
-    "INSERT INTO tasks (id, title, description, category, budget, deadline, location, city, anonymous, attachments, poster_id, poster_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-  ).bind(id, title, description, category, parseInt(budget), deadline, location, user?.city || '', anonymous, JSON.stringify(attachments), session, user?.name || 'User').run();
+    "INSERT INTO tasks (id, title, description, category, budget, deadline, location, city, anonymous, urgent, attachments, poster_id, poster_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+  ).bind(id, title, description, category, parseInt(budget), deadline, location, user?.city || '', anonymous, urgent, JSON.stringify(attachments), session, user?.name || 'User').run();
 
   return new Response(JSON.stringify({ id }), { status: 201 });
 };

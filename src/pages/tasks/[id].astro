@@ -53,17 +53,16 @@ import Footer from "../../components/Footer.astro";
   function render() {
     document.getElementById('breadcrumb-cat')!.textContent = task.category;
     const isOwner = currentUser && task.posterId === currentUser.id;
+    const isAdmin = currentUser && currentUser.is_admin;
     const isClaimer = currentUser && task.claimedBy === currentUser.id;
     const time = (window as any).formatIST(task.createdAt);
 
     let actionsHtml = '';
     let messageBtn = '';
 
-    // Message button — available to any logged-in user who isn't the owner
     if (currentUser && !isOwner) {
       messageBtn = `<button id="message-btn" class="h-11 px-6 flex items-center justify-center text-sm font-medium text-ink border border-hairline rounded-full hover:bg-canvas-soft-2 transition-colors">Message Poster</button>`;
     }
-    // Message button for owner when task is claimed
     if (currentUser && isOwner && task.claimedBy) {
       messageBtn = `<button id="message-btn" class="h-11 px-6 flex items-center justify-center text-sm font-medium text-ink border border-hairline rounded-full hover:bg-canvas-soft-2 transition-colors">Message Helper</button>`;
     }
@@ -84,6 +83,15 @@ import Footer from "../../components/Footer.astro";
       actionsHtml = `<p class="text-sm text-cyan-deep font-medium">✓ Claimed by ${escapeHtml(task.claimedByName || 'a helper')}</p>${messageBtn}`;
     } else if (task.status === 'completed') {
       actionsHtml = `<p class="text-sm text-mute font-medium">✓ Task completed</p>${messageBtn}`;
+    }
+
+    // Delete + Report buttons
+    let topActions = '';
+    if (isOwner || isAdmin) {
+      topActions += `<button id="delete-btn" class="h-8 px-3 text-xs font-medium text-error border border-error/30 rounded-md hover:bg-error-soft transition-colors">Delete Task</button>`;
+    }
+    if (currentUser && !isOwner) {
+      topActions += `<button id="report-btn" class="h-8 px-3 text-xs font-medium text-warning-deep border border-warning/30 rounded-md hover:bg-warning-soft transition-colors">Report</button>`;
     }
 
     let attachmentsHtml = '';
@@ -111,9 +119,13 @@ import Footer from "../../components/Footer.astro";
 
     document.getElementById('task-content')!.innerHTML = `
       <div class="p-6 md:p-8 bg-canvas rounded-lg border border-hairline shadow-[0px_2px_2px_#0000000a,0px_8px_16px_-4px_#0000000a]">
-        <div class="flex items-center gap-2 mb-4">
-          <span class="px-2.5 py-0.5 text-xs font-medium bg-canvas-soft-2 text-body rounded-full">${escapeHtml(task.category)}</span>
-          <span class="px-2.5 py-0.5 text-xs font-medium rounded-full ${task.status === 'open' ? 'bg-cyan-soft text-cyan-deep' : task.status === 'claimed' ? 'bg-warning-soft text-warning-deep' : 'bg-canvas-soft-2 text-mute'}">${task.status.charAt(0).toUpperCase() + task.status.slice(1)}</span>
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 text-xs font-medium bg-canvas-soft-2 text-body rounded-full">${escapeHtml(task.category)}</span>
+            <span class="px-2.5 py-0.5 text-xs font-medium rounded-full ${task.status === 'open' ? 'bg-cyan-soft text-cyan-deep' : task.status === 'claimed' ? 'bg-warning-soft text-warning-deep' : 'bg-canvas-soft-2 text-mute'}">${task.status.charAt(0).toUpperCase() + task.status.slice(1)}</span>
+            ${task.urgent ? '<span class="px-2.5 py-0.5 text-xs font-medium bg-error-soft text-error rounded-full">⚡ Urgent</span>' : ''}
+          </div>
+          <div class="flex items-center gap-2">${topActions}</div>
         </div>
         <h1 class="text-xl md:text-2xl font-semibold text-ink tracking-[-0.96px]">${escapeHtml(task.title)}</h1>
         ${task.description ? `<p class="mt-4 text-sm text-body leading-relaxed">${escapeHtml(task.description)}</p>` : ''}
@@ -169,6 +181,8 @@ import Footer from "../../components/Footer.astro";
     document.getElementById('claim-btn')?.addEventListener('click', claimTask);
     document.getElementById('complete-btn')?.addEventListener('click', completeTask);
     document.getElementById('message-btn')?.addEventListener('click', messageUser);
+    document.getElementById('delete-btn')?.addEventListener('click', deleteTask);
+    document.getElementById('report-btn')?.addEventListener('click', reportTask);
   }
 
   let selectedRating = 0;
@@ -296,6 +310,44 @@ import Footer from "../../components/Footer.astro";
     } else {
       alert('Failed to start conversation');
       btn.textContent = isOwner ? 'Message Helper' : 'Message Poster';
+    }
+  }
+
+  async function deleteTask() {
+    if (!confirm('Are you sure you want to delete this task? This cannot be undone.')) return;
+    const res = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+    if (res.ok) {
+      alert('Task deleted.');
+      window.location.href = '/tasks';
+    } else {
+      const d = await res.json();
+      alert(d.error || 'Failed to delete');
+    }
+  }
+
+  async function reportTask() {
+    const reasons = ['Spam or scam', 'Inappropriate content', 'Illegal activity', 'Misleading information', 'Harassment', 'Other'];
+    const reason = prompt(
+      'Why are you reporting this task?\n\n' +
+      reasons.map((r, i) => `${i + 1}. ${r}`).join('\n') +
+      '\n\nEnter the number or type your reason:'
+    );
+    if (!reason) return;
+
+    const selectedReason = /^\d$/.test(reason.trim()) ? reasons[parseInt(reason) - 1] || reason : reason;
+    const description = prompt('Any additional details? (optional)') || '';
+
+    const res = await fetch('/api/reports', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'task', targetId: taskId, reason: selectedReason, description }),
+    });
+
+    if (res.ok) {
+      alert('Report submitted. Our team will review it. Thank you.');
+    } else {
+      const d = await res.json();
+      alert(d.error || 'Failed to submit report');
     }
   }
 

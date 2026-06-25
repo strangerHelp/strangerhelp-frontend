@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   poster_id TEXT NOT NULL,
   poster_name TEXT DEFAULT '',
   status TEXT DEFAULT 'open',
+  urgent INTEGER DEFAULT 0,
   claimed_by TEXT,
   claimed_by_name TEXT,
   completion_proof TEXT DEFAULT '[]',
