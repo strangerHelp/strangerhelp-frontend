@@ -81,14 +81,40 @@ import Footer from "../components/Footer.astro";
     }
     container.innerHTML = reports.map((r: any) => {
       const statusColors: Record<string, string> = { open: 'bg-warning-soft text-warning-deep', reviewing: 'bg-link-bg-soft text-link', resolved: 'bg-cyan-soft text-cyan-deep', dismissed: 'bg-canvas-soft-2 text-mute' };
+
+      let descHtml = '';
+      if (r.description) {
+        // Check if description is JSON with base64 images (verification reports)
+        try {
+          const parsed = JSON.parse(r.description);
+          if (parsed.front || parsed.selfie || parsed.back) {
+            const images = [parsed.front && 'ID Front', parsed.back && 'ID Back', parsed.selfie && 'Selfie'].filter(Boolean);
+            descHtml = `<div class="mt-2 flex flex-wrap gap-2">${
+              parsed.front ? `<button onclick="window.open().document.write('<img src=\\'${parsed.front}\\' style=\\'max-width:100%\\'>')" class="px-2 py-1 text-xs font-medium text-link border border-hairline rounded hover:bg-canvas-soft-2">View ID Front</button>` : ''}${
+              parsed.back ? `<button onclick="window.open().document.write('<img src=\\'${parsed.back}\\' style=\\'max-width:100%\\'>')" class="px-2 py-1 text-xs font-medium text-link border border-hairline rounded hover:bg-canvas-soft-2">View ID Back</button>` : ''}${
+              parsed.selfie ? `<button onclick="window.open().document.write('<img src=\\'${parsed.selfie}\\' style=\\'max-width:100%\\'>')" class="px-2 py-1 text-xs font-medium text-link border border-hairline rounded hover:bg-canvas-soft-2">View Selfie</button>` : ''
+            }</div>`;
+          } else {
+            descHtml = `<p class="text-xs text-body mt-1">${escapeHtml(r.description.slice(0, 150))}</p>`;
+          }
+        } catch {
+          // Not JSON, check if it contains base64 data
+          if (r.description.includes('data:image')) {
+            descHtml = `<button onclick="window.open().document.write('<img src=\\'${r.description.replace(/'/g, "\\'")}\\' style=\\'max-width:100%\\'>')" class="mt-2 px-2 py-1 text-xs font-medium text-link border border-hairline rounded hover:bg-canvas-soft-2">View Attachment</button>`;
+          } else {
+            descHtml = `<p class="text-xs text-body mt-1">${escapeHtml(r.description.slice(0, 150))}</p>`;
+          }
+        }
+      }
+
       return `<div class="p-4 bg-canvas rounded-lg border border-hairline">
         <div class="flex items-center justify-between mb-1">
           <span class="text-xs font-medium uppercase text-mute">${r.type}</span>
           <span class="px-2 py-0.5 text-xs font-medium rounded-full ${statusColors[r.status] || ''}">${r.status}</span>
         </div>
-        <p class="text-sm font-medium text-ink">${r.reason}</p>
-        ${r.description ? `<p class="text-xs text-body mt-1">${r.description.slice(0, 100)}</p>` : ''}
-        ${r.adminNote ? `<p class="mt-2 text-xs text-link bg-link-bg-soft p-2 rounded">Admin: ${r.adminNote}</p>` : ''}
+        <p class="text-sm font-medium text-ink">${escapeHtml(r.reason)}</p>
+        ${descHtml}
+        ${r.adminNote ? `<p class="mt-2 text-xs text-link bg-link-bg-soft p-2 rounded">Admin: ${escapeHtml(r.adminNote)}</p>` : ''}
       </div>`;
     }).join('');
   }
@@ -122,4 +148,6 @@ import Footer from "../components/Footer.astro";
   });
 
   loadReports();
+
+  function escapeHtml(s: string) { return s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || ''; }
 </script>
