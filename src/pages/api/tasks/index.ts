@@ -15,14 +15,14 @@ export const GET: APIRoute = async ({ url, cookies }) => {
   if (mine === 'true') {
     const session = await getSessionUserId(cookies);
     if (!session) return new Response(JSON.stringify([]), { status: 200 });
-    query = "SELECT * FROM tasks WHERE poster_id = ? OR claimed_by = ? ORDER BY created_at DESC LIMIT ?";
+    query = "SELECT t.*, u.verified as poster_verified FROM tasks t LEFT JOIN users u ON t.poster_id = u.id WHERE t.poster_id = ? OR t.claimed_by = ? ORDER BY t.created_at DESC LIMIT ?";
     params.push(session, session, limit);
   } else {
     if (category && category !== 'All') {
-      query = "SELECT * FROM tasks WHERE status = 'open' AND category = ? ORDER BY created_at DESC LIMIT ?";
+      query = "SELECT t.*, u.verified as poster_verified FROM tasks t LEFT JOIN users u ON t.poster_id = u.id WHERE t.status = 'open' AND t.category = ? ORDER BY t.created_at DESC LIMIT ?";
       params.push(category, limit);
     } else {
-      query = "SELECT * FROM tasks WHERE status = 'open' ORDER BY created_at DESC LIMIT ?";
+      query = "SELECT t.*, u.verified as poster_verified FROM tasks t LEFT JOIN users u ON t.poster_id = u.id WHERE t.status = 'open' ORDER BY t.created_at DESC LIMIT ?";
       params.push(limit);
     }
   }
@@ -30,6 +30,7 @@ export const GET: APIRoute = async ({ url, cookies }) => {
   const { results } = await db.prepare(query).bind(...params).all();
   const tasks = (results || []).map((t: any) => ({
     ...t, _id: t.id, posterId: t.poster_id, posterName: t.poster_name,
+    posterVerified: t.poster_verified === 1,
     claimedBy: t.claimed_by, claimedByName: t.claimed_by_name,
     completionProof: JSON.parse(t.completion_proof || '[]'),
     attachments: JSON.parse(t.attachments || '[]'), createdAt: t.created_at,

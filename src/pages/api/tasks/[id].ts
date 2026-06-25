@@ -9,9 +9,15 @@ export const GET: APIRoute = async ({ params }) => {
   const task: any = await db.prepare("SELECT * FROM tasks WHERE id = ?").bind(params.id).first();
   if (!task) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
 
+  // Get verified status for poster and claimer
+  const poster: any = task.poster_id ? await db.prepare("SELECT verified FROM users WHERE id = ?").bind(task.poster_id).first() : null;
+  const claimer: any = task.claimed_by ? await db.prepare("SELECT verified FROM users WHERE id = ?").bind(task.claimed_by).first() : null;
+
   return new Response(JSON.stringify({
     ...task, _id: task.id, posterId: task.poster_id, posterName: task.poster_name,
+    posterVerified: poster?.verified === 1,
     claimedBy: task.claimed_by, claimedByName: task.claimed_by_name,
+    claimerVerified: claimer?.verified === 1,
     completionProof: JSON.parse(task.completion_proof || '[]'),
     attachments: JSON.parse(task.attachments || '[]'), createdAt: task.created_at,
   }));

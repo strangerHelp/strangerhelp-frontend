@@ -63,6 +63,7 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
       return `<a href="/tasks/${t._id}" class="group p-5 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong shadow-[0px_1px_1px_#00000005,0px_2px_2px_#0000000a] transition-colors">
         <div class="flex items-center justify-between mb-3">
           <span class="px-2 py-0.5 text-xs font-medium text-body bg-canvas-soft-2 rounded-full">${t.category}</span>
+          ${t.urgent ? '<span class="px-2 py-0.5 text-xs font-medium bg-error-soft text-error rounded-full">⚡</span>' : ''}
           <span class="text-base font-semibold text-ink">₹${t.budget}</span>
         </div>
         <h3 class="text-sm font-semibold text-ink group-hover:text-link transition-colors leading-snug">${escapeHtml(t.title)}</h3>
@@ -74,7 +75,7 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
           <span>${time}</span>
         </div>
         <div class="mt-3 pt-3 border-t border-hairline flex items-center justify-between">
-          <span class="text-xs text-body">${t.anonymous ? 'Anonymous' : escapeHtml(t.posterName || 'User')}</span>
+          <span class="text-xs text-body">${t.anonymous ? 'Anonymous' : escapeHtml(t.posterName || 'User')}${!t.anonymous && t.posterVerified ? ' <span class="text-link" title="Verified">✓</span>' : ''}</span>
           <span class="px-2 py-0.5 text-xs rounded-full ${t.status === 'open' ? 'bg-cyan-soft text-cyan-deep' : t.status === 'claimed' ? 'bg-warning-soft text-warning-deep' : 'bg-canvas-soft-2 text-mute'}">${t.status}</span>
         </div>
       </a>`;
