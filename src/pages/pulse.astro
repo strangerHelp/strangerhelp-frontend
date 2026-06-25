@@ -7,10 +7,8 @@ import Navbar from "../components/Navbar.astro";
   <Navbar />
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
   <main class="relative h-[calc(100vh-64px)] overflow-hidden">
-    <!-- Map -->
-    <div id="pulse-map" class="absolute inset-0"></div>
+    <div id="pulse-map" class="absolute inset-0 w-full h-full"></div>
 
-    <!-- Control panel -->
     <div class="absolute top-4 left-4 right-4 md:right-auto md:w-80 z-10 space-y-2">
       <div class="p-4 bg-canvas/95 backdrop-blur-md rounded-lg border border-hairline shadow-[0px_8px_16px_-4px_#0000000a]">
         <div class="flex items-center gap-2 mb-3">
@@ -40,7 +38,6 @@ import Navbar from "../components/Navbar.astro";
       </div>
     </div>
 
-    <!-- Tasks list panel -->
     <div class="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 z-10 space-y-2">
       <div id="tasks-panel" class="max-h-48 overflow-y-auto p-3 bg-canvas/95 backdrop-blur-md rounded-lg border border-hairline shadow-[0px_8px_16px_-4px_#0000000a]">
         <p class="text-xs font-semibold text-ink mb-2">Open Tasks Nearby</p>
@@ -52,129 +49,98 @@ import Navbar from "../components/Navbar.astro";
       </a>
     </div>
   </main>
-</Layout>
+  <script is:inline src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script is:inline>
+    var map, isOnline = false, watchId = null, helperMarkers = [], taskMarkers = [];
 
-<script>
-  let map: any;
-  let isOnline = false;
-  let watchId: number | null = null;
-  let helperMarkers: any[] = [];
-  let taskMarkers: any[] = [];
+    function initPulseMap() {
+      map = new maplibregl.Map({
+        container: 'pulse-map',
+        style: 'https://tiles.openfreemap.org/styles/liberty',
+        center: [78.9629, 20.5937],
+        zoom: 4.5,
+      });
+      map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
 
-  async function initMap() {
-    // Load MapLibre
-    await new Promise<void>((resolve) => {
-      if ((window as any).maplibregl) { resolve(); return; }
-      const s = document.createElement('script');
-      s.src = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js';
-      s.onload = () => resolve();
-      document.head.appendChild(s);
-    });
-
-    const maplibregl = (window as any).maplibregl;
-
-    // Default to India center, will fly to user location if available
-    map = new maplibregl.Map({
-      container: 'pulse-map',
-      style: 'https://tiles.openfreemap.org/styles/liberty',
-      center: [78.9629, 20.5937],
-      zoom: 4.5,
-    });
-
-    map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
-
-    // Try to get user location and center map
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((pos) => {
-        map.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 12 });
-      }, () => {}, { timeout: 5000 });
-    }
-
-    map.on('load', () => loadPulse());
-  }
-
-  async function loadPulse() {
-    const res = await fetch('/api/pulse');
-    if (!res.ok) return;
-    const { tasks, helpers } = await res.json();
-    const maplibregl = (window as any).maplibregl;
-
-    document.getElementById('online-count')!.textContent = `${helpers.length} online`;
-
-    // Clear old markers
-    helperMarkers.forEach(m => m.remove());
-    taskMarkers.forEach(m => m.remove());
-    helperMarkers = [];
-    taskMarkers = [];
-
-    // Render helper markers
-    helpers.forEach((h: any) => {
-      const el = document.createElement('div');
-      el.style.cssText = 'width:16px;height:16px;background:#29bc9b;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);cursor:pointer;';
-      const popup = new maplibregl.Popup({ offset: 12 }).setHTML(
-        `<div style="font-size:13px;font-weight:600;">${esc(h.name)}</div><div style="font-size:11px;color:#666;">${esc(h.city || 'Helper')}</div>`
-      );
-      const marker = new maplibregl.Marker({ element: el }).setLngLat([h.lng, h.lat]).setPopup(popup).addTo(map);
-      helperMarkers.push(marker);
-    });
-
-    // Render task markers (only those with coordinates)
-    tasks.forEach((t: any) => {
-      if (!t.lat || !t.lng) return;
-      const el = document.createElement('div');
-      el.style.cssText = 'width:16px;height:16px;background:#f5a623;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);cursor:pointer;';
-      const popup = new maplibregl.Popup({ offset: 12 }).setHTML(
-        `<div style="font-size:13px;font-weight:600;">${esc(t.title)}</div><div style="font-size:11px;color:#666;">₹${t.budget} · ${esc(t.location)}</div><a href="/tasks/${t._id}" style="font-size:11px;color:#0070f3;">View Task →</a>`
-      );
-      const marker = new maplibregl.Marker({ element: el }).setLngLat([t.lng, t.lat]).setPopup(popup).addTo(map);
-      taskMarkers.push(marker);
-    });
-
-    // Tasks list
-    const list = document.getElementById('tasks-list')!;
-    if (tasks.length === 0) {
-      list.innerHTML = '<p class="text-mute">No open tasks right now.</p>';
-    } else {
-      list.innerHTML = tasks.slice(0, 6).map((t: any) =>
-        `<a href="/tasks/${t._id}" class="flex items-center justify-between p-1.5 rounded hover:bg-canvas-soft-2 transition-colors">
-          <span class="truncate">${esc(t.title)}</span>
-          <span class="shrink-0 ml-2 font-medium text-ink">₹${t.budget}</span>
-        </a>`
-      ).join('');
-    }
-  }
-
-  // Online toggle
-  const toggle = document.getElementById('online-toggle')!;
-  toggle.addEventListener('click', async () => {
-    isOnline = !isOnline;
-    toggle.setAttribute('aria-pressed', String(isOnline));
-    toggle.classList.toggle('bg-primary', isOnline);
-    toggle.classList.toggle('bg-hairline', !isOnline);
-    toggle.querySelector('span')!.classList.toggle('translate-x-4', isOnline);
-
-    if (isOnline) {
       if (navigator.geolocation) {
-        watchId = navigator.geolocation.watchPosition(
-          async (pos) => {
-            await fetch('/api/pulse', {
+        navigator.geolocation.getCurrentPosition(function(pos) {
+          map.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 12 });
+        }, function() {}, { timeout: 5000 });
+      }
+
+      map.on('load', function() { loadPulseData(); });
+    }
+
+    function loadPulseData() {
+      fetch('/api/pulse').then(function(r) { return r.json(); }).then(function(data) {
+        var tasks = data.tasks, helpers = data.helpers;
+        document.getElementById('online-count').textContent = helpers.length + ' online';
+
+        helperMarkers.forEach(function(m) { m.remove(); });
+        taskMarkers.forEach(function(m) { m.remove(); });
+        helperMarkers = [];
+        taskMarkers = [];
+
+        helpers.forEach(function(h) {
+          var el = document.createElement('div');
+          el.style.cssText = 'width:16px;height:16px;background:#29bc9b;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);cursor:pointer;';
+          var popup = new maplibregl.Popup({ offset: 12 }).setHTML(
+            '<div style="font-size:13px;font-weight:600;">' + esc(h.name) + '</div><div style="font-size:11px;color:#666;">' + esc(h.city || 'Helper') + '</div>'
+          );
+          var marker = new maplibregl.Marker({ element: el }).setLngLat([h.lng, h.lat]).setPopup(popup).addTo(map);
+          helperMarkers.push(marker);
+        });
+
+        tasks.forEach(function(t) {
+          if (!t.lat || !t.lng) return;
+          var el = document.createElement('div');
+          el.style.cssText = 'width:16px;height:16px;background:#f5a623;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);cursor:pointer;';
+          var popup = new maplibregl.Popup({ offset: 12 }).setHTML(
+            '<div style="font-size:13px;font-weight:600;">' + esc(t.title) + '</div><div style="font-size:11px;color:#666;">₹' + t.budget + ' · ' + esc(t.location) + '</div><a href="/tasks/' + t._id + '" style="font-size:11px;color:#0070f3;">View Task →</a>'
+          );
+          var marker = new maplibregl.Marker({ element: el }).setLngLat([t.lng, t.lat]).setPopup(popup).addTo(map);
+          taskMarkers.push(marker);
+        });
+
+        var list = document.getElementById('tasks-list');
+        if (tasks.length === 0) {
+          list.innerHTML = '<p class="text-mute">No open tasks right now.</p>';
+        } else {
+          list.innerHTML = tasks.slice(0, 6).map(function(t) {
+            return '<a href="/tasks/' + t._id + '" class="flex items-center justify-between p-1.5 rounded hover:bg-canvas-soft-2 transition-colors"><span class="truncate">' + esc(t.title) + '</span><span class="shrink-0 ml-2 font-medium text-ink">₹' + t.budget + '</span></a>';
+          }).join('');
+        }
+      }).catch(function() {});
+    }
+
+    // Online toggle
+    document.getElementById('online-toggle').addEventListener('click', function() {
+      isOnline = !isOnline;
+      var toggle = document.getElementById('online-toggle');
+      toggle.setAttribute('aria-pressed', String(isOnline));
+      toggle.classList.toggle('bg-primary', isOnline);
+      toggle.classList.toggle('bg-hairline', !isOnline);
+      toggle.querySelector('span').classList.toggle('translate-x-4', isOnline);
+
+      if (isOnline) {
+        if (navigator.geolocation) {
+          watchId = navigator.geolocation.watchPosition(function(pos) {
+            fetch('/api/pulse', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
             });
-          },
-          () => alert('Location access denied'),
-          { enableHighAccuracy: true, maximumAge: 30000 }
-        );
+          }, function() { alert('Location access denied'); }, { enableHighAccuracy: true, maximumAge: 30000 });
+        }
+      } else {
+        if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+        fetch('/api/pulse', { method: 'DELETE' });
       }
-    } else {
-      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
-      await fetch('/api/pulse', { method: 'DELETE' });
-    }
-  });
+    });
 
-  function esc(s: string) { return s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || ''; }
+    function esc(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
 
-  initMap();
-  setInterval(loadPulse, 5000);
-</script>
+    initPulseMap();
+    setInterval(loadPulseData, 5000);
+  </script>
+</Layout>
