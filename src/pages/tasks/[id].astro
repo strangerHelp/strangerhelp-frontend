@@ -6,6 +6,7 @@ import Footer from "../../components/Footer.astro";
 
 <Layout title="Task Detail — StrangerHelp">
   <Navbar />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
   <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
     <div class="max-w-3xl mx-auto">
       <nav class="flex items-center gap-2 text-sm text-mute mb-6">
@@ -136,6 +137,14 @@ import Footer from "../../components/Footer.astro";
           <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-mono uppercase">Location</p><p class="mt-1 text-sm font-medium text-ink">${escapeHtml(task.location)}</p></div>
           <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-mono uppercase">Posted</p><p class="mt-1 text-sm font-medium text-ink">${time}</p></div>
         </div>
+        ${task.lat && task.lng ? `
+        <div class="mt-6">
+          <div id="task-map" class="h-48 rounded-md border border-hairline overflow-hidden"></div>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${task.lat},${task.lng}" target="_blank" rel="noopener" class="mt-2 flex items-center justify-center gap-2 h-10 w-full text-sm font-medium text-ink border border-hairline rounded-md hover:bg-canvas-soft-2 transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            Get Directions (Google Maps)
+          </a>
+        </div>` : ''}
         <div class="mt-6 pt-6 border-t border-hairline flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-canvas-soft-2 flex items-center justify-center text-sm font-semibold text-body">${task.anonymous ? '?' : (task.posterName || 'U').slice(0, 2).toUpperCase()}</div>
@@ -183,6 +192,31 @@ import Footer from "../../components/Footer.astro";
     document.getElementById('message-btn')?.addEventListener('click', messageUser);
     document.getElementById('delete-btn')?.addEventListener('click', deleteTask);
     document.getElementById('report-btn')?.addEventListener('click', reportTask);
+
+    // Init mini-map if task has coordinates
+    if (task.lat && task.lng && document.getElementById('task-map')) {
+      initTaskMap(task.lat, task.lng);
+    }
+  }
+
+  async function initTaskMap(lat: number, lng: number) {
+    if (!(window as any).maplibregl) {
+      await new Promise<void>((resolve) => {
+        const s = document.createElement('script');
+        s.src = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js';
+        s.onload = () => resolve();
+        document.head.appendChild(s);
+      });
+    }
+    const maplibregl = (window as any).maplibregl;
+    const map = new maplibregl.Map({
+      container: 'task-map',
+      style: 'https://tiles.openfreemap.org/styles/liberty',
+      center: [lng, lat],
+      zoom: 14,
+      interactive: true,
+    });
+    new maplibregl.Marker({ color: '#171717' }).setLngLat([lng, lat]).addTo(map);
   }
 
   let selectedRating = 0;

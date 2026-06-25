@@ -5,6 +5,7 @@ import Navbar from "../../components/Navbar.astro";
 
 <Layout title="Post a Task — StrangerHelp">
   <Navbar />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
   <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
     <div class="max-w-lg mx-auto">
       <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Post a new task.</h1>
@@ -72,7 +73,14 @@ import Navbar from "../../components/Navbar.astro";
 
         <div>
           <label for="location" class="block text-sm font-medium text-ink mb-1.5">Location</label>
-          <input type="text" id="location" name="location" required placeholder="Area, landmark, or address" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute" />
+          <div class="relative">
+            <input type="text" id="location" name="location" required placeholder="Search address or place..." autocomplete="off" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute" />
+            <div id="location-results" class="hidden absolute z-20 left-0 right-0 top-11 bg-canvas border border-hairline rounded-md shadow-lg max-h-48 overflow-y-auto"></div>
+          </div>
+          <input type="hidden" id="lat" name="lat" />
+          <input type="hidden" id="lng" name="lng" />
+          <div id="map-preview" class="hidden mt-2 h-40 rounded-md border border-hairline overflow-hidden"></div>
+          <p class="mt-1 text-xs text-mute">Search or <button type="button" id="use-my-location" class="text-link hover:underline">use my current location</button></p>
         </div>
 
         <div>
@@ -204,6 +212,8 @@ import Navbar from "../../components/Navbar.astro";
     fd.append('location', (document.getElementById('location') as HTMLInputElement).value);
     fd.append('anonymous', (document.getElementById('anonymous') as HTMLInputElement).checked ? 'true' : 'false');
     fd.append('urgent', urgentCheckbox.checked ? 'true' : 'false');
+    if (latInput.value) fd.append('lat', latInput.value);
+    if (lngInput.value) fd.append('lng', lngInput.value);
 
     const files = fileInput.files;
     if (files && files.length > 0) {
@@ -229,5 +239,91 @@ import Navbar from "../../components/Navbar.astro";
 
     submitBtn.textContent = 'Post Task';
     submitBtn.removeAttribute('disabled');
+  });
+
+  // --- Location picker with Nominatim + MapLibre ---
+  const locationInput = document.getElementById('location') as HTMLInputElement;
+  const locationResults = document.getElementById('location-results')!;
+  const latInput = document.getElementById('lat') as HTMLInputElement;
+  const lngInput = document.getElementById('lng') as HTMLInputElement;
+  const mapPreview = document.getElementById('map-preview')!;
+  let searchTimeout: any;
+  let miniMap: any = null;
+  let marker: any = null;
+
+  locationInput.addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    const q = locationInput.value.trim();
+    if (q.length < 3) { locationResults.classList.add('hidden'); return; }
+    searchTimeout = setTimeout(() => searchLocation(q), 400);
+  });
+
+  async function searchLocation(q: string) {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5&countrycodes=in`);
+    const data = await res.json();
+    if (data.length === 0) { locationResults.classList.add('hidden'); return; }
+    locationResults.innerHTML = data.map((r: any) =>
+      `<div class="px-3 py-2 text-sm text-body hover:bg-canvas-soft cursor-pointer border-b border-hairline last:border-0" data-lat="${r.lat}" data-lng="${r.lon}" data-name="${r.display_name}">${r.display_name}</div>`
+    ).join('');
+    locationResults.classList.remove('hidden');
+    locationResults.querySelectorAll('div').forEach(el => {
+      el.addEventListener('click', () => selectLocation(el.dataset.name!, parseFloat(el.dataset.lat!), parseFloat(el.dataset.lng!)));
+    });
+  }
+
+  function selectLocation(name: string, lat: number, lng: number) {
+    locationInput.value = name;
+    latInput.value = String(lat);
+    lngInput.value = String(lng);
+    locationResults.classList.add('hidden');
+    showMapPreview(lat, lng);
+  }
+
+  async function showMapPreview(lat: number, lng: number) {
+    mapPreview.classList.remove('hidden');
+    if (!(window as any).maplibregl) {
+      await new Promise<void>((resolve) => {
+        const s = document.createElement('script');
+        s.src = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js';
+        s.onload = () => resolve();
+        document.head.appendChild(s);
+      });
+    }
+    const maplibregl = (window as any).maplibregl;
+    if (miniMap) { miniMap.remove(); }
+    miniMap = new maplibregl.Map({
+      container: mapPreview,
+      style: 'https://tiles.openfreemap.org/styles/liberty',
+      center: [lng, lat],
+      zoom: 14,
+    });
+    if (marker) marker.remove();
+    marker = new maplibregl.Marker({ color: '#171717' }).setLngLat([lng, lat]).addTo(miniMap);
+    miniMap.on('click', (e: any) => {
+      const { lng: newLng, lat: newLat } = e.lngLat;
+      marker.setLngLat([newLng, newLat]);
+      latInput.value = String(newLat);
+      lngInput.value = String(newLng);
+    });
+  }
+
+  document.getElementById('use-my-location')!.addEventListener('click', () => {
+    if (!navigator.geolocation) { alert('Geolocation not supported'); return; }
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const { latitude, longitude } = pos.coords;
+      latInput.value = String(latitude);
+      lngInput.value = String(longitude);
+      // Reverse geocode
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+      const data = await res.json();
+      locationInput.value = data.display_name || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+      showMapPreview(latitude, longitude);
+    }, () => alert('Location access denied'));
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!(e.target as HTMLElement).closest('#location, #location-results')) {
+      locationResults.classList.add('hidden');
+    }
   });
 </script>
