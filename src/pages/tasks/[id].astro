@@ -81,7 +81,7 @@ import Footer from "../../components/Footer.astro";
           <div class="mt-3">${messageBtn}</div>
         </div>`;
     } else if (task.status === 'claimed' && isOwner) {
-      actionsHtml = `<p class="text-sm text-cyan-deep font-medium">✓ Claimed by ${escapeHtml(task.claimedByName || 'a helper')}${task.claimerVerified ? ' <span class="text-link" title="Verified">✓</span>' : ''}</p>${messageBtn}`;
+      actionsHtml = `<p class="text-sm text-cyan-deep font-medium">✓ Claimed by ${escapeHtml(task.claimedByName || 'a helper')}${task.claimerVerified ? ' <span class="text-link text-xs">✓ Verified</span>' : ''}</p>${messageBtn}`;
     } else if (task.status === 'completed') {
       actionsHtml = `<p class="text-sm text-mute font-medium">✓ Task completed</p>${messageBtn}`;
     }
@@ -149,7 +149,7 @@ import Footer from "../../components/Footer.astro";
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-canvas-soft-2 flex items-center justify-center text-sm font-semibold text-body">${task.anonymous ? '?' : (task.posterName || 'U').slice(0, 2).toUpperCase()}</div>
             <div>
-              <p class="text-sm font-medium text-ink">${task.anonymous ? 'Anonymous' : escapeHtml(task.posterName || 'User')}${task.posterVerified ? ' <span class="inline-flex items-center text-link" title="Verified User">✓</span>' : ''}</p>
+              <p class="text-sm font-medium text-ink">${task.anonymous ? 'Anonymous' : escapeHtml(task.posterName || 'User')}${task.posterVerified ? ' <span class="text-link text-xs" title="Verified User">✓ Verified</span>' : ''}</p>
               <p class="text-xs text-mute">${escapeHtml(task.city || '')}</p>
             </div>
           </div>
