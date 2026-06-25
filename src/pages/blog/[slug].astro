@@ -178,7 +178,7 @@ if (!post) return Astro.redirect('/blog');
           <span class="text-xs text-mute">{post.date}</span>
         </div>
         <h1 class="text-2xl md:text-3xl font-semibold text-ink tracking-[-1.28px] leading-tight">{post.title}</h1>
-        <div class="mt-8 prose" set:html={post.content} />
+        <div class="mt-8 text-sm text-body leading-relaxed [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-ink [&_h2]:mt-8 [&_h2]:mb-3 [&_p]:mb-4 [&_ul]:mb-4 [&_ul]:pl-5 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ol]:mb-4 [&_ol]:pl-5 [&_ol]:list-decimal [&_ol]:space-y-1.5 [&_a]:text-link [&_a]:underline [&_strong]:text-ink [&_strong]:font-medium" set:html={post.content} />
       </article>
 
       <div class="mt-12 pt-6 border-t border-hairline">
@@ -188,15 +188,3 @@ if (!post) return Astro.redirect('/blog');
   </main>
   <Footer />
 </Layout>
-
-<style>
-  .prose { @apply text-sm text-body leading-relaxed; }
-  .prose h2 { @apply text-lg font-semibold text-ink mt-8 mb-3 tracking-[-0.6px]; }
-  .prose p { @apply mb-4; }
-  .prose ul, .prose ol { @apply mb-4 pl-5 space-y-1.5; }
-  .prose ul { @apply list-disc; }
-  .prose ol { @apply list-decimal; }
-  .prose li { @apply text-sm text-body; }
-  .prose a { @apply text-link hover:text-link-deep underline; }
-  .prose strong { @apply text-ink font-medium; }
-</style>
