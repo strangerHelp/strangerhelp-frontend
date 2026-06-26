@@ -18,15 +18,40 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
     </div>
 
     <!-- Location banner -->
-    <div id="location-banner" class="mb-6 p-4 bg-canvas rounded-lg border border-hairline flex items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-link shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        <div>
-          <p class="text-sm font-medium text-ink" id="location-text">Enable location for nearby tasks</p>
-          <p class="text-xs text-mute" id="location-sub">See tasks sorted by distance from you</p>
+    <div id="location-banner" class="mb-6 p-4 bg-canvas rounded-lg border border-hairline">
+      <!-- State 1: Ask for location -->
+      <div id="loc-ask" class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-link shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div>
+            <p class="text-sm font-medium text-ink" id="location-text">Enable location for nearby tasks</p>
+            <p class="text-xs text-mute" id="location-sub">See tasks sorted by distance from you</p>
+          </div>
+        </div>
+        <button id="location-btn" class="shrink-0 h-8 px-3 text-xs font-medium text-on-primary bg-primary rounded-md hover:opacity-90 transition-opacity">Allow Location</button>
+      </div>
+      <!-- State 2: City input (shown if GPS denied and not logged in with city) -->
+      <div id="loc-city" class="hidden">
+        <div class="flex items-center gap-3 mb-2">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-link shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <p class="text-sm font-medium text-ink">Enter your city to see nearby tasks</p>
+        </div>
+        <div class="relative">
+          <input type="text" id="city-input" placeholder="Search city or area..." autocomplete="off" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute" />
+          <div id="city-results" class="hidden absolute z-20 left-0 right-0 top-11 bg-canvas border border-hairline rounded-md shadow-lg max-h-48 overflow-y-auto"></div>
         </div>
       </div>
-      <button id="location-btn" class="shrink-0 h-8 px-3 text-xs font-medium text-on-primary bg-primary rounded-md hover:opacity-90 transition-opacity">Allow Location</button>
+      <!-- State 3: Location active -->
+      <div id="loc-active" class="hidden flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-cyan-deep shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div>
+            <p class="text-sm font-medium text-ink">Tasks near <span id="loc-name" class="text-link"></span></p>
+            <p class="text-xs text-mute">Sorted by distance</p>
+          </div>
+        </div>
+        <button id="change-location-btn" class="shrink-0 h-8 px-3 text-xs font-medium text-ink border border-hairline rounded-md hover:bg-canvas-soft-2">Change</button>
+      </div>
     </div>
 
     <!-- Filters -->
@@ -55,6 +80,7 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
   let activeCategory = 'All';
   let userLat: number | null = null;
   let userLng: number | null = null;
+  let currentUser: any = null;
 
   async function loadTasks(category?: string) {
     const params = new URLSearchParams();
@@ -66,13 +92,9 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
     const grid = document.getElementById('tasks-grid')!;
     const empty = document.getElementById('empty-state')!;
 
-    if (tasks.length === 0) {
-      grid.innerHTML = '';
-      empty.classList.remove('hidden');
-      return;
-    }
-
+    if (tasks.length === 0) { grid.innerHTML = ''; empty.classList.remove('hidden'); return; }
     empty.classList.add('hidden');
+
     grid.innerHTML = tasks.map((t: any) => {
       const time = (window as any).timeAgoIST(t.createdAt);
       const distText = t.distance != null ? `${t.distance < 1 ? (t.distance * 1000).toFixed(0) + ' m' : t.distance.toFixed(1) + ' km'} away` : '';
@@ -84,53 +106,115 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
           </div>
           <span class="text-base font-semibold text-ink">₹${t.budget}</span>
         </div>
-        <h3 class="text-sm font-semibold text-ink group-hover:text-link transition-colors leading-snug">${escapeHtml(t.title)}</h3>
+        <h3 class="text-sm font-semibold text-ink group-hover:text-link transition-colors leading-snug">${esc(t.title)}</h3>
         <div class="mt-3 flex items-center gap-3 text-xs text-mute">
           <span class="flex items-center gap-1">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            ${escapeHtml(t.location)}
+            ${esc(t.location)}
           </span>
           ${distText ? `<span class="text-link font-medium">${distText}</span>` : `<span>${time}</span>`}
         </div>
         <div class="mt-3 pt-3 border-t border-hairline flex items-center justify-between">
-          <span class="text-xs text-body">${t.anonymous ? 'Anonymous' : escapeHtml(t.posterName || 'User')}${t.posterVerified ? ' <span class="text-link text-[10px]" title="Verified User">✓ Verified</span>' : ''}</span>
+          <span class="text-xs text-body">${t.anonymous ? 'Anonymous' : esc(t.posterName || 'User')}${t.posterVerified ? ' <span class="text-link text-[10px]">✓ Verified</span>' : ''}</span>
           <span class="px-2 py-0.5 text-xs rounded-full ${t.status === 'open' ? 'bg-cyan-soft text-cyan-deep' : t.status === 'claimed' ? 'bg-warning-soft text-warning-deep' : 'bg-canvas-soft-2 text-mute'}">${t.status}</span>
         </div>
       </a>`;
     }).join('');
   }
 
-  function escapeHtml(s: string) {
-    return s?.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') || '';
+  function esc(s: string) { return s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || ''; }
+
+  function showActiveState(name: string) {
+    document.getElementById('loc-ask')!.classList.add('hidden');
+    document.getElementById('loc-city')!.classList.add('hidden');
+    document.getElementById('loc-active')!.classList.remove('hidden');
+    document.getElementById('loc-name')!.textContent = name;
   }
 
-  // Location handling
-  const locationBtn = document.getElementById('location-btn')!;
-  const locationText = document.getElementById('location-text')!;
-  const locationSub = document.getElementById('location-sub')!;
+  function showCityInput() {
+    document.getElementById('loc-ask')!.classList.add('hidden');
+    document.getElementById('loc-city')!.classList.remove('hidden');
+    document.getElementById('loc-active')!.classList.add('hidden');
+  }
 
-  locationBtn.addEventListener('click', () => {
-    if (!navigator.geolocation) { locationText.textContent = 'Geolocation not supported'; return; }
-    locationBtn.textContent = 'Locating...';
+  // GPS location
+  document.getElementById('location-btn')!.addEventListener('click', () => {
+    if (!navigator.geolocation) { showCityInput(); return; }
+    (document.getElementById('location-btn') as HTMLButtonElement).textContent = 'Locating...';
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         userLat = pos.coords.latitude;
         userLng = pos.coords.longitude;
-        locationText.textContent = 'Showing tasks nearest to you';
-        locationSub.textContent = 'Sorted by distance';
-        locationBtn.textContent = '✓ Active';
-        locationBtn.classList.add('opacity-50');
+        showActiveState('your current location');
         loadTasks(activeCategory);
       },
       () => {
-        locationText.textContent = 'Location denied — using approximate location';
-        locationSub.textContent = 'Based on your IP address';
-        locationBtn.textContent = 'Denied';
-        locationBtn.classList.add('opacity-50');
-        loadTasks(activeCategory);
+        // GPS denied — check if logged-in user has city
+        if (currentUser?.city) {
+          geocodeCity(currentUser.city);
+        } else {
+          showCityInput();
+        }
       },
       { timeout: 10000 }
     );
+  });
+
+  // City search with Nominatim autocomplete
+  const cityInput = document.getElementById('city-input') as HTMLInputElement;
+  const cityResults = document.getElementById('city-results')!;
+  let cityTimeout: any;
+
+  cityInput.addEventListener('input', () => {
+    clearTimeout(cityTimeout);
+    const q = cityInput.value.trim();
+    if (q.length < 2) { cityResults.classList.add('hidden'); return; }
+    cityTimeout = setTimeout(() => searchCity(q), 400);
+  });
+
+  async function searchCity(q: string) {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5`);
+    const data = await res.json();
+    if (data.length === 0) { cityResults.classList.add('hidden'); return; }
+    cityResults.innerHTML = data.map((r: any) =>
+      `<div class="px-3 py-2.5 text-sm text-body hover:bg-canvas-soft cursor-pointer border-b border-hairline last:border-0" data-lat="${r.lat}" data-lng="${r.lon}" data-name="${r.display_name.split(',')[0]}">${r.display_name}</div>`
+    ).join('');
+    cityResults.classList.remove('hidden');
+    cityResults.querySelectorAll('div').forEach(el => {
+      el.addEventListener('click', () => {
+        userLat = parseFloat(el.dataset.lat!);
+        userLng = parseFloat(el.dataset.lng!);
+        showActiveState(el.dataset.name!);
+        cityResults.classList.add('hidden');
+        loadTasks(activeCategory);
+      });
+    });
+  }
+
+  async function geocodeCity(city: string) {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`);
+    const data = await res.json();
+    if (data.length > 0) {
+      userLat = parseFloat(data[0].lat);
+      userLng = parseFloat(data[0].lon);
+      showActiveState(city);
+      loadTasks(activeCategory);
+    } else {
+      showCityInput();
+    }
+  }
+
+  // Change location button
+  document.getElementById('change-location-btn')!.addEventListener('click', () => {
+    showCityInput();
+    cityInput.focus();
+  });
+
+  // Close dropdown on outside click
+  document.addEventListener('click', (e) => {
+    if (!(e.target as HTMLElement).closest('#city-input, #city-results')) {
+      cityResults.classList.add('hidden');
+    }
   });
 
   // Category filter
@@ -147,6 +231,21 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
     });
   });
 
-  // Initial load — API uses CF IP fallback automatically
-  loadTasks();
+  // Init: check if logged in and has city
+  async function init() {
+    const authRes = await fetch('/api/auth/me');
+    if (authRes.ok) {
+      const { user } = await authRes.json();
+      currentUser = user;
+      if (user.city) {
+        // Auto-sort by user's registered city
+        geocodeCity(user.city);
+        return;
+      }
+    }
+    // Not logged in or no city — load without sorting, API uses CF IP
+    loadTasks();
+  }
+
+  init();
 </script>
