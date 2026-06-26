@@ -38,8 +38,6 @@ async function sendPush(endpoint: string, payload: PushPayload) {
 
   const jwt = await createVapidToken(audience, vapidPrivateKey, vapidPublicKey);
 
-  // Send push without encrypted payload - service worker will show notification
-  // We store the payload info in KV or just send a "tickle" push
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: {
@@ -48,10 +46,11 @@ async function sendPush(endpoint: string, payload: PushPayload) {
       'TTL': '86400',
       'Urgency': 'high',
     },
+    body: null,
   });
 
   if (res.status === 410 || res.status === 404) throw new Error('gone');
-  if (!res.ok) throw new Error(`push failed: ${res.status}`);
+  if (res.status === 403 || res.status === 401) throw new Error('auth failed: ' + res.status);
 }
 
 async function createVapidToken(audience: string, privateKeyB64url: string, publicKeyB64url: string): Promise<string> {
