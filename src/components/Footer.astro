@@ -79,5 +79,23 @@ const columns = [
         </a>
       </div>
     </div>
+    <!-- Google Translate -->
+    <div class="mt-6 pt-4 border-t border-hairline/50 flex items-center justify-between">
+      <span class="text-xs text-mute">🌐 Translate</span>
+      <div id="google_translate_element"></div>
+    </div>
   </div>
 </footer>
+
+<script is:inline>
+function googleTranslateInit() {
+  new google.translate.TranslateElement({ pageLanguage: 'en', layout: google.translate.TranslateElement.InlineLayout.SIMPLE, autoDisplay: false }, 'google_translate_element');
+}
+</script>
+<script is:inline src="https://translate.google.com/translate_a/element.js?cb=googleTranslateInit"></script>
+<style>
+  .goog-te-gadget { font-size: 0 !important; }
+  .goog-te-gadget .goog-te-combo { font-size: 12px; border: 1px solid #ebebeb; border-radius: 6px; padding: 4px 8px; background: transparent; color: #4d4d4d; }
+  .goog-te-banner-frame { display: none !important; }
+  body { top: 0 !important; }
+</style>
