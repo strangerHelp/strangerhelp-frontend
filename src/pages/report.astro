@@ -88,11 +88,10 @@ import Footer from "../components/Footer.astro";
         try {
           const parsed = JSON.parse(r.description);
           if (parsed.front || parsed.selfie || parsed.back) {
-            const images = [parsed.front && 'ID Front', parsed.back && 'ID Back', parsed.selfie && 'Selfie'].filter(Boolean);
             descHtml = `<div class="mt-2 flex flex-wrap gap-2">${
-              parsed.front ? `<button onclick="window.open().document.write('<img src=\\'${parsed.front}\\' style=\\'max-width:100%\\'>')" class="px-2 py-1 text-xs font-medium text-link border border-hairline rounded hover:bg-canvas-soft-2">View ID Front</button>` : ''}${
-              parsed.back ? `<button onclick="window.open().document.write('<img src=\\'${parsed.back}\\' style=\\'max-width:100%\\'>')" class="px-2 py-1 text-xs font-medium text-link border border-hairline rounded hover:bg-canvas-soft-2">View ID Back</button>` : ''}${
-              parsed.selfie ? `<button onclick="window.open().document.write('<img src=\\'${parsed.selfie}\\' style=\\'max-width:100%\\'>')" class="px-2 py-1 text-xs font-medium text-link border border-hairline rounded hover:bg-canvas-soft-2">View Selfie</button>` : ''
+              parsed.front ? `<button onclick="viewImage('${parsed.front}')" class="px-2 py-1 text-xs font-medium text-link border border-hairline rounded hover:bg-canvas-soft-2">View ID Front</button>` : ''}${
+              parsed.back ? `<button onclick="viewImage('${parsed.back}')" class="px-2 py-1 text-xs font-medium text-link border border-hairline rounded hover:bg-canvas-soft-2">View ID Back</button>` : ''}${
+              parsed.selfie ? `<button onclick="viewImage('${parsed.selfie}')" class="px-2 py-1 text-xs font-medium text-link border border-hairline rounded hover:bg-canvas-soft-2">View Selfie</button>` : ''
             }</div>`;
           } else {
             descHtml = `<p class="text-xs text-body mt-1">${escapeHtml(r.description.slice(0, 150))}</p>`;
@@ -100,7 +99,7 @@ import Footer from "../components/Footer.astro";
         } catch {
           // Not JSON, check if it contains base64 data
           if (r.description.includes('data:image')) {
-            descHtml = `<button onclick="window.open().document.write('<img src=\\'${r.description.replace(/'/g, "\\'")}\\' style=\\'max-width:100%\\'>')" class="mt-2 px-2 py-1 text-xs font-medium text-link border border-hairline rounded hover:bg-canvas-soft-2">View Attachment</button>`;
+            descHtml = `<button onclick="viewImage('${r.description.replace(/'/g, "\\'")}')" class="mt-2 px-2 py-1 text-xs font-medium text-link border border-hairline rounded hover:bg-canvas-soft-2">View Attachment</button>`;
           } else {
             descHtml = `<p class="text-xs text-body mt-1">${escapeHtml(r.description.slice(0, 150))}</p>`;
           }

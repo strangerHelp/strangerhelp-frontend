@@ -100,7 +100,7 @@ import Footer from "../../components/Footer.astro";
       attachmentsHtml = `<div class="mt-4"><p class="text-xs text-mute font-mono uppercase mb-2">Attachments</p><div class="flex gap-2 flex-wrap">${task.attachments.map((a: string, i: number) => {
         const isImage = a.startsWith('data:image') || a.match(/\.(jpg|jpeg|png|gif|webp)$/i);
         return isImage
-          ? `<a href="${a}" target="_blank"><img src="${a}" class="w-24 h-24 object-cover rounded-md border border-hairline" /></a>`
+          ? `<img src="${a}" onclick="viewImage(this.src)" class="w-24 h-24 object-cover rounded-md border border-hairline cursor-pointer" />`
           : `<a href="${a}" target="_blank" class="inline-flex h-9 items-center px-3 text-xs font-medium text-link border border-hairline rounded-md hover:bg-canvas-soft-2">View File ${i + 1}</a>`;
       }).join('')}</div></div>`;
     }
@@ -112,7 +112,7 @@ import Footer from "../../components/Footer.astro";
         <div class="flex gap-2 flex-wrap">${task.completionProof.map((p: string, i: number) => {
           const isImage = p.startsWith('data:image') || p.match(/\.(jpg|jpeg|png|gif|webp)$/i);
           return isImage
-            ? `<a href="${p}" target="_blank" class="block"><img src="${p}" class="w-24 h-24 object-cover rounded-md border border-hairline" /></a>`
+            ? `<img src="${p}" onclick="viewImage(this.src)" class="w-24 h-24 object-cover rounded-md border border-hairline cursor-pointer" />`
             : `<a href="${p}" target="_blank" class="inline-flex h-9 items-center px-3 text-xs font-medium text-link border border-hairline rounded-md hover:bg-canvas-soft-2">View Proof ${i + 1}</a>`;
         }).join('')}</div>
       </div>`;
