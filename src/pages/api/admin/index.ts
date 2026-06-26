@@ -45,6 +45,15 @@ export const PATCH: APIRoute = async ({ cookies, request }) => {
   else if (action === 'delete_task') await db.prepare("DELETE FROM tasks WHERE id = ?").bind(id).run();
   else if (action === 'verify_user') await db.prepare("UPDATE users SET verified = 1, verification_status = 'approved' WHERE id = ?").bind(id).run();
   else if (action === 'reject_verification') await db.prepare("UPDATE users SET verification_status = '' WHERE id = ?").bind(id).run();
+  else if (action === 'delete_user') {
+    await db.prepare("DELETE FROM messages WHERE sender_id = ?").bind(id).run();
+    await db.prepare("DELETE FROM conversations WHERE participant_1 = ? OR participant_2 = ?").bind(id, id).run();
+    await db.prepare("DELETE FROM tasks WHERE poster_id = ?").bind(id).run();
+    await db.prepare("DELETE FROM notifications WHERE user_id = ?").bind(id).run();
+    await db.prepare("DELETE FROM pulse WHERE user_id = ?").bind(id).run();
+    await db.prepare("DELETE FROM reports WHERE reporter_id = ?").bind(id).run();
+    await db.prepare("DELETE FROM users WHERE id = ?").bind(id).run();
+  }
   else return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400 });
 
   return new Response(JSON.stringify({ ok: true }));

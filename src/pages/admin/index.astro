@@ -112,6 +112,7 @@ import Layout from "../../layouts/Layout.astro";
                   ? `<button onclick="adminAction('unban_user','${u._id}')" class="text-xs text-link hover:underline">Unban</button>`
                   : `<button onclick="adminAction('ban_user','${u._id}')" class="text-xs text-error hover:underline">Ban</button>`}
                 ${!u.isAdmin ? ` <button onclick="adminAction('make_admin','${u._id}')" class="text-xs text-link hover:underline ml-2">Make Admin</button>` : ''}
+                ${!u.isAdmin ? ` <button onclick="if(confirm('Permanently delete this user and all their data?'))adminAction('delete_user','${u._id}')" class="text-xs text-error hover:underline ml-2">Delete</button>` : ''}
               </td>
             </tr>`).join('')}
           </tbody>
