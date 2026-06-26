@@ -140,7 +140,7 @@ import Footer from "../../components/Footer.astro";
         ${task.description ? `<p class="mt-4 text-sm text-body leading-relaxed">${escapeHtml(task.description)}</p>` : ''}
         ${attachmentsHtml}
         <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-mono uppercase">Budget</p><p class="mt-1 text-lg font-semibold text-ink">₹${task.budget}</p></div>
+          <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-mono uppercase">Budget</p><p class="mt-1 text-lg font-semibold text-ink">₹${task.budget}${task.maxClaimers > 1 ? '<span class="text-xs font-normal text-mute">/person</span>' : ''}</p></div>
           <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-mono uppercase">Deadline</p><p class="mt-1 text-sm font-medium text-ink">${escapeHtml(task.deadline || 'Today')}</p></div>
           <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-mono uppercase">Location</p><p class="mt-1 text-sm font-medium text-ink">${escapeHtml(task.location)}</p></div>
           <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-mono uppercase">Posted</p><p class="mt-1 text-sm font-medium text-ink">${time}</p></div>

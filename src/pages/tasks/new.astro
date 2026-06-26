@@ -172,7 +172,9 @@ import Navbar from "../../components/Navbar.astro";
   // Category: show/hide helpers field for Event/Group Work
   const categorySelect = document.getElementById('category') as HTMLSelectElement;
   categorySelect.addEventListener('change', () => {
-    document.getElementById('helpers-field')!.classList.toggle('hidden', categorySelect.value !== 'Event / Group Work');
+    const isGroup = categorySelect.value === 'Event / Group Work';
+    document.getElementById('helpers-field')!.classList.toggle('hidden', !isGroup);
+    document.querySelector('label[for="budget"]')!.textContent = isGroup ? 'Budget (₹) / per person' : 'Budget (₹)';
   });
 
   // Urgent: show popup when checked
