@@ -112,6 +112,7 @@ const navLinks = [
       }
       document.getElementById('mobile-auth')!.innerHTML = `<a href="/dashboard" class="flex-1 text-center py-2 text-sm font-medium text-ink border border-hairline rounded-md">Dashboard</a><a href="/chat" class="flex-1 text-center py-2 text-sm font-medium text-on-primary bg-primary rounded-md">Messages</a>`;
       loadNotifications();
+      initPush();
     }
   }).catch(() => {});
 
@@ -176,7 +177,4 @@ const navLinks = [
       });
     }, 3000);
   }
-
-  // Only init push for logged-in users
-  fetch('/api/auth/me').then(r => { if (r.ok) initPush(); }).catch(() => {});
 </script>
