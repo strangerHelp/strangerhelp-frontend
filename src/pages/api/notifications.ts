@@ -40,4 +40,10 @@ export async function createNotification(db: D1Database, userId: string, type: s
   const id = genId();
   await db.prepare("INSERT INTO notifications (id, user_id, type, title, message, link) VALUES (?, ?, ?, ?, ?, ?)")
     .bind(id, userId, type, title, message, link).run();
+
+  // Send push notification (best effort, don't await to avoid slowing down response)
+  try {
+    const { sendPushToUser } = await import('../../lib/push');
+    await sendPushToUser(db, userId, { title, body: message, url: link });
+  } catch {}
 }
