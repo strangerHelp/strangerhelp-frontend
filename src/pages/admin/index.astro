@@ -144,6 +144,7 @@ import Layout from "../../layouts/Layout.astro";
   async function loadReports() {
     const res = await fetch('/api/reports');
     const allReports = await res.json();
+    cachedReports = allReports;
     const reports = allReports.filter((r: any) => r.type !== 'verification');
     const statusColors: Record<string, string> = { open: 'bg-warning-soft text-warning-deep', reviewing: 'bg-link-bg-soft text-link', resolved: 'bg-cyan-soft text-cyan-deep', dismissed: 'bg-canvas-soft-2 text-mute' };
 
@@ -161,7 +162,7 @@ import Layout from "../../layouts/Layout.astro";
           </div>
           <p class="text-sm font-medium text-ink truncate">${esc(r.reason)}</p>
           <p class="text-xs text-body mt-1">By: ${esc(r.reporterName)}</p>
-          ${r.description ? `<p class="text-xs text-body mt-1 p-2 bg-canvas-soft rounded overflow-hidden max-h-12 break-all">${esc(r.description.slice(0, 150))}</p>` : ''}
+          ${r.description && !r.description.startsWith('{') && !r.description.includes('data:image') ? `<p class="text-xs text-body mt-1 p-2 bg-canvas-soft rounded overflow-hidden max-h-12 break-all">${esc(r.description.slice(0, 150))}</p>` : ''}
           ${r.adminNote ? `<p class="text-xs text-link mt-2 truncate">Note: ${esc(r.adminNote)}</p>` : ''}
           <div class="mt-3 flex gap-2">
             <button onclick="updateReport('${r._id}','reviewing','')" class="text-xs px-2 py-1 rounded border border-hairline hover:bg-canvas-soft-2">Reviewing</button>
@@ -175,6 +176,7 @@ import Layout from "../../layouts/Layout.astro";
   async function loadVerification() {
     const res = await fetch('/api/reports');
     const reports = await res.json();
+    cachedReports = reports;
     const verifications = reports.filter((r: any) => r.type === 'verification');
 
     document.getElementById('admin-content')!.innerHTML = `
@@ -182,23 +184,38 @@ import Layout from "../../layouts/Layout.astro";
       <p class="mt-1 text-sm text-body">${verifications.length} verification requests</p>
       <div class="mt-6 space-y-3">
         ${verifications.length === 0 ? '<p class="text-sm text-mute py-8 text-center">No verification requests.</p>' : verifications.map((v: any) => {
-          let docs: any = {};
-          try { docs = JSON.parse(v.description || '{}'); } catch {}
+          let hasImages = false;
+          try { const d = JSON.parse(v.description || '{}'); hasImages = !!(d.front || d.selfie); } catch {}
           return `<div class="p-4 bg-canvas rounded-lg border border-hairline">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-sm font-medium text-ink">${esc(v.reporter_name)} — ${esc(v.reason)}</span>
+              <span class="text-sm font-medium text-ink">${esc(v.reporterName || v.reporter_name || '')} — ${esc(v.reason)}</span>
               <span class="px-2 py-0.5 text-xs rounded-full ${v.status === 'open' ? 'bg-warning-soft text-warning-deep' : 'bg-cyan-soft text-cyan-deep'}">${v.status}</span>
             </div>
-            <p class="text-xs text-mute mb-2">User ID: ${v.reporter_id}</p>
-            ${docs.front ? `<div class="flex gap-2 flex-wrap mb-3 overflow-hidden"><img src="${docs.front}" class="w-24 h-24 object-cover rounded border border-hairline shrink-0" />${docs.back ? `<img src="${docs.back}" class="w-24 h-24 object-cover rounded border border-hairline shrink-0" />` : ''}${docs.selfie ? `<img src="${docs.selfie}" class="w-24 h-24 object-cover rounded border border-hairline shrink-0" />` : ''}</div>` : `<p class="text-xs text-mute mb-2">Documents uploaded (stored securely)</p>`}
+            <p class="text-xs text-mute mb-2">User ID: ${v.reporterId || v.reporter_id}</p>
+            ${hasImages ? `<div class="flex gap-2 mb-3">
+              <button onclick="viewVerificationDocs('${v._id || v.id}')" class="text-xs px-2 py-1 text-link border border-hairline rounded hover:bg-canvas-soft-2">View Documents</button>
+            </div>` : '<p class="text-xs text-mute mb-2">No documents</p>'}
             ${v.status === 'open' ? `<div class="flex gap-2">
-              <button onclick="approveVerification('${v.reporter_id}','${v.id}')" class="text-xs px-3 py-1.5 rounded bg-primary text-on-primary hover:opacity-90">Approve</button>
-              <button onclick="rejectVerification('${v.reporter_id}','${v.id}')" class="text-xs px-3 py-1.5 rounded border border-hairline text-error hover:bg-error-soft">Reject</button>
+              <button onclick="approveVerification('${v.reporterId || v.reporter_id}','${v._id || v.id}')" class="text-xs px-3 py-1.5 rounded bg-primary text-on-primary hover:opacity-90">Approve</button>
+              <button onclick="rejectVerification('${v.reporterId || v.reporter_id}','${v._id || v.id}')" class="text-xs px-3 py-1.5 rounded border border-hairline text-error hover:bg-error-soft">Reject</button>
             </div>` : ''}
           </div>`;
         }).join('')}
       </div>`;
   }
+
+  let cachedReports: any[] = [];
+
+  (window as any).viewVerificationDocs = function(reportId: string) {
+    const report = cachedReports.find((r: any) => (r._id || r.id) === reportId);
+    if (!report) return;
+    try {
+      const docs = JSON.parse(report.description || '{}');
+      const w = window.open('', '_blank');
+      if (!w) return;
+      w.document.write(`<html><head><title>Verification Docs</title><style>body{font-family:system-ui;padding:20px;background:#f5f5f5}img{max-width:400px;margin:10px;border-radius:8px;border:1px solid #ddd}</style></head><body><h2>Verification Documents</h2>${docs.front ? '<h3>ID Front</h3><img src="'+docs.front+'" />' : ''}${docs.back ? '<h3>ID Back</h3><img src="'+docs.back+'" />' : ''}${docs.selfie ? '<h3>Selfie</h3><img src="'+docs.selfie+'" />' : ''}</body></html>`);
+    } catch {}
+  };
 
   (window as any).approveVerification = async function(userId: string, reportId: string) {
     const db = await fetch('/api/admin', { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'verify_user', id: userId }) });
