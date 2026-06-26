@@ -32,9 +32,12 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
       </div>
       <!-- State 2: City input (shown if GPS denied and not logged in with city) -->
       <div id="loc-city" class="hidden">
-        <div class="flex items-center gap-3 mb-2">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-link shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <p class="text-sm font-medium text-ink">Enter your city to see nearby tasks</p>
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-3">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-link shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <p class="text-sm font-medium text-ink">Enter your city to see nearby tasks</p>
+          </div>
+          <button id="live-location-btn" class="shrink-0 h-8 px-3 text-xs font-medium text-link border border-hairline rounded-md hover:bg-canvas-soft-2">📍 Use Live Location</button>
         </div>
         <div class="relative">
           <input type="text" id="city-input" placeholder="Search city or area..." autocomplete="off" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute" />
@@ -164,6 +167,23 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
   const cityInput = document.getElementById('city-input') as HTMLInputElement;
   const cityResults = document.getElementById('city-results')!;
   let cityTimeout: any;
+
+  // Live location button (inside city input state)
+  document.getElementById('live-location-btn')!.addEventListener('click', () => {
+    if (!navigator.geolocation) return;
+    const btn = document.getElementById('live-location-btn')!;
+    btn.textContent = 'Locating...';
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        userLat = pos.coords.latitude;
+        userLng = pos.coords.longitude;
+        showActiveState('your live location');
+        loadTasks(activeCategory);
+      },
+      () => { btn.textContent = '📍 Use Live Location'; alert('Location access denied'); },
+      { timeout: 10000 }
+    );
+  });
 
   cityInput.addEventListener('input', () => {
     clearTimeout(cityTimeout);
