@@ -17,6 +17,18 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
       <a href="/tasks/new" class="inline-flex h-10 items-center px-4 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">+ Post a Task</a>
     </div>
 
+    <!-- Location banner -->
+    <div id="location-banner" class="mb-6 p-4 bg-canvas rounded-lg border border-hairline flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-link shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <div>
+          <p class="text-sm font-medium text-ink" id="location-text">Enable location for nearby tasks</p>
+          <p class="text-xs text-mute" id="location-sub">See tasks sorted by distance from you</p>
+        </div>
+      </div>
+      <button id="location-btn" class="shrink-0 h-8 px-3 text-xs font-medium text-on-primary bg-primary rounded-md hover:opacity-90 transition-opacity">Allow Location</button>
+    </div>
+
     <!-- Filters -->
     <div class="flex gap-2 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0">
       {categories.map((cat, i) => (
@@ -41,11 +53,14 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
 
 <script>
   let activeCategory = 'All';
+  let userLat: number | null = null;
+  let userLng: number | null = null;
 
   async function loadTasks(category?: string) {
     const params = new URLSearchParams();
     if (category && category !== 'All') params.set('category', category);
-    
+    if (userLat && userLng) { params.set('lat', String(userLat)); params.set('lng', String(userLng)); }
+
     const res = await fetch(`/api/tasks?${params}`);
     const tasks = await res.json();
     const grid = document.getElementById('tasks-grid')!;
@@ -60,10 +75,13 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
     empty.classList.add('hidden');
     grid.innerHTML = tasks.map((t: any) => {
       const time = (window as any).timeAgoIST(t.createdAt);
+      const distText = t.distance != null ? `${t.distance < 1 ? (t.distance * 1000).toFixed(0) + ' m' : t.distance.toFixed(1) + ' km'} away` : '';
       return `<a href="/tasks/${t._id}" class="group p-5 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong shadow-[0px_1px_1px_#00000005,0px_2px_2px_#0000000a] transition-colors">
         <div class="flex items-center justify-between mb-3">
-          <span class="px-2 py-0.5 text-xs font-medium text-body bg-canvas-soft-2 rounded-full">${t.category}</span>
-          ${t.urgent ? '<span class="px-2 py-0.5 text-xs font-medium bg-error-soft text-error rounded-full">⚡</span>' : ''}
+          <div class="flex items-center gap-1.5">
+            <span class="px-2 py-0.5 text-xs font-medium text-body bg-canvas-soft-2 rounded-full">${t.category}</span>
+            ${t.urgent ? '<span class="px-2 py-0.5 text-xs font-medium bg-error-soft text-error rounded-full">⚡</span>' : ''}
+          </div>
           <span class="text-base font-semibold text-ink">₹${t.budget}</span>
         </div>
         <h3 class="text-sm font-semibold text-ink group-hover:text-link transition-colors leading-snug">${escapeHtml(t.title)}</h3>
@@ -72,7 +90,7 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
             ${escapeHtml(t.location)}
           </span>
-          <span>${time}</span>
+          ${distText ? `<span class="text-link font-medium">${distText}</span>` : `<span>${time}</span>`}
         </div>
         <div class="mt-3 pt-3 border-t border-hairline flex items-center justify-between">
           <span class="text-xs text-body">${t.anonymous ? 'Anonymous' : escapeHtml(t.posterName || 'User')}${t.posterVerified ? ' <span class="text-link text-[10px]" title="Verified User">✓ Verified</span>' : ''}</span>
@@ -85,6 +103,35 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
   function escapeHtml(s: string) {
     return s?.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') || '';
   }
+
+  // Location handling
+  const locationBtn = document.getElementById('location-btn')!;
+  const locationText = document.getElementById('location-text')!;
+  const locationSub = document.getElementById('location-sub')!;
+
+  locationBtn.addEventListener('click', () => {
+    if (!navigator.geolocation) { locationText.textContent = 'Geolocation not supported'; return; }
+    locationBtn.textContent = 'Locating...';
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        userLat = pos.coords.latitude;
+        userLng = pos.coords.longitude;
+        locationText.textContent = 'Showing tasks nearest to you';
+        locationSub.textContent = 'Sorted by distance';
+        locationBtn.textContent = '✓ Active';
+        locationBtn.classList.add('opacity-50');
+        loadTasks(activeCategory);
+      },
+      () => {
+        locationText.textContent = 'Location denied — using approximate location';
+        locationSub.textContent = 'Based on your IP address';
+        locationBtn.textContent = 'Denied';
+        locationBtn.classList.add('opacity-50');
+        loadTasks(activeCategory);
+      },
+      { timeout: 10000 }
+    );
+  });
 
   // Category filter
   document.querySelectorAll('.cat-btn').forEach(btn => {
@@ -100,5 +147,6 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
     });
   });
 
+  // Initial load — API uses CF IP fallback automatically
   loadTasks();
 </script>
