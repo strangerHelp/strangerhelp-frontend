@@ -180,7 +180,7 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
         showActiveState('your live location');
         loadTasks(activeCategory);
       },
-      () => { btn.textContent = '📍 Use Live Location'; alert('Location access denied'); },
+      () => { btn.textContent = '📍 Use Live Location'; alert('Location access denied. To enable:\n\n• Android Chrome: Tap the lock icon (🔒) in address bar → Site settings → Location → Allow\n\n• iPhone Safari: Settings → Safari → Location → Allow\n\n• Desktop: Click the lock icon in address bar → Location → Allow'); },
       { timeout: 10000 }
     );
   });
