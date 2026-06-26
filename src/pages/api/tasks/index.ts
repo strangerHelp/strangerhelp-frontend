@@ -96,6 +96,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const urgent = formData.get('urgent') === 'true' ? 1 : 0;
   const lat = parseFloat(formData.get('lat') as string) || null;
   const lng = parseFloat(formData.get('lng') as string) || null;
+  const maxClaimers = parseInt(formData.get('max_claimers') as string) || 1;
 
   if (!title || !category || !budget || !location) {
     return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
@@ -110,8 +111,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
   const id = genId();
   await db.prepare(
-    "INSERT INTO tasks (id, title, description, category, budget, deadline, location, city, anonymous, urgent, lat, lng, attachments, poster_id, poster_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-  ).bind(id, title, description, category, parseInt(budget), deadline, location, user?.city || '', anonymous, urgent, lat, lng, JSON.stringify(attachments), session, user?.name || 'User').run();
+    "INSERT INTO tasks (id, title, description, category, budget, deadline, location, city, anonymous, urgent, lat, lng, max_claimers, attachments, poster_id, poster_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+  ).bind(id, title, description, category, parseInt(budget), deadline, location, user?.city || '', anonymous, urgent, lat, lng, maxClaimers, JSON.stringify(attachments), session, user?.name || 'User').run();
 
   return new Response(JSON.stringify({ id }), { status: 201 });
 };

@@ -37,8 +37,16 @@ import Navbar from "../../components/Navbar.astro";
             <option>Queue Standing</option>
             <option>Verification</option>
             <option>Receipt Collection</option>
+            <option>Event / Group Work</option>
             <option>Other</option>
           </select>
+        </div>
+
+        <!-- Helpers needed (shown for Event/Group Work) -->
+        <div id="helpers-field" class="hidden">
+          <label for="max-claimers" class="block text-sm font-medium text-ink mb-1.5">How many helpers needed?</label>
+          <input type="number" id="max-claimers" name="max-claimers" min="2" max="50" value="2" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors" />
+          <p class="mt-1 text-xs text-mute">Multiple people can claim this task (e.g., catering, event staff, freelancing)</p>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
@@ -161,6 +169,12 @@ import Navbar from "../../components/Navbar.astro";
     customDeadline.classList.toggle('hidden', deadlineSelect.value !== 'custom');
   });
 
+  // Category: show/hide helpers field for Event/Group Work
+  const categorySelect = document.getElementById('category') as HTMLSelectElement;
+  categorySelect.addEventListener('change', () => {
+    document.getElementById('helpers-field')!.classList.toggle('hidden', categorySelect.value !== 'Event / Group Work');
+  });
+
   // Urgent: show popup when checked
   urgentCheckbox.addEventListener('change', () => {
     if (urgentCheckbox.checked) {
@@ -212,6 +226,8 @@ import Navbar from "../../components/Navbar.astro";
     fd.append('location', (document.getElementById('location') as HTMLInputElement).value);
     fd.append('anonymous', (document.getElementById('anonymous') as HTMLInputElement).checked ? 'true' : 'false');
     fd.append('urgent', urgentCheckbox.checked ? 'true' : 'false');
+    const maxClaimers = (document.getElementById('max-claimers') as HTMLInputElement).value;
+    if (categorySelect.value === 'Event / Group Work') fd.append('max_claimers', maxClaimers);
     if (latInput.value) fd.append('lat', latInput.value);
     if (lngInput.value) fd.append('lng', lngInput.value);
 

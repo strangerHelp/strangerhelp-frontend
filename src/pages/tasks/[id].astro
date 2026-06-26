@@ -69,7 +69,15 @@ import Footer from "../../components/Footer.astro";
     }
 
     if (task.status === 'open' && currentUser && !isOwner) {
-      actionsHtml = `<button id="claim-btn" class="flex-1 h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">Claim This Task</button>${messageBtn}`;
+      if (task.maxClaimers > 1) {
+        const alreadyClaimed = task.claimedUsers?.some((u: any) => u.user_id === currentUser.id);
+        const slotsLeft = task.maxClaimers - (task.claimedUsers?.length || 0);
+        actionsHtml = alreadyClaimed
+          ? `<p class="text-sm text-cyan-deep font-medium">✓ You joined this task</p>${messageBtn}`
+          : `<button id="claim-btn" class="flex-1 h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">Join Task (${slotsLeft} spot${slotsLeft > 1 ? 's' : ''} left)</button>${messageBtn}`;
+      } else {
+        actionsHtml = `<button id="claim-btn" class="flex-1 h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">Claim This Task</button>${messageBtn}`;
+      }
     } else if (task.status === 'open' && !currentUser) {
       actionsHtml = `<a href="/login?redirect=/tasks/${taskId}" class="flex-1 h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full">Login to Claim</a>`;
     } else if (task.status === 'claimed' && isClaimer) {
@@ -137,6 +145,15 @@ import Footer from "../../components/Footer.astro";
           <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-mono uppercase">Location</p><p class="mt-1 text-sm font-medium text-ink">${escapeHtml(task.location)}</p></div>
           <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-mono uppercase">Posted</p><p class="mt-1 text-sm font-medium text-ink">${time}</p></div>
         </div>
+        ${task.maxClaimers > 1 ? `
+        <div class="mt-4 p-4 bg-canvas-soft rounded-md border border-hairline">
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-xs font-mono uppercase text-mute">Group Task — ${task.claimedUsers?.length || 0}/${task.maxClaimers} helpers joined</p>
+            <span class="px-2 py-0.5 text-xs font-medium rounded-full ${(task.claimedUsers?.length || 0) >= task.maxClaimers ? 'bg-error-soft text-error' : 'bg-cyan-soft text-cyan-deep'}">${(task.claimedUsers?.length || 0) >= task.maxClaimers ? 'Full' : 'Open'}</span>
+          </div>
+          <div class="w-full h-2 bg-hairline rounded-full overflow-hidden"><div class="h-full bg-cyan-deep rounded-full" style="width:${Math.round(((task.claimedUsers?.length || 0) / task.maxClaimers) * 100)}%"></div></div>
+          ${task.claimedUsers?.length > 0 ? `<div class="mt-3 space-y-1">${task.claimedUsers.map((u: any) => `<div class="flex items-center gap-2 text-xs text-body"><span class="w-5 h-5 rounded-full bg-canvas-soft-2 flex items-center justify-center text-[10px] font-semibold">${(u.user_name || '?')[0].toUpperCase()}</span>${escapeHtml(u.user_name)}</div>`).join('')}</div>` : ''}
+        </div>` : ''}
         ${task.lat && task.lng ? `
         <div class="mt-6">
           <div id="task-map" class="h-48 rounded-md border border-hairline overflow-hidden"></div>
