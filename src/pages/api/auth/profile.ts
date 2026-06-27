@@ -11,12 +11,21 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const formData = await request.formData();
 
   const name = formData.get('name') as string;
+  const handle = formData.get('handle') as string;
   const city = formData.get('city') as string;
   const area = formData.get('area') as string;
   const country = formData.get('country') as string;
   const phone = formData.get('phone') as string;
   const bio = formData.get('bio') as string;
   const file = formData.get('avatar') as File | null;
+
+  // Validate handle uniqueness
+  if (handle) {
+    const cleanHandle = handle.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    if (cleanHandle.length < 3) return new Response(JSON.stringify({ error: 'Handle must be at least 3 characters (letters, numbers, underscore)' }), { status: 400 });
+    const existing: any = await db.prepare("SELECT id FROM users WHERE handle = ? AND id != ?").bind(cleanHandle, session).first();
+    if (existing) return new Response(JSON.stringify({ error: 'This handle is already taken' }), { status: 409 });
+  }
 
   let avatar = '';
   if (file && file.size > 0) {
@@ -27,6 +36,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const values: any[] = [];
 
   if (name) { updates.push("name = ?"); values.push(name); }
+  if (handle) { updates.push("handle = ?"); values.push(handle.toLowerCase().replace(/[^a-z0-9_]/g, '')); }
   if (city) { updates.push("city = ?"); values.push(city); }
   if (area !== undefined) { updates.push("area = ?"); values.push(area); }
   if (country) { updates.push("country = ?"); values.push(country); }
