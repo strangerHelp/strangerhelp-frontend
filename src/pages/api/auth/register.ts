@@ -33,6 +33,13 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     const token = await createSession(id);
     cookies.set('session', token, { httpOnly: true, secure: true, path: '/', maxAge: 60 * 60 * 24 * 7, sameSite: 'lax' });
+
+    // Send verification email (non-blocking)
+    try {
+      const { sendVerificationEmail } = await import('../../../lib/email');
+      await sendVerificationEmail(db, id, email);
+    } catch {}
+
     return new Response(JSON.stringify({ id, name }), { status: 201 });
   } catch (e: any) {
     return new Response(JSON.stringify({ error: 'Server error' }), { status: 500 });

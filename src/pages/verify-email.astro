@@ -1,0 +1,54 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+
+const params = Astro.url.searchParams;
+const success = params.get('success') === 'true';
+const error = params.get('error');
+---
+
+<Layout title="Verify Email — StrangerHelp">
+  <Navbar />
+  <main class="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-16">
+    <div class="w-full max-w-sm text-center">
+      {success ? (
+        <div class="p-8 bg-canvas rounded-lg border border-hairline">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-cyan-soft flex items-center justify-center">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#29bc9b" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+          </div>
+          <h1 class="text-xl font-semibold text-ink">Email Verified!</h1>
+          <p class="mt-2 text-sm text-body">Your email has been verified successfully.</p>
+          <a href="/dashboard" class="mt-6 inline-flex h-10 items-center px-6 text-sm font-medium text-on-primary bg-primary rounded-full">Go to Dashboard</a>
+        </div>
+      ) : error ? (
+        <div class="p-8 bg-canvas rounded-lg border border-hairline">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-error-soft flex items-center justify-center">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ee0000" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+          </div>
+          <h1 class="text-xl font-semibold text-ink">Verification Failed</h1>
+          <p class="mt-2 text-sm text-body">{error === 'invalid' ? 'This link is invalid or expired.' : 'Something went wrong.'}</p>
+          <button id="resend-btn" class="mt-6 inline-flex h-10 items-center px-6 text-sm font-medium text-on-primary bg-primary rounded-full">Resend Verification</button>
+        </div>
+      ) : (
+        <div class="p-8 bg-canvas rounded-lg border border-hairline">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-warning-soft flex items-center justify-center">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f5a623" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
+          </div>
+          <h1 class="text-xl font-semibold text-ink">Check Your Email</h1>
+          <p class="mt-2 text-sm text-body">We sent a verification link to your email. Click it to verify your account.</p>
+          <button id="resend-btn" class="mt-6 inline-flex h-10 items-center px-6 text-sm font-medium text-ink border border-hairline rounded-full hover:bg-canvas-soft-2">Resend Email</button>
+        </div>
+      )}
+    </div>
+  </main>
+</Layout>
+
+<script>
+  document.getElementById('resend-btn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('resend-btn')!;
+    btn.textContent = 'Sending...';
+    const res = await fetch('/api/auth/verify-email', { method: 'POST' });
+    const data = await res.json();
+    btn.textContent = res.ok ? '✓ Sent!' : 'Failed';
+  });
+</script>
