@@ -45,6 +45,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const isInvolved = task.poster_id === session || task.claimed_by === session;
   if (!isInvolved) return new Response(JSON.stringify({ error: 'You are not part of this task' }), { status: 403 });
 
+  // Validate revieweeId is the other participant
+  const validReviewee = (task.poster_id === session && revieweeId === task.claimed_by) || (task.claimed_by === session && revieweeId === task.poster_id);
+  if (!validReviewee) return new Response(JSON.stringify({ error: 'Invalid reviewee' }), { status: 403 });
+
   // Check if already reviewed
   const existing: any = await db.prepare("SELECT id FROM reviews WHERE task_id = ? AND reviewer_id = ?").bind(taskId, session).first();
   if (existing) return new Response(JSON.stringify({ error: 'Already reviewed' }), { status: 409 });

@@ -18,7 +18,13 @@ async function hmacSign(data: string): Promise<string> {
 
 async function hmacVerify(data: string, signature: string): Promise<boolean> {
   const expected = await hmacSign(data);
-  return expected === signature;
+  if (expected.length !== signature.length) return false;
+  const encoder = new TextEncoder();
+  const a = encoder.encode(expected);
+  const b = encoder.encode(signature);
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+  return diff === 0;
 }
 
 /** Create a signed session token: userId.timestamp.signature */

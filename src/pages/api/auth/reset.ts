@@ -2,9 +2,13 @@ import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import bcrypt from 'bcryptjs';
 import { verifyEmailToken } from '../../../lib/email';
+import { isRateLimited } from '../../../lib/ratelimit';
 
 // POST /api/auth/reset - verify token and set new password
 export const POST: APIRoute = async ({ request }) => {
+  if (await isRateLimited(request, 'reset')) {
+    return new Response(JSON.stringify({ error: 'Too many attempts. Try again later.' }), { status: 429 });
+  }
   const { token, password } = await request.json();
   if (!token || !password) return new Response(JSON.stringify({ error: 'Token and password required' }), { status: 400 });
   if (password.length < 8) return new Response(JSON.stringify({ error: 'Password must be at least 8 characters' }), { status: 400 });

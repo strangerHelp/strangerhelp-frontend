@@ -20,6 +20,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     if (password.length < 8) {
       return new Response(JSON.stringify({ error: 'Password must be at least 8 characters' }), { status: 400 });
     }
+    if (name.length > 100) return new Response(JSON.stringify({ error: 'Name too long' }), { status: 400 });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return new Response(JSON.stringify({ error: 'Invalid email format' }), { status: 400 });
 
     const existing = await db.prepare("SELECT id FROM users WHERE email = ?").bind(email).first();
     if (existing) {

@@ -3,6 +3,7 @@ import { env } from 'cloudflare:workers';
 import { genId, fileToDataUrl } from '../../../lib/db';
 import { createNotification } from '../notifications';
 import { getSessionUserId } from '../../../lib/auth';
+import { isRateLimited } from '../../../lib/ratelimit';
 
 export const GET: APIRoute = async ({ params, cookies }) => {
   const session = await getSessionUserId(cookies);
@@ -27,6 +28,7 @@ export const GET: APIRoute = async ({ params, cookies }) => {
 export const POST: APIRoute = async ({ params, request, cookies }) => {
   const session = await getSessionUserId(cookies);
   if (!session) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+  if (await isRateLimited(request, 'message')) return new Response(JSON.stringify({ error: 'Slow down' }), { status: 429 });
 
   const db = (env as any).DB as D1Database;
   const conv: any = await db.prepare("SELECT * FROM conversations WHERE id = ? AND (participant_1 = ? OR participant_2 = ?)")
@@ -55,6 +57,7 @@ export const POST: APIRoute = async ({ params, request, cookies }) => {
   }
 
   if (!text && attachments.length === 0) return new Response(JSON.stringify({ error: 'Empty message' }), { status: 400 });
+  if (text.length > 5000) return new Response(JSON.stringify({ error: 'Message too long' }), { status: 400 });
 
   const id = genId();
   await db.prepare("INSERT INTO messages (id, conversation_id, sender_id, sender_name, text, attachments, type) VALUES (?, ?, ?, ?, ?, ?, ?)")

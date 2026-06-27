@@ -38,6 +38,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
   const user: any = await db.prepare("SELECT name FROM users WHERE id = ?").bind(session).first();
   const recipient: any = await db.prepare("SELECT name FROM users WHERE id = ?").bind(recipientId).first();
+  if (!recipient) return new Response(JSON.stringify({ error: 'Recipient not found' }), { status: 404 });
 
   const id = genId();
   await db.prepare("INSERT INTO conversations (id, task_id, participant_1, participant_2, participant_1_name, participant_2_name) VALUES (?, ?, ?, ?, ?, ?)")

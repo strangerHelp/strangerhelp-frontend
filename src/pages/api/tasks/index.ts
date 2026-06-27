@@ -101,6 +101,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   if (!title || !category || !budget || !location) {
     return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
   }
+  if (title.length > 200) return new Response(JSON.stringify({ error: 'Title too long (max 200 chars)' }), { status: 400 });
+  if (description.length > 5000) return new Response(JSON.stringify({ error: 'Description too long' }), { status: 400 });
+  const budgetNum = parseInt(budget);
+  if (isNaN(budgetNum) || budgetNum < 1 || budgetNum > 500000) return new Response(JSON.stringify({ error: 'Invalid budget (₹1 - ₹5,00,000)' }), { status: 400 });
 
   const files = formData.getAll('files') as File[];
   const attachments: string[] = [];
@@ -112,7 +116,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const id = genId();
   await db.prepare(
     "INSERT INTO tasks (id, title, description, category, budget, deadline, location, city, anonymous, urgent, lat, lng, max_claimers, attachments, poster_id, poster_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-  ).bind(id, title, description, category, parseInt(budget), deadline, location, user?.city || '', anonymous, urgent, lat, lng, maxClaimers, JSON.stringify(attachments), session, user?.name || 'User').run();
+  ).bind(id, title, description, category, budgetNum, deadline, location, user?.city || '', anonymous, urgent, lat, lng, maxClaimers, JSON.stringify(attachments), session, user?.name || 'User').run();
 
   return new Response(JSON.stringify({ id }), { status: 201 });
 };

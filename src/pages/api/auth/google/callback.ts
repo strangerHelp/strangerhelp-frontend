@@ -5,7 +5,11 @@ import { createSession } from '../../../../lib/session';
 
 export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   const code = url.searchParams.get('code');
-  if (!code) return redirect('/login?error=google_failed');
+  const state = url.searchParams.get('state');
+  const expectedState = cookies.get('oauth_state')?.value;
+
+  if (!code || !state || state !== expectedState) return redirect('/login?error=google_failed');
+  cookies.delete('oauth_state', { path: '/' });
 
   const clientId = (env as any).GOOGLE_CLIENT_ID;
   const clientSecret = (env as any).GOOGLE_CLIENT_SECRET;

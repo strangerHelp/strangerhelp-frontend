@@ -119,8 +119,14 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
   }
 
   if (action === 'complete') {
-    const task: any = await db.prepare("SELECT poster_id, title FROM tasks WHERE id = ?").bind(params.id).first();
-    await db.prepare("UPDATE tasks SET status = 'completed', completed_at = datetime('now') WHERE id = ? AND claimed_by = ?").bind(params.id, session).run();
+    const task: any = await db.prepare("SELECT poster_id, title, max_claimers FROM tasks WHERE id = ?").bind(params.id).first();
+    if (!task) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
+    // For group tasks, verify user is a claimer
+    if ((task.max_claimers || 1) > 1) {
+      const isClaimer: any = await db.prepare("SELECT id FROM claimed_users WHERE task_id = ? AND user_id = ?").bind(params.id, session).first();
+      if (!isClaimer) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+    }
+    await db.prepare("UPDATE tasks SET status = 'completed', completed_at = datetime('now') WHERE id = ? AND (claimed_by = ? OR ? IN (SELECT user_id FROM claimed_users WHERE task_id = ?))").bind(params.id, session, session, params.id).run();
     if (task) {
       await createNotification(db, task.poster_id, 'task_completed', 'Task Completed', `${user?.name || 'Helper'} completed: ${task.title}`, `/tasks/${params.id}`);
     }
