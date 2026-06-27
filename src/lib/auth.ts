@@ -13,7 +13,7 @@ export async function getUser(cookies: AstroCookies) {
   if (!userId) return null;
   try {
     const db = (env as any).DB as D1Database;
-    const user: any = await db.prepare("SELECT id, name, email, avatar, city, area, country, phone, bio, is_admin, banned FROM users WHERE id = ?").bind(userId).first();
+    const user: any = await db.prepare("SELECT id, name, email, avatar, city, area, country, phone, bio, is_admin, banned, verified, email_verified FROM users WHERE id = ?").bind(userId).first();
     if (user?.banned) return null;
     return user;
   } catch {

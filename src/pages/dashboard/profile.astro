@@ -7,6 +7,18 @@ import AccountLayout from "../../layouts/AccountLayout.astro";
     <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Edit Profile</h1>
     <p class="mt-1 text-sm text-body">Update your public profile information.</p>
 
+    <!-- Email verification banner -->
+    <div id="verify-email-banner" class="hidden mt-4 p-4 bg-warning-soft rounded-lg border border-warning/20 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-warning-deep shrink-0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
+        <div>
+          <p class="text-sm font-medium text-ink">Verify your email</p>
+          <p class="text-xs text-body">Please verify your email to unlock all features.</p>
+        </div>
+      </div>
+      <button id="send-verify-btn" class="shrink-0 h-8 px-3 text-xs font-medium text-on-primary bg-primary rounded-md hover:opacity-90">Verify Now</button>
+    </div>
+
     <form id="profile-form" class="mt-8 space-y-5">
       <div id="success-msg" class="hidden p-3 text-sm text-cyan-deep bg-cyan-soft rounded-md">Profile updated!</div>
       <div id="error-msg" class="hidden p-3 text-sm text-error bg-error-soft rounded-md"></div>
@@ -77,6 +89,11 @@ import AccountLayout from "../../layouts/AccountLayout.astro";
     if (!res.ok) { window.location.href = '/login'; return; }
     const { user } = await res.json();
 
+    // Show verify email banner if not verified
+    if (!user.email_verified) {
+      document.getElementById('verify-email-banner')!.classList.remove('hidden');
+    }
+
     (document.getElementById('name') as HTMLInputElement).value = user.name || '';
     (document.getElementById('bio') as HTMLTextAreaElement).value = user.bio || '';
     (document.getElementById('city') as HTMLInputElement).value = user.city || '';
@@ -124,6 +141,19 @@ import AccountLayout from "../../layouts/AccountLayout.astro";
       document.getElementById('error-msg')!.classList.remove('hidden');
     }
     btn.textContent = 'Save Changes';
+  });
+
+  // Verify email button
+  document.getElementById('send-verify-btn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('send-verify-btn')!;
+    btn.textContent = 'Sending...';
+    const res = await fetch('/api/auth/verify-email', { method: 'POST' });
+    if (res.ok) {
+      btn.textContent = '✓ Sent!';
+      btn.classList.add('opacity-50');
+    } else {
+      btn.textContent = 'Failed';
+    }
   });
 
   init();
