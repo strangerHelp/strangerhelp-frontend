@@ -1,0 +1,132 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+---
+
+<Layout title="User Profile — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="max-w-2xl mx-auto">
+      <div id="profile-content"><p class="text-sm text-mute text-center py-12">Loading...</p></div>
+      <div id="not-found" class="hidden text-center py-16">
+        <p class="text-lg font-semibold text-ink">User not found</p>
+        <a href="/tasks" class="mt-4 inline-flex h-9 items-center px-4 text-sm font-medium text-link">← Back to tasks</a>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Layout>
+
+<script>
+  const userId = window.location.pathname.split('/user/')[1];
+
+  async function init() {
+    const res = await fetch(`/api/users/${userId}`);
+    if (!res.ok) { document.getElementById('profile-content')!.classList.add('hidden'); document.getElementById('not-found')!.classList.remove('hidden'); return; }
+    const u = await res.json();
+
+    const stars = '★'.repeat(Math.round(u.rating)) + '☆'.repeat(5 - Math.round(u.rating));
+    const memberDate = new Date(u.memberSince).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+
+    document.getElementById('profile-content')!.innerHTML = `
+      <div class="p-6 md:p-8 bg-canvas rounded-lg border border-hairline">
+        <!-- Header -->
+        <div class="flex items-center gap-4">
+          <div class="w-20 h-20 rounded-full bg-canvas-soft-2 flex items-center justify-center text-2xl font-bold text-body overflow-hidden border border-hairline">
+            ${u.avatar ? `<img src="${u.avatar}" class="w-full h-full object-cover" />` : u.name.slice(0, 2).toUpperCase()}
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-xl font-semibold text-ink">${esc(u.name)}</h1>
+              ${u.verified ? '<span class="text-link text-sm">✓ Verified</span>' : ''}
+            </div>
+            ${u.handle ? `<p class="text-sm text-mute">@${esc(u.handle)}</p>` : ''}
+            <p class="text-sm text-body mt-0.5">${esc(u.city || '')} · Member since ${memberDate}</p>
+          </div>
+        </div>
+
+        ${u.bio ? `<p class="mt-4 text-sm text-body leading-relaxed">${esc(u.bio)}</p>` : ''}
+
+        <!-- Rating -->
+        <div class="mt-6 flex items-center gap-3">
+          <span class="text-2xl font-bold text-ink">${u.rating || '—'}</span>
+          <div>
+            <p class="text-sm text-warning">${stars}</p>
+            <p class="text-xs text-mute">${u.totalReviews} review${u.totalReviews !== 1 ? 's' : ''}</p>
+          </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="p-3 bg-canvas-soft rounded-md text-center">
+            <p class="text-xl font-bold text-ink">${u.tasksPosted}</p>
+            <p class="text-xs text-mute">Posted</p>
+          </div>
+          <div class="p-3 bg-canvas-soft rounded-md text-center">
+            <p class="text-xl font-bold text-ink">${u.tasksClaimed}</p>
+            <p class="text-xs text-mute">Claimed</p>
+          </div>
+          <div class="p-3 bg-canvas-soft rounded-md text-center">
+            <p class="text-xl font-bold text-ink">${u.tasksCompleted}</p>
+            <p class="text-xs text-mute">Completed</p>
+          </div>
+          <div class="p-3 bg-canvas-soft rounded-md text-center">
+            <p class="text-xl font-bold text-cyan-deep">${u.completionRate}%</p>
+            <p class="text-xs text-mute">Completion</p>
+          </div>
+        </div>
+
+        <!-- Trust Meter -->
+        <div class="mt-6">
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-sm font-medium text-ink">Trust Level</p>
+            <p class="text-sm font-semibold text-ink">${getTrustLabel(u.completionRate, u.verified, u.totalReviews)}</p>
+          </div>
+          <div class="w-full h-2.5 bg-hairline rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-cyan-deep to-cyan rounded-full" style="width:${getTrustPercent(u.completionRate, u.verified, u.totalReviews)}%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reviews section -->
+      <div class="mt-6" id="reviews-section"></div>
+    `;
+
+    // Load reviews
+    const revRes = await fetch('/api/reviews?userId=' + u.id);
+    if (revRes.ok) {
+      const data = await revRes.json();
+      const reviews = data.reviews || [];
+      if (reviews.length > 0) {
+        document.getElementById('reviews-section')!.innerHTML = `
+          <h2 class="text-sm font-semibold text-ink mb-4">Reviews (${reviews.length})</h2>
+          <div class="space-y-3">${reviews.map((r: any) => `
+            <div class="p-4 bg-canvas rounded-lg border border-hairline">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-warning">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
+                <span class="text-xs text-mute">${(window as any).timeAgoIST(r.created_at)}</span>
+              </div>
+              ${r.comment ? `<p class="mt-1 text-sm text-body">${esc(r.comment)}</p>` : ''}
+              <p class="mt-1 text-xs text-mute">— ${esc(r.reviewer_name || 'User')}</p>
+            </div>`).join('')}
+          </div>`;
+      }
+    }
+  }
+
+  function getTrustLabel(rate: number, verified: boolean, reviews: number): string {
+    const score = (rate * 0.4) + (verified ? 20 : 0) + Math.min(reviews * 4, 40);
+    if (score >= 80) return '🟢 Excellent';
+    if (score >= 60) return '🟡 Good';
+    if (score >= 30) return '🟠 Building';
+    return '⚪ New';
+  }
+
+  function getTrustPercent(rate: number, verified: boolean, reviews: number): number {
+    return Math.min(100, Math.round((rate * 0.4) + (verified ? 20 : 0) + Math.min(reviews * 4, 40)));
+  }
+
+  function esc(s: string) { return s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || ''; }
+  init();
+</script>
