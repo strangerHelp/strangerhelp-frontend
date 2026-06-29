@@ -156,6 +156,232 @@ const posts: Record<string, { title: string; date: string; category: string; con
       <p>If you believe in what we're building, <a href="/tasks/new">post your first task</a> or <a href="/register">sign up as a helper</a> today.</p>
     `,
   },
+  "voice-task-posting": {
+    title: "Voice Task Posting: Just Speak and Your Task is Live",
+    date: "2026-06-25",
+    category: "Features",
+    content: `
+      <p>Not everyone wants to type out a task description. Maybe you're driving, maybe you're in a hurry, or maybe typing just isn't your thing. That's why we built <strong>voice task posting</strong>.</p>
+      <h2>How It Works</h2>
+      <ol>
+        <li>Go to <a href="/tasks/new">Post a Task</a> and find the "Voice Note" section</li>
+        <li>Tap <strong>Record</strong> — your microphone activates</li>
+        <li>Describe your task naturally: "I need someone to pick up my parcel from Bluedart office in Koramangala"</li>
+        <li>Tap <strong>Stop</strong> — you can play it back or re-record</li>
+        <li>Fill in budget and location, then post</li>
+      </ol>
+      <h2>Why Voice Notes Help</h2>
+      <ul>
+        <li><strong>Faster</strong> — speak in 10 seconds what takes 2 minutes to type</li>
+        <li><strong>Clearer</strong> — helpers hear your tone, pronunciation of addresses, and specific instructions</li>
+        <li><strong>Any language</strong> — speak in Hindi, Tamil, Telugu, or any language comfortable to you</li>
+        <li><strong>Accessibility</strong> — great for users who aren't comfortable with written English</li>
+      </ul>
+      <h2>Where Helpers Hear It</h2>
+      <p>Your voice note appears as an audio player on the task detail page. Helpers can listen before claiming to fully understand what's needed.</p>
+    `,
+  },
+  "live-pulse-map": {
+    title: "Live Pulse Map: See Helpers Around You in Real-Time",
+    date: "2026-06-24",
+    category: "Features",
+    content: `
+      <p>The <a href="/pulse">Live Pulse</a> map shows you a real-time view of who's available and what tasks are open near you.</p>
+      <h2>What You See</h2>
+      <ul>
+        <li><strong>Teal dots</strong> — online helpers broadcasting their location</li>
+        <li><strong>Orange dots</strong> — open tasks waiting to be claimed</li>
+        <li>Tap any dot to see details (helper name, task title + budget)</li>
+      </ul>
+      <h2>How to Go Online</h2>
+      <p>If you're a helper looking for work, toggle "Go Online as Helper" on the Pulse page. Your location appears on the map, and task posters can see you're available nearby.</p>
+      <h2>Finding Tasks Near You</h2>
+      <p>The map auto-centers on your location. You can see which tasks are closest without scrolling through a list. Tap an orange dot → "View Task" → claim it.</p>
+      <h2>Get Directions</h2>
+      <p>Every task with a pinned location has a "Get Directions" button that opens Google Maps directly. Navigate to the task location with one tap.</p>
+    `,
+  },
+  "group-tasks-events": {
+    title: "Group Tasks: Hire Multiple Helpers for Events and Big Jobs",
+    date: "2026-06-23",
+    category: "Features",
+    content: `
+      <p>Some jobs need more than one person. Catering for a wedding, setting up an event, distributing flyers, or running a survey across locations — that's where <strong>Group Tasks</strong> come in.</p>
+      <h2>How Group Tasks Work</h2>
+      <ol>
+        <li>When posting a task, select category "Event / Group Work"</li>
+        <li>Set how many helpers you need (2-50)</li>
+        <li>Set budget <strong>per person</strong></li>
+        <li>Helpers join one by one until all slots are filled</li>
+      </ol>
+      <h2>What Helpers See</h2>
+      <p>The task detail shows a progress bar: "Group Task — 3/10 helpers joined" with a list of who has joined. The "Join Task (7 spots left)" button stays active until full.</p>
+      <h2>Communication</h2>
+      <p>Each helper who joins gets a private chat with the poster. You can coordinate timing, share specific instructions, and manage the group.</p>
+      <h2>Use Cases</h2>
+      <ul>
+        <li>Event staffing (catering, serving, cleanup)</li>
+        <li>Survey/data collection across multiple locations</li>
+        <li>Flyer distribution in different areas</li>
+        <li>Moving help (multiple people needed)</li>
+        <li>Photography/videography teams</li>
+      </ul>
+    `,
+  },
+  "location-based-feed": {
+    title: "How Our Location-Based Feed Shows You the Most Relevant Tasks",
+    date: "2026-06-22",
+    category: "Features",
+    content: `
+      <p>The task feed on StrangerHelp isn't just a chronological list — it's <strong>sorted by distance</strong> so you always see what's closest to you first.</p>
+      <h2>Three Ways We Detect Your Location</h2>
+      <ol>
+        <li><strong>GPS (most accurate)</strong> — allow location permission for exact proximity</li>
+        <li><strong>Your saved city</strong> — if you're logged in, we use the city from your profile</li>
+        <li><strong>IP address</strong> — even without permission, we approximate your city from your internet connection</li>
+      </ol>
+      <h2>What You See</h2>
+      <p>Each task card shows distance: "2.3 km away" or "450 m away" in blue text. Tasks without coordinates (posted before this feature) appear at the bottom.</p>
+      <h2>Change Location</h2>
+      <p>Traveling? Want to check tasks in another city? Use the "Change" button on the location bar to search any city or area. The feed instantly re-sorts.</p>
+      <h2>For Helpers</h2>
+      <p>This means you can focus on tasks you can actually reach quickly. No more scrolling through tasks in cities 100km away.</p>
+    `,
+  },
+  "urgent-tasks-explained": {
+    title: "Urgent Tasks: Get Things Done in Hours, Not Days",
+    date: "2026-06-21",
+    category: "Features",
+    content: `
+      <p>Sometimes you need something done NOW. A deadline in 2 hours. A document that must reach an office today. That's what the <strong>⚡ Urgent</strong> flag is for.</p>
+      <h2>How to Post an Urgent Task</h2>
+      <p>When creating a task, toggle the "⚡ Mark as Urgent" switch. You'll see a prompt suggesting a higher budget — because urgent tasks with better pay get claimed faster.</p>
+      <h2>What Helpers See</h2>
+      <p>Urgent tasks show a red ⚡ badge on the task card in the feed. They stand out immediately. Helpers know this needs quick action.</p>
+      <h2>Tips for Urgent Tasks</h2>
+      <ul>
+        <li><strong>Set a higher budget</strong> — ₹50 extra can mean the difference between claimed in 5 minutes vs 2 hours</li>
+        <li><strong>Be specific about deadline</strong> — "Within 1 hour" or "Before 3 PM today"</li>
+        <li><strong>Be online</strong> — respond to the helper's messages quickly so they can start immediately</li>
+        <li><strong>Pick a specific location</strong> — "RTO Jayanagar" not just "Bangalore"</li>
+      </ul>
+    `,
+  },
+  "chat-and-coordination": {
+    title: "In-App Chat: Coordinate with Helpers Without Sharing Your Number",
+    date: "2026-06-19",
+    category: "Features",
+    content: `
+      <p>When a helper claims your task, a private chat opens automatically. No need to exchange phone numbers or use WhatsApp.</p>
+      <h2>What You Can Do in Chat</h2>
+      <ul>
+        <li>Share detailed instructions and addresses</li>
+        <li>Send photos (documents to submit, reference images)</li>
+        <li>Ask for progress updates</li>
+        <li>Confirm payment details</li>
+      </ul>
+      <h2>Privacy First</h2>
+      <p>Your phone number, email, and personal details are never shared with the other person unless you choose to share them in chat. Communication stays within StrangerHelp.</p>
+      <h2>Message Notifications</h2>
+      <p>Get notified instantly when you receive a new message. Never miss an update from your helper.</p>
+      <h2>All Messages Logged</h2>
+      <p>For safety and accountability, all messages are stored. If any dispute arises, our moderation team can review the conversation.</p>
+    `,
+  },
+  "photo-proof-system": {
+    title: "Completion Proof: How Photo Verification Ensures Task Quality",
+    date: "2026-06-17",
+    category: "Features",
+    content: `
+      <p>How do you know a task was actually completed? <strong>Photo proof.</strong> Every helper must upload photos showing the work is done before a task can be marked complete.</p>
+      <h2>How It Works</h2>
+      <ol>
+        <li>Helper completes the physical task</li>
+        <li>Takes photos as evidence (receipt, stamped document, delivered parcel, etc.)</li>
+        <li>Uploads the photos through the "Submit Proof & Complete" button</li>
+        <li>Poster receives notification and can view the proof</li>
+      </ol>
+      <h2>What Counts as Valid Proof?</h2>
+      <ul>
+        <li>Photo of submitted document with office stamp</li>
+        <li>Receipt or acknowledgment slip</li>
+        <li>Photo of delivered parcel at doorstep</li>
+        <li>Screenshot of completed transaction</li>
+        <li>Photo showing you at the location with the task done</li>
+      </ul>
+      <h2>Disputes</h2>
+      <p>If proof seems inadequate, the poster can message the helper for additional evidence or report the task for review.</p>
+    `,
+  },
+  "anonymous-posting": {
+    title: "Anonymous Task Posting: Get Help Without Revealing Your Identity",
+    date: "2026-06-16",
+    category: "Features",
+    content: `
+      <p>Sometimes you need help with something personal or sensitive. StrangerHelp lets you post tasks <strong>completely anonymously</strong>.</p>
+      <h2>What Anonymous Means</h2>
+      <ul>
+        <li>Your name is hidden — shows as "Anonymous" on the task</li>
+        <li>Your city area is still shown (helpers need to know the location)</li>
+        <li>Your verified badge still appears (builds trust without revealing identity)</li>
+        <li>The helper only sees your name once you message them</li>
+      </ul>
+      <h2>When to Use Anonymous Posting</h2>
+      <ul>
+        <li>Medical document collection</li>
+        <li>Legal paperwork submissions</li>
+        <li>Sensitive personal errands</li>
+        <li>When you just prefer privacy</li>
+      </ul>
+      <h2>How to Enable</h2>
+      <p>Simply check the "Post anonymously" checkbox at the bottom of the task form. That's it.</p>
+    `,
+  },
+  "share-tasks-grow": {
+    title: "Share Tasks on WhatsApp and Social Media to Find Helpers Faster",
+    date: "2026-06-14",
+    category: "Tips",
+    content: `
+      <p>Every task on StrangerHelp has a <strong>Share button</strong>. When you share a task, it goes out with a professional pre-written message that includes the task title, budget, and location.</p>
+      <h2>What Gets Shared</h2>
+      <p>The share message looks like:</p>
+      <p><em>🆘 Task: Submit documents at RTO<br>💰 Earn ₹350<br>📍 Koramangala, Bangalore<br>⏰ Today<br><br>Complete this task nearby and earn money on StrangerHelp!<br>https://strangerhelp.com/tasks/abc123</em></p>
+      <h2>Where to Share</h2>
+      <ul>
+        <li><strong>WhatsApp</strong> — dedicated green button for quick sharing</li>
+        <li><strong>Telegram, Instagram, Twitter</strong> — via the general share button</li>
+        <li><strong>Local community groups</strong> — area-specific WhatsApp/Telegram groups work great</li>
+      </ul>
+      <h2>Why Share?</h2>
+      <p>More visibility = faster claims. If your task hasn't been claimed in 30 minutes, share it in relevant groups to reach more potential helpers.</p>
+    `,
+  },
+  "community-questions": {
+    title: "Ask the Community: Get Real-Time Local Information from Strangers",
+    date: "2026-06-13",
+    category: "Features",
+    content: `
+      <p>The <a href="/ask">Ask</a> feature lets you post location-tagged questions and get answers from people who are actually there.</p>
+      <h2>How It's Different from a Task</h2>
+      <p>A <strong>task</strong> requires someone to DO something physically. A <strong>question</strong> just needs information — no payment involved.</p>
+      <h2>Example Questions</h2>
+      <ul>
+        <li>"What are the current office hours at Jayanagar RTO?"</li>
+        <li>"How long is the queue at passport office today?"</li>
+        <li>"Is XYZ shop open right now?"</li>
+        <li>"What's the parking situation near Phoenix Mall?"</li>
+        <li>"Has the road been fixed on 80 Feet Road?"</li>
+      </ul>
+      <h2>Features</h2>
+      <ul>
+        <li>Upvote/downvote questions</li>
+        <li>Multiple people can answer</li>
+        <li>Post anonymously if you prefer</li>
+        <li>Tag by category and location</li>
+      </ul>
+      <p>Think of it as hyper-local Quora — but for real-time, on-the-ground information.</p>
+    `,
+  },
 };
 
 const post = posts[slug as string];
