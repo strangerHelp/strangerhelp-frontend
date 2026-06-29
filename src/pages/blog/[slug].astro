@@ -6,6 +6,44 @@ import Footer from "../../components/Footer.astro";
 const { slug } = Astro.params;
 
 const posts: Record<string, { title: string; date: string; category: string; content: string }> = {
+  "karma-wallet": {
+    title: "Karma Wallet: Earn, Donate, and Withdraw — Your Trust Currency",
+    date: "2026-06-28",
+    category: "Features",
+    content: `
+      <p>On StrangerHelp, trust isn't just a badge — it's a currency. <strong>Karma</strong> is what you earn by being a reliable, helpful member of the community. And with the Karma Wallet, those points have real value.</p>
+      <h2>How You Earn Karma</h2>
+      <ul>
+        <li><strong>Complete a task</strong> — +10 to +50 karma depending on complexity</li>
+        <li><strong>Answer a community question</strong> — +5 karma</li>
+        <li><strong>Get upvoted</strong> — +2 karma per upvote</li>
+        <li><strong>Verify your identity</strong> — +100 karma (one-time bonus)</li>
+        <li><strong>Help in emergencies</strong> — +75 karma</li>
+        <li><strong>Receive 5-star reviews</strong> — bonus karma</li>
+      </ul>
+      <h2>What You Can Do With Karma</h2>
+      <ul>
+        <li><strong>Withdraw as cash</strong> — 1 Karma = ₹1. Minimum withdrawal: 100 Karma. Instant UPI transfer.</li>
+        <li><strong>Boost your task</strong> — Spend 20 karma to push your task to the top of the feed for more visibility.</li>
+        <li><strong>Priority matching</strong> — Spend 15 karma to get matched with the nearest available helper first.</li>
+        <li><strong>Donate to causes</strong> — Support education, clean water, tree plantation, and other verified causes directly with karma.</li>
+        <li><strong>Gift to another user</strong> — Send karma to someone who helped you or someone you appreciate.</li>
+      </ul>
+      <h2>Karma as Trust</h2>
+      <p>Your karma balance is visible on your profile. When someone sees you have 500+ karma, they know you've completed dozens of tasks reliably. It's social proof that you're trustworthy — more meaningful than any badge.</p>
+      <h2>Donating Karma</h2>
+      <p>We partner with verified NGOs and causes. You can donate any amount of karma to:</p>
+      <ul>
+        <li>Education for underprivileged children</li>
+        <li>Clean water for rural villages</li>
+        <li>Tree plantation in your city</li>
+        <li>And more causes added regularly</li>
+      </ul>
+      <p>Every donation is tracked transparently. You can see how much has been raised and how close each cause is to its goal.</p>
+      <h2>Status: Coming Soon</h2>
+      <p>Karma Wallet is currently in development. The karma system is already tracking your activity — once we launch withdrawals and donations, your accumulated karma will be immediately available. <a href="/karma">Check your Karma Wallet →</a></p>
+    `,
+  },
   "strangers-meet": {
     title: "Strangers Meet: Unite with People Who Care About Real-World Problems",
     date: "2026-06-29",
