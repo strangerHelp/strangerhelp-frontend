@@ -1,0 +1,91 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+---
+
+<Layout title="StrangerMeet — Connect with Strangers">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+      <div>
+        <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">StrangerMeet</h1>
+        <p class="mt-1 text-sm text-body">Connect with strangers for meetups, events, discussions & more.</p>
+      </div>
+      <a href="/meets/new" class="inline-flex h-10 items-center px-4 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">+ Create Meet</a>
+    </div>
+
+    <!-- Filter -->
+    <div class="flex gap-2 overflow-x-auto pb-4">
+      {["All", "Discussion", "Plantation", "Cleanup", "Meetup", "Workshop", "Sports", "Social", "Other"].map((cat, i) => (
+        <button data-cat={cat} class={`cat-btn shrink-0 px-4 py-2 text-sm rounded-full border transition-colors ${i === 0 ? "bg-primary text-on-primary border-primary" : "bg-canvas text-body border-hairline hover:border-hairline-strong"}`}>{cat}</button>
+      ))}
+    </div>
+
+    <div id="meets-grid" class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <p class="col-span-full text-center text-sm text-mute py-12">Loading meets...</p>
+    </div>
+
+    <!-- Join private meet -->
+    <div class="mt-12 p-5 bg-canvas rounded-lg border border-hairline max-w-md mx-auto text-center">
+      <p class="text-sm font-medium text-ink mb-2">Have an invite code?</p>
+      <div class="flex gap-2">
+        <input type="text" id="invite-input" placeholder="Enter invite code" class="flex-1 h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink placeholder:text-mute" />
+        <button id="join-code-btn" class="h-10 px-4 text-sm font-medium text-on-primary bg-primary rounded-md hover:opacity-90">Join</button>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Layout>
+
+<script>
+  let activeCategory = 'All';
+
+  async function loadMeets() {
+    const res = await fetch('/api/meets');
+    if (!res.ok) return;
+    let meets = await res.json();
+    if (activeCategory !== 'All') meets = meets.filter((m: any) => m.category === activeCategory);
+
+    const grid = document.getElementById('meets-grid')!;
+    if (meets.length === 0) { grid.innerHTML = '<p class="col-span-full text-center text-sm text-mute py-12">No meets yet. Create the first one!</p>'; return; }
+
+    grid.innerHTML = meets.map((m: any) => `
+      <a href="/meets/${m.id}" class="group p-5 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong shadow-[0px_1px_1px_#00000005,0px_2px_2px_#0000000a] transition-colors">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="px-2 py-0.5 text-xs font-medium text-body bg-canvas-soft-2 rounded-full">${m.category}</span>
+          <span class="px-2 py-0.5 text-xs font-medium rounded-full ${m.visibility === 'public' ? 'bg-cyan-soft text-cyan-deep' : 'bg-violet-soft text-violet-deep'}">${m.visibility === 'public' ? '🌐 Public' : '🔒 Private'}</span>
+        </div>
+        <h3 class="text-sm font-semibold text-ink group-hover:text-link transition-colors">${esc(m.title)}</h3>
+        ${m.description ? `<p class="mt-1 text-xs text-body line-clamp-2">${esc(m.description.slice(0, 100))}</p>` : ''}
+        <div class="mt-3 flex items-center justify-between text-xs text-mute">
+          <span>📍 ${esc(m.location || 'TBD')}</span>
+          <span>👥 ${m.attendeeCount}/${m.max_attendees}</span>
+        </div>
+        ${m.date ? `<p class="mt-1 text-xs text-mute">📅 ${m.date}${m.time ? ' · ' + m.time : ''}</p>` : ''}
+        <div class="mt-3 pt-3 border-t border-hairline flex items-center justify-between">
+          <span class="text-xs text-body">by ${esc(m.host_name)}</span>
+          ${m.voice_note ? '<span class="text-xs text-mute">🎤 Voice</span>' : ''}
+        </div>
+      </a>
+    `).join('');
+  }
+
+  function esc(s: string) { return s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || ''; }
+
+  document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cat-btn').forEach(b => { b.classList.remove('bg-primary','text-on-primary','border-primary'); b.classList.add('bg-canvas','text-body','border-hairline'); });
+      btn.classList.add('bg-primary','text-on-primary','border-primary'); btn.classList.remove('bg-canvas','text-body','border-hairline');
+      activeCategory = (btn as HTMLElement).dataset.cat || 'All';
+      loadMeets();
+    });
+  });
+
+  document.getElementById('join-code-btn')!.addEventListener('click', () => {
+    const code = (document.getElementById('invite-input') as HTMLInputElement).value.trim();
+    if (code) window.location.href = `/meets/${code}`;
+  });
+
+  loadMeets();
+</script>

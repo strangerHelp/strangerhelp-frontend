@@ -1,0 +1,126 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+---
+
+<Layout title="Meet — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="max-w-2xl mx-auto">
+      <div id="meet-content"><p class="text-sm text-mute text-center py-12">Loading...</p></div>
+      <div id="not-found" class="hidden text-center py-16">
+        <p class="text-lg font-semibold text-ink">Meet not found or private</p>
+        <a href="/meets" class="mt-4 inline-flex h-9 items-center px-4 text-sm font-medium text-link">← Back to meets</a>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Layout>
+
+<script>
+  const meetId = window.location.pathname.split('/meets/')[1];
+  let currentUser: any = null;
+  let meet: any = null;
+
+  async function init() {
+    const authRes = await fetch('/api/auth/me');
+    if (authRes.ok) { const d = await authRes.json(); currentUser = d.user; }
+
+    const res = await fetch(`/api/meets/${meetId}`);
+    if (!res.ok) { document.getElementById('meet-content')!.classList.add('hidden'); document.getElementById('not-found')!.classList.remove('hidden'); return; }
+    meet = await res.json();
+    render();
+  }
+
+  function render() {
+    const isHost = currentUser && currentUser.id === meet.host_id;
+    const isJoined = currentUser && meet.attendees?.some((a: any) => a.user_id === currentUser.id);
+    const spotsLeft = meet.max_attendees - (meet.attendeeCount || 0);
+    const shareUrl = `https://strangerhelp.com/meets/${meet.invite_code}`;
+    const shareText = `🤝 ${meet.title}\n📍 ${meet.location || 'TBD'}\n📅 ${meet.date || 'TBD'}${meet.time ? ' · ' + meet.time : ''}\n👥 ${meet.attendeeCount}/${meet.max_attendees} joined\n\nJoin this ${meet.category} meet:\n${shareUrl}`;
+
+    document.getElementById('meet-content')!.innerHTML = `
+      <div class="p-6 md:p-8 bg-canvas rounded-lg border border-hairline">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 text-xs font-medium bg-canvas-soft-2 text-body rounded-full">${esc(meet.category)}</span>
+            <span class="px-2.5 py-0.5 text-xs font-medium rounded-full ${meet.visibility === 'public' ? 'bg-cyan-soft text-cyan-deep' : 'bg-violet-soft text-violet-deep'}">${meet.visibility === 'public' ? '🌐 Public' : '🔒 Private'}</span>
+          </div>
+          ${isHost ? `<button id="delete-btn" class="h-8 px-3 text-xs font-medium text-error border border-error/30 rounded-md hover:bg-error-soft">Delete</button>` : ''}
+        </div>
+
+        <h1 class="text-xl md:text-2xl font-semibold text-ink tracking-[-0.96px]">${esc(meet.title)}</h1>
+        ${meet.description ? `<p class="mt-3 text-sm text-body leading-relaxed">${esc(meet.description)}</p>` : ''}
+
+        ${meet.voice_note ? `<div class="mt-4"><p class="text-xs text-mute mb-1">🎤 Voice description</p><audio controls class="w-full h-10" src="${meet.voice_note}"></audio></div>` : ''}
+
+        <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute">📍 Location</p><p class="mt-1 text-sm font-medium text-ink">${esc(meet.location || 'TBD')}</p></div>
+          <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute">📅 Date</p><p class="mt-1 text-sm font-medium text-ink">${meet.date || 'TBD'}</p></div>
+          <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute">🕐 Time</p><p class="mt-1 text-sm font-medium text-ink">${meet.time || 'TBD'}</p></div>
+          <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute">👥 Spots</p><p class="mt-1 text-sm font-medium text-ink">${meet.attendeeCount}/${meet.max_attendees}</p></div>
+        </div>
+
+        <!-- Attendees -->
+        <div class="mt-6">
+          <p class="text-sm font-medium text-ink mb-3">Attendees (${meet.attendeeCount})</p>
+          <div class="flex flex-wrap gap-2">
+            ${(meet.attendees || []).map((a: any) => `<span class="px-3 py-1.5 text-xs font-medium bg-canvas-soft-2 rounded-full">${esc(a.user_name)}${a.user_id === meet.host_id ? ' 👑' : ''}</span>`).join('')}
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-6 pt-6 border-t border-hairline flex flex-col sm:flex-row gap-3">
+          ${!currentUser ? `<a href="/login?redirect=/meets/${meetId}" class="flex-1 h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full">Login to Join</a>` :
+            isHost ? `<p class="text-sm text-cyan-deep font-medium">👑 You're hosting this meet</p>` :
+            isJoined ? `<button id="leave-btn" class="flex-1 h-11 flex items-center justify-center text-sm font-medium text-error border border-error/30 rounded-full hover:bg-error-soft">Leave Meet</button>` :
+            spotsLeft > 0 ? `<button id="join-btn" class="flex-1 h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90">Join Meet (${spotsLeft} spot${spotsLeft > 1 ? 's' : ''} left)</button>` :
+            `<p class="text-sm text-mute font-medium">Meet is full</p>`}
+          <button id="share-btn" class="h-11 px-6 flex items-center justify-center gap-2 text-sm font-medium text-ink border border-hairline rounded-full hover:bg-canvas-soft-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>
+            Share
+          </button>
+        </div>
+
+        <!-- Invite link for private meets -->
+        ${meet.visibility === 'private' && (isHost || isJoined) ? `
+        <div class="mt-4 p-3 bg-canvas-soft rounded-md border border-hairline">
+          <p class="text-xs text-mute mb-1">Invite Link (share to let others join)</p>
+          <div class="flex gap-2">
+            <input type="text" value="${shareUrl}" readonly class="flex-1 h-8 px-2 text-xs bg-canvas border border-hairline rounded" />
+            <button id="copy-link" class="h-8 px-3 text-xs font-medium text-link border border-hairline rounded hover:bg-canvas-soft-2">Copy</button>
+          </div>
+        </div>` : ''}
+
+        <p class="mt-4 text-xs text-mute">Hosted by ${esc(meet.host_name)}</p>
+      </div>`;
+
+    // Event listeners
+    document.getElementById('join-btn')?.addEventListener('click', async () => {
+      const res = await fetch(`/api/meets/${meetId}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'join' }) });
+      if (res.ok) { location.reload(); } else { const d = await res.json(); alert(d.error); }
+    });
+    document.getElementById('leave-btn')?.addEventListener('click', async () => {
+      if (!confirm('Leave this meet?')) return;
+      await fetch(`/api/meets/${meetId}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'leave' }) });
+      location.reload();
+    });
+    document.getElementById('delete-btn')?.addEventListener('click', async () => {
+      if (!confirm('Delete this meet permanently?')) return;
+      await fetch(`/api/meets/${meetId}`, { method: 'DELETE' });
+      window.location.href = '/meets';
+    });
+    document.getElementById('share-btn')?.addEventListener('click', () => {
+      if (navigator.share) { navigator.share({ title: meet.title, text: shareText, url: shareUrl }); }
+      else { navigator.clipboard.writeText(shareText); alert('Copied to clipboard!'); }
+    });
+    document.getElementById('copy-link')?.addEventListener('click', () => {
+      navigator.clipboard.writeText(shareUrl);
+      document.getElementById('copy-link')!.textContent = '✓ Copied';
+    });
+  }
+
+  function esc(s: string) { return s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || ''; }
+  init();
+</script>
