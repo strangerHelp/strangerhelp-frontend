@@ -1,13 +1,9 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import Navbar from "../components/Navbar.astro";
-import Footer from "../components/Footer.astro";
+import AccountLayout from "../layouts/AccountLayout.astro";
 ---
 
-<Layout title="Karma Wallet — StrangerHelp">
-  <Navbar />
-  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
-    <div class="max-w-lg mx-auto">
+<AccountLayout title="Karma Wallet — StrangerHelp">
+  <div class="max-w-lg">
       <!-- Balance Card -->
       <div class="p-6 bg-primary rounded-xl text-on-primary relative overflow-hidden">
         <div class="absolute top-3 right-3 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider bg-warning text-ink rounded-full">Coming Soon</div>
@@ -103,6 +99,5 @@ import Footer from "../components/Footer.astro";
         </div>
       </div>
     </div>
-  </main>
-  <Footer />
-</Layout>
+  </div>
+</AccountLayout>
