@@ -10,10 +10,6 @@ import Navbar from "../../components/Navbar.astro";
     <div class="max-w-lg mx-auto">
       <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Post a new task.</h1>
       <p class="mt-2 text-sm text-body">Describe what you need done. A helper near the location will claim it.</p>
-      <a href="/tasks/voice" class="mt-3 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-ink border border-hairline rounded-full hover:bg-canvas-soft-2 transition-colors">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
-        Post with Voice
-      </a>
 
       <form id="task-form" class="mt-8 space-y-5" enctype="multipart/form-data">
         <div id="error-msg" class="hidden p-3 text-sm text-error bg-error-soft rounded-md"></div>
@@ -93,6 +89,31 @@ import Navbar from "../../components/Navbar.astro";
           <input type="hidden" id="lng" name="lng" />
           <div id="map-preview" class="hidden mt-2 h-40 rounded-md border border-hairline overflow-hidden"></div>
           <p class="mt-1 text-xs text-mute">Search or <button type="button" id="use-my-location" class="text-link hover:underline">use my current location</button></p>
+        </div>
+
+        <!-- Voice Note (optional) -->
+        <div>
+          <label class="block text-sm font-medium text-ink mb-1.5">Voice Note <span class="text-mute font-normal">(optional)</span></label>
+          <div id="voice-section" class="p-3 bg-canvas-soft rounded-md border border-hairline">
+            <div id="voice-idle" class="flex items-center justify-between">
+              <p class="text-xs text-mute">Add a voice description for helpers</p>
+              <button type="button" id="voice-start" class="h-8 px-3 flex items-center gap-1.5 text-xs font-medium text-ink border border-hairline rounded-full hover:bg-canvas-soft-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+                Record
+              </button>
+            </div>
+            <div id="voice-recording" class="hidden flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-error animate-pulse"></span>
+                <span id="voice-timer" class="text-xs font-mono text-error">00:00</span>
+              </div>
+              <button type="button" id="voice-stop" class="h-8 px-3 text-xs font-medium text-error border border-error/30 rounded-full hover:bg-error-soft">Stop</button>
+            </div>
+            <div id="voice-done" class="hidden flex items-center justify-between">
+              <audio id="voice-audio" controls class="h-8 flex-1"></audio>
+              <button type="button" id="voice-remove" class="ml-2 text-xs text-error hover:underline">Remove</button>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -207,6 +228,44 @@ import Navbar from "../../components/Navbar.astro";
     ).join('');
   });
 
+  // Voice recorder
+  let voiceBlob: Blob | null = null;
+  let voiceRecorder: MediaRecorder | null = null;
+  let voiceChunks: Blob[] = [];
+  let voiceInterval: any;
+  let voiceSecs = 0;
+
+  document.getElementById('voice-start')!.addEventListener('click', async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      voiceChunks = [];
+      voiceRecorder = new MediaRecorder(stream);
+      voiceRecorder.ondataavailable = (e) => { if (e.data.size > 0) voiceChunks.push(e.data); };
+      voiceRecorder.onstop = () => {
+        voiceBlob = new Blob(voiceChunks, { type: 'audio/webm' });
+        (document.getElementById('voice-audio') as HTMLAudioElement).src = URL.createObjectURL(voiceBlob);
+        document.getElementById('voice-recording')!.classList.add('hidden');
+        document.getElementById('voice-done')!.classList.remove('hidden');
+        stream.getTracks().forEach(t => t.stop());
+      };
+      voiceRecorder.start();
+      document.getElementById('voice-idle')!.classList.add('hidden');
+      document.getElementById('voice-recording')!.classList.remove('hidden');
+      voiceSecs = 0;
+      voiceInterval = setInterval(() => { voiceSecs++; document.getElementById('voice-timer')!.textContent = `${String(Math.floor(voiceSecs/60)).padStart(2,'0')}:${String(voiceSecs%60).padStart(2,'0')}`; }, 1000);
+    } catch { alert('Microphone access denied'); }
+  });
+
+  document.getElementById('voice-stop')!.addEventListener('click', () => {
+    voiceRecorder?.stop(); clearInterval(voiceInterval);
+  });
+
+  document.getElementById('voice-remove')!.addEventListener('click', () => {
+    voiceBlob = null;
+    document.getElementById('voice-done')!.classList.add('hidden');
+    document.getElementById('voice-idle')!.classList.remove('hidden');
+  });
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     errorMsg.classList.add('hidden');
@@ -242,6 +301,7 @@ import Navbar from "../../components/Navbar.astro";
       const compressed = await (window as any).compressFiles(files);
       for (const f of compressed) fd.append('files', f);
     }
+    if (voiceBlob) fd.append('files', new File([voiceBlob], 'voice-note.webm', { type: 'audio/webm' }));
 
     try {
       const res = await fetch('/api/tasks', { method: 'POST', body: fd });
