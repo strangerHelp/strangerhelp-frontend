@@ -1,26 +1,51 @@
 import { env } from 'cloudflare:workers';
 
-const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-const MAX_ATTEMPTS = 10; // max attempts per window
+const WINDOW_SECONDS = 900; // 15 minutes
+const MAX_ATTEMPTS = 10;
 
 /** Returns true if rate limited. Uses CF-Connecting-IP header. */
 export async function isRateLimited(request: Request, action: string): Promise<boolean> {
-  const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+  const ip = request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for') || 'unknown';
   const key = `${action}:${ip}`;
   const db = (env as any).DB as D1Database;
 
   try {
-    const cutoff = new Date(Date.now() - WINDOW_MS).toISOString();
-    // Clean old entries and count recent
-    await db.prepare("DELETE FROM rate_limits WHERE created_at < ?").bind(cutoff).run();
-    const row: any = await db.prepare("SELECT COUNT(*) as cnt FROM rate_limits WHERE key = ? AND created_at > ?").bind(key, cutoff).first();
+    // Use upsert pattern: single row per key with counter and window start
+    const row: any = await db.prepare(
+      "SELECT attempts, window_start FROM rate_limits WHERE key = ?"
+    ).bind(key).first();
 
-    if ((row?.cnt || 0) >= MAX_ATTEMPTS) return true;
+    const now = Math.floor(Date.now() / 1000);
 
-    await db.prepare("INSERT INTO rate_limits (key, created_at) VALUES (?, datetime('now'))").bind(key).run();
+    if (!row) {
+      // First attempt - create entry
+      await db.prepare(
+        "INSERT OR REPLACE INTO rate_limits (key, attempts, window_start, created_at) VALUES (?, 1, ?, datetime('now'))"
+      ).bind(key, now).run();
+      return false;
+    }
+
+    const windowStart = row.window_start || 0;
+    const elapsed = now - windowStart;
+
+    if (elapsed > WINDOW_SECONDS) {
+      // Window expired - reset
+      await db.prepare(
+        "UPDATE rate_limits SET attempts = 1, window_start = ?, created_at = datetime('now') WHERE key = ?"
+      ).bind(now, key).run();
+      return false;
+    }
+
+    if (row.attempts >= MAX_ATTEMPTS) {
+      return true; // Rate limited
+    }
+
+    // Increment counter
+    await db.prepare(
+      "UPDATE rate_limits SET attempts = attempts + 1 WHERE key = ?"
+    ).bind(key).run();
     return false;
   } catch {
-    // If table doesn't exist yet, don't block requests
     return false;
   }
 }
