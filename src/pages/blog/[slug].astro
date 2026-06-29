@@ -6,6 +6,44 @@ import Footer from "../../components/Footer.astro";
 const { slug } = Astro.params;
 
 const posts: Record<string, { title: string; date: string; category: string; content: string }> = {
+  "strangers-meet": {
+    title: "Strangers Meet: Unite with People Who Care About Real-World Problems",
+    date: "2026-06-29",
+    category: "Features",
+    content: `
+      <p>StrangerHelp isn't just about getting errands done. It's about building a community of people who show up — for each other and for their city. <strong>Strangers Meet</strong> is our newest feature that brings people together to tackle real-world problems.</p>
+      <h2>What is Strangers Meet?</h2>
+      <p>It's a space to organize and join events where strangers come together for a shared purpose — environmental action, community discussions, skill-sharing, or social causes. Think of it as "meetup.com" built into a platform where trust is already established.</p>
+      <h2>Public vs Private Meets</h2>
+      <ul>
+        <li><strong>Public meets</strong> — visible to everyone. Anyone can browse and join. Great for open events like plantation drives, cleanups, and community workshops.</li>
+        <li><strong>Private meets</strong> — only accessible via invite link. The organizer shares the link with people they want to invite. Perfect for smaller discussions, study groups, or planning sessions.</li>
+      </ul>
+      <h2>What You Can Organize</h2>
+      <ul>
+        <li><strong>🌱 Plantation drives</strong> — "Let's plant 100 trees in Cubbon Park this Saturday"</li>
+        <li><strong>🧹 Neighborhood cleanups</strong> — "Beach cleanup at Marina, 6 AM Sunday"</li>
+        <li><strong>💬 Problem-solving discussions</strong> — "How do we fix the traffic at Silk Board junction?"</li>
+        <li><strong>🎓 Workshops</strong> — "Free photography workshop for beginners"</li>
+        <li><strong>🏃 Sports</strong> — "Weekend cricket at Shivaji Park, need 11 players"</li>
+        <li><strong>🤝 Social causes</strong> — "Blood donation camp organizing committee"</li>
+      </ul>
+      <h2>How It Works</h2>
+      <ol>
+        <li>Go to <a href="/meets/new">Create Meet</a></li>
+        <li>Add title, description, category, date, time, location</li>
+        <li>Choose Public or Private</li>
+        <li>Optionally record a voice note explaining the event</li>
+        <li>Set max attendees (2 to 500)</li>
+        <li>Share the link — people join</li>
+      </ol>
+      <h2>Why This Matters</h2>
+      <p>Cities are full of people who want to make a difference but don't know where to start. Strangers Meet removes that barrier. You don't need to know anyone — just show up. The trust system from StrangerHelp (verification, ratings, karma) carries over, so you know the people joining are real and accountable.</p>
+      <h2>Built on Trust</h2>
+      <p>Every attendee has a StrangerHelp profile with a trust score, task history, and optional ID verification. You're not meeting random anonymous accounts — you're meeting verified members of a community that has already proven they show up and get things done.</p>
+      <p><a href="/meets">Browse meets happening near you →</a></p>
+    `,
+  },
   "how-strangerhelp-works": {
     title: "How StrangerHelp Works: Get Tasks Done by Verified Helpers Near You",
     date: "2026-06-20",
