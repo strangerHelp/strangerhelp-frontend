@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
-import { genId, fileToDataUrl } from '../../lib/db';
-import { getSessionUserId } from '../../lib/auth';
+import { genId, fileToDataUrl } from '../../../lib/db';
+import { getSessionUserId } from '../../../lib/auth';
 
 // GET /api/meets - list public meets + user's private meets
 export const GET: APIRoute = async ({ url, cookies }) => {
