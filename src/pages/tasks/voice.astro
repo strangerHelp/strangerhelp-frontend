@@ -9,12 +9,12 @@ import Navbar from "../../components/Navbar.astro";
     <div class="max-w-lg mx-auto text-center">
       <p class="font-mono text-xs text-mute uppercase tracking-wide mb-3">Voice Task Posting</p>
       <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Speak your task.</h1>
-      <p class="mt-2 text-sm text-body">Say it in Hindi, Tamil, Telugu, Bengali, or any language. We'll handle the rest.</p>
+      <p class="mt-2 text-sm text-body">Record your task in any language. We'll transcribe it and post it for you.</p>
 
       <!-- Language selector -->
       <div class="mt-6 flex flex-wrap justify-center gap-2">
-        {["English", "हिन्दी", "தமிழ்", "తెలుగు", "বাংলা", "मराठी", "ગુજરાતી", "ਪੰਜਾਬੀ", "ಕನ್ನಡ", "മലയാളം"].map((lang, i) => (
-          <button class={`px-3 py-1.5 text-xs rounded-full border transition-colors ${i === 0 ? "bg-primary text-on-primary border-primary" : "text-body border-hairline hover:border-hairline-strong"}`} data-lang={["en-IN","hi-IN","ta-IN","te-IN","bn-IN","mr-IN","gu-IN","pa-IN","kn-IN","ml-IN"][i]}>
+        {["English", "हिन्दी", "தமிழ்", "తెలుగు", "বাংলা", "मराठी"].map((lang, i) => (
+          <button class={`lang-btn px-3 py-1.5 text-xs rounded-full border transition-colors ${i === 0 ? "bg-primary text-on-primary border-primary" : "text-body border-hairline hover:border-hairline-strong"}`} data-lang={["en-IN","hi-IN","ta-IN","te-IN","bn-IN","mr-IN"][i]}>
             {lang}
           </button>
         ))}
@@ -22,100 +22,191 @@ import Navbar from "../../components/Navbar.astro";
 
       <!-- Mic button -->
       <div class="mt-10">
-        <button id="mic-btn" class="relative w-24 h-24 rounded-full bg-primary text-on-primary mx-auto flex items-center justify-center hover:opacity-90 transition-all" aria-label="Start recording">
+        <button id="mic-btn" class="relative w-24 h-24 rounded-full bg-primary text-on-primary mx-auto flex items-center justify-center hover:opacity-90 transition-all">
           <svg id="mic-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
           <div id="mic-pulse" class="hidden absolute inset-0 rounded-full bg-primary animate-ping opacity-30"></div>
         </button>
-        <p id="mic-status" class="mt-4 text-sm text-mute">Tap to start speaking</p>
+        <p id="mic-status" class="mt-4 text-sm text-mute">Tap to start recording</p>
+        <p id="mic-timer" class="hidden text-xs text-error font-mono mt-1">00:00</p>
       </div>
 
-      <!-- Transcription output -->
-      <div class="mt-8 text-left">
-        <div class="p-4 min-h-[120px] bg-canvas rounded-lg border border-hairline">
-          <p id="transcript" class="text-sm text-ink whitespace-pre-wrap">Your transcribed task will appear here...</p>
-        </div>
+      <!-- Audio playback -->
+      <div id="audio-preview" class="hidden mt-6">
+        <audio id="audio-player" controls class="w-full"></audio>
+        <button id="retry-btn" class="mt-2 text-xs text-link hover:underline">Re-record</button>
       </div>
 
-      <!-- Auto-parsed fields -->
-      <div id="parsed-fields" class="hidden mt-6 text-left space-y-3">
-        <div class="p-4 bg-canvas-soft rounded-lg border border-hairline">
-          <p class="text-xs font-mono text-mute uppercase mb-2">AI-Parsed Task</p>
-          <div class="space-y-2">
-            <div class="flex justify-between text-sm"><span class="text-body">Title</span><span class="text-ink font-medium" id="parsed-title">—</span></div>
-            <div class="flex justify-between text-sm"><span class="text-body">Category</span><span class="text-ink font-medium" id="parsed-category">—</span></div>
-            <div class="flex justify-between text-sm"><span class="text-body">Location</span><span class="text-ink font-medium" id="parsed-location">—</span></div>
-            <div class="flex justify-between text-sm"><span class="text-body">Suggested Budget</span><span class="text-ink font-medium" id="parsed-budget">—</span></div>
+      <!-- Transcription -->
+      <div class="mt-6 text-left">
+        <label class="block text-sm font-medium text-ink mb-1.5">Transcription</label>
+        <textarea id="transcript" rows="4" placeholder="Your voice will be transcribed here. You can also edit manually..." class="w-full px-3 py-2.5 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute resize-none"></textarea>
+      </div>
+
+      <!-- Task details (editable) -->
+      <div class="mt-4 text-left space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-ink mb-1">Category</label>
+            <select id="voice-category" class="w-full h-9 px-2 text-sm bg-canvas border border-hairline rounded-md">
+              <option>Task</option>
+              <option>Document Submission</option>
+              <option>Photo Proof</option>
+              <option>Parcel Pickup</option>
+              <option>Queue Standing</option>
+              <option>Verification</option>
+              <option>Event / Group Work</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-ink mb-1">Budget (₹)</label>
+            <input type="number" id="voice-budget" value="200" min="10" class="w-full h-9 px-2 text-sm bg-canvas border border-hairline rounded-md" />
           </div>
         </div>
-        <button class="w-full h-11 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">
-          Confirm & Post Task
-        </button>
+        <div>
+          <label class="block text-xs font-medium text-ink mb-1">Location</label>
+          <input type="text" id="voice-location" placeholder="Area or address" class="w-full h-9 px-2 text-sm bg-canvas border border-hairline rounded-md placeholder:text-mute" />
+        </div>
       </div>
+
+      <!-- Post button -->
+      <button id="post-btn" class="mt-6 w-full h-11 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity disabled:opacity-50" disabled>
+        Post Voice Task
+      </button>
+      <div id="post-msg" class="hidden mt-3 p-3 text-sm rounded-md"></div>
     </div>
   </main>
 </Layout>
 
 <script>
-  const btn = document.getElementById('mic-btn')!;
-  const status = document.getElementById('mic-status')!;
-  const transcript = document.getElementById('transcript')!;
-  const pulse = document.getElementById('mic-pulse')!;
-  const parsed = document.getElementById('parsed-fields')!;
-  let recognition: any = null;
+  fetch('/api/auth/me').then(r => { if (!r.ok) window.location.href = '/login?redirect=/tasks/voice'; });
+
+  const micBtn = document.getElementById('mic-btn')!;
+  const micStatus = document.getElementById('mic-status')!;
+  const micTimer = document.getElementById('mic-timer')!;
+  const micPulse = document.getElementById('mic-pulse')!;
+  const audioPreview = document.getElementById('audio-preview')!;
+  const audioPlayer = document.getElementById('audio-player') as HTMLAudioElement;
+  const transcript = document.getElementById('transcript') as HTMLTextAreaElement;
+  const postBtn = document.getElementById('post-btn') as HTMLButtonElement;
+
+  let mediaRecorder: MediaRecorder | null = null;
+  let audioChunks: Blob[] = [];
+  let audioBlob: Blob | null = null;
   let isRecording = false;
+  let timerInterval: any;
+  let seconds = 0;
   let selectedLang = 'en-IN';
+  let recognition: any = null;
 
   // Language selection
-  document.querySelectorAll('[data-lang]').forEach(b => {
+  document.querySelectorAll('.lang-btn').forEach(b => {
     b.addEventListener('click', () => {
-      document.querySelectorAll('[data-lang]').forEach(x => {
-        x.classList.remove('bg-primary', 'text-on-primary', 'border-primary');
-        x.classList.add('text-body', 'border-hairline');
-      });
-      b.classList.add('bg-primary', 'text-on-primary', 'border-primary');
-      b.classList.remove('text-body', 'border-hairline');
+      document.querySelectorAll('.lang-btn').forEach(x => { x.classList.remove('bg-primary','text-on-primary','border-primary'); x.classList.add('text-body','border-hairline'); });
+      b.classList.add('bg-primary','text-on-primary','border-primary'); b.classList.remove('text-body','border-hairline');
       selectedLang = (b as HTMLElement).dataset.lang || 'en-IN';
     });
   });
 
-  btn.addEventListener('click', () => {
-    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-      status.textContent = 'Speech recognition not supported in this browser';
-      return;
-    }
-    if (isRecording) {
-      recognition?.stop();
-      return;
-    }
+  micBtn.addEventListener('click', async () => {
+    if (isRecording) { stopRecording(); return; }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      startRecording(stream);
+    } catch { micStatus.textContent = 'Microphone access denied'; }
+  });
+
+  function startRecording(stream: MediaStream) {
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      audioPlayer.src = URL.createObjectURL(audioBlob);
+      audioPreview.classList.remove('hidden');
+      postBtn.disabled = false;
+      stream.getTracks().forEach(t => t.stop());
+    };
+    mediaRecorder.start();
+    isRecording = true;
+    micPulse.classList.remove('hidden');
+    micStatus.textContent = 'Recording... tap to stop';
+    micTimer.classList.remove('hidden');
+    seconds = 0;
+    timerInterval = setInterval(() => { seconds++; micTimer.textContent = `${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`; }, 1000);
+
+    // Start speech recognition simultaneously
+    startSpeechRecognition();
+  }
+
+  function stopRecording() {
+    mediaRecorder?.stop();
+    isRecording = false;
+    micPulse.classList.add('hidden');
+    micStatus.textContent = 'Recording complete';
+    clearInterval(timerInterval);
+    recognition?.stop();
+  }
+
+  function startSpeechRecognition() {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return;
     recognition = new SR();
     recognition.lang = selectedLang;
     recognition.continuous = true;
     recognition.interimResults = true;
-
-    recognition.onstart = () => {
-      isRecording = true;
-      pulse.classList.remove('hidden');
-      status.textContent = 'Listening... tap again to stop';
-      transcript.textContent = '';
-    };
     recognition.onresult = (e: any) => {
       let text = '';
       for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript;
-      transcript.textContent = text;
-    };
-    recognition.onend = () => {
-      isRecording = false;
-      pulse.classList.add('hidden');
-      status.textContent = 'Tap to start speaking';
-      if (transcript.textContent && transcript.textContent !== 'Your transcribed task will appear here...') {
-        parsed.classList.remove('hidden');
-        document.getElementById('parsed-title')!.textContent = transcript.textContent.slice(0, 50);
-        document.getElementById('parsed-category')!.textContent = 'Document Submission';
-        document.getElementById('parsed-location')!.textContent = 'Detecting...';
-        document.getElementById('parsed-budget')!.textContent = '₹200 - ₹400';
-      }
+      transcript.value = text;
     };
     recognition.start();
+  }
+
+  // Retry
+  document.getElementById('retry-btn')!.addEventListener('click', () => {
+    audioBlob = null; audioPreview.classList.add('hidden'); transcript.value = '';
+    postBtn.disabled = true; micStatus.textContent = 'Tap to start recording';
+    micTimer.classList.add('hidden');
+  });
+
+  // Post task
+  postBtn.addEventListener('click', async () => {
+    const title = transcript.value.trim().slice(0, 100) || 'Voice Task';
+    const description = transcript.value.trim();
+    const category = (document.getElementById('voice-category') as HTMLSelectElement).value;
+    const budget = (document.getElementById('voice-budget') as HTMLInputElement).value;
+    const location = (document.getElementById('voice-location') as HTMLInputElement).value;
+
+    if (!location) { alert('Please enter a location'); return; }
+
+    postBtn.textContent = 'Posting...'; postBtn.disabled = true;
+
+    const fd = new FormData();
+    fd.append('title', title);
+    fd.append('description', description);
+    fd.append('category', category);
+    fd.append('budget', budget);
+    fd.append('deadline', 'Today');
+    fd.append('location', location);
+    fd.append('anonymous', 'false');
+    fd.append('urgent', 'false');
+    if (audioBlob) fd.append('files', new File([audioBlob], 'voice-note.webm', { type: 'audio/webm' }));
+
+    const res = await fetch('/api/tasks', { method: 'POST', body: fd });
+    const data = await res.json();
+    const msg = document.getElementById('post-msg')!;
+
+    if (res.ok) {
+      msg.textContent = 'Task posted! Redirecting...';
+      msg.className = 'mt-3 p-3 text-sm rounded-md bg-cyan-soft text-cyan-deep';
+      msg.classList.remove('hidden');
+      setTimeout(() => window.location.href = `/tasks/${data.id}`, 1000);
+    } else {
+      msg.textContent = data.error || 'Failed to post';
+      msg.className = 'mt-3 p-3 text-sm rounded-md bg-error-soft text-error';
+      msg.classList.remove('hidden');
+      postBtn.textContent = 'Post Voice Task'; postBtn.disabled = false;
+    }
   });
 </script>
