@@ -87,6 +87,15 @@ import Navbar from "../../components/Navbar.astro";
           </div>
         </div>
 
+        <!-- Anonymous toggle -->
+        <div class="flex items-center justify-between p-4 bg-canvas-soft rounded-md border border-hairline">
+          <div>
+            <p class="text-sm font-medium text-ink">Post anonymously</p>
+            <p class="text-xs text-mute mt-0.5">Your name will be hidden from attendees.</p>
+          </div>
+          <input type="checkbox" id="anonymous" class="w-5 h-5 rounded border-hairline" />
+        </div>
+
         <button type="submit" id="submit-btn" class="w-full h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">Create Meet</button>
       </form>
     </div>
@@ -129,6 +138,7 @@ import Navbar from "../../components/Navbar.astro";
     fd.append('location', (document.getElementById('location') as HTMLInputElement).value);
     fd.append('visibility', (document.getElementById('visibility') as HTMLSelectElement).value);
     fd.append('max_attendees', (document.getElementById('max-attendees') as HTMLInputElement).value);
+    fd.append('anonymous', (document.getElementById('anonymous') as HTMLInputElement).checked ? 'true' : 'false');
     if (voiceBlob) fd.append('voice_note', new File([voiceBlob], 'voice.webm', { type: 'audio/webm' }));
 
     const res = await fetch('/api/meets', { method: 'POST', body: fd });

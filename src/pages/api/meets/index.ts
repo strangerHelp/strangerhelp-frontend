@@ -52,6 +52,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const time = formData.get('time') as string || '';
   const visibility = formData.get('visibility') as string || 'public';
   const maxAttendees = parseInt(formData.get('max_attendees') as string) || 50;
+  const anonymous = formData.get('anonymous') === 'true' ? 1 : 0;
 
   if (!title || !category) return new Response(JSON.stringify({ error: 'Title and category required' }), { status: 400 });
   if (title.length > 200) return new Response(JSON.stringify({ error: 'Title too long' }), { status: 400 });
@@ -65,8 +66,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const inviteCode = genId().slice(0, 8); // short invite code
 
   await db.prepare(
-    "INSERT INTO meets (id, title, description, category, location, date, time, visibility, invite_code, max_attendees, host_id, host_name, voice_note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-  ).bind(id, title, description, category, location, date, time, visibility, inviteCode, maxAttendees, session, user?.name || 'User', voiceNote).run();
+    "INSERT INTO meets (id, title, description, category, location, date, time, visibility, invite_code, max_attendees, host_id, host_name, voice_note, anonymous) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+  ).bind(id, title, description, category, location, date, time, visibility, inviteCode, maxAttendees, session, anonymous ? 'Anonymous' : (user?.name || 'User'), voiceNote, anonymous).run();
 
   // Host auto-joins
   await db.prepare("INSERT INTO meet_attendees (id, meet_id, user_id, user_name) VALUES (?, ?, ?, ?)").bind(genId(), id, session, user?.name || 'User').run();
