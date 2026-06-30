@@ -38,7 +38,7 @@ import Footer from "../../components/Footer.astro";
     const isJoined = currentUser && meet.attendees?.some((a: any) => a.user_id === currentUser.id);
     const spotsLeft = meet.max_attendees - (meet.attendeeCount || 0);
     const shareUrl = `https://strangerhelp.com/meets/${meet.invite_code}`;
-    const shareText = `🤝 ${meet.title}\n📍 ${meet.location || 'TBD'}\n📅 ${meet.date || 'TBD'}${meet.time ? ' · ' + meet.time : ''}\n👥 ${meet.attendeeCount}/${meet.max_attendees} joined\n\nJoin this ${meet.category} meet:\n${shareUrl}`;
+    const shareText = `🤝 ${meet.title}\n📍 ${meet.location || 'TBD'}\n📅 ${meet.date || 'TBD'}${meet.time ? ' · ' + meet.time : ''}\n👥 ${meet.attendeeCount}/${meet.max_attendees} joined\n\nJoin this ${meet.category} meet:`;
 
     document.getElementById('meet-content')!.innerHTML = `
       <div class="p-6 md:p-8 bg-canvas rounded-lg border border-hairline">
@@ -113,7 +113,7 @@ import Footer from "../../components/Footer.astro";
     });
     document.getElementById('share-btn')?.addEventListener('click', () => {
       if (navigator.share) { navigator.share({ title: meet.title, text: shareText, url: shareUrl }); }
-      else { navigator.clipboard.writeText(shareText); alert('Copied to clipboard!'); }
+      else { navigator.clipboard.writeText(shareText + '\n' + shareUrl); alert('Copied to clipboard!'); }
     });
     document.getElementById('copy-link')?.addEventListener('click', () => {
       navigator.clipboard.writeText(shareUrl);
