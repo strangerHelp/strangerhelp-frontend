@@ -2,7 +2,7 @@ import { defineMiddleware } from "astro:middleware";
 import { env } from "cloudflare:workers";
 import { verifySession } from "./lib/session";
 
-const PROTECTED_ROUTES = ["/dashboard", "/tasks/my-tasks", "/tasks/new", "/chat", "/karma"];
+const PROTECTED_ROUTES = ["/dashboard", "/tasks/my-tasks", "/tasks/new", "/chat", "/karma", "/referral"];
 const AUTH_ROUTES = ["/login", "/register"];
 
 // Cache durations in seconds

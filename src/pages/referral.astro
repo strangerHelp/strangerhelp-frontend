@@ -1,0 +1,146 @@
+---
+import AccountLayout from "../layouts/AccountLayout.astro";
+---
+
+<AccountLayout title="Refer & Earn — StrangerHelp">
+  <div class="max-w-lg">
+    <!-- Referral Card -->
+    <div class="p-6 bg-primary rounded-xl text-on-primary relative overflow-hidden">
+      <div class="absolute top-3 right-3 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider bg-warning text-ink rounded-full">Coming Soon</div>
+      <p class="text-xs font-mono uppercase opacity-60">Referral Earnings</p>
+      <p class="mt-2 text-4xl font-semibold tracking-tight">₹0 <span class="text-lg opacity-60">earned</span></p>
+      <p class="mt-2 text-sm opacity-70">Invite friends, earn ₹50 for every friend who completes their first task!</p>
+      <div class="mt-5">
+        <p class="text-xs opacity-60 mb-1.5">Your Referral Code</p>
+        <div class="flex gap-2">
+          <div class="flex-1 h-10 flex items-center px-3 bg-on-primary/10 rounded-md text-sm font-mono" id="ref-code">Loading...</div>
+          <button id="copy-code" class="h-10 px-4 text-xs font-medium bg-on-primary/20 rounded-md hover:bg-on-primary/30 transition-colors">Copy</button>
+        </div>
+      </div>
+      <div class="mt-4 flex gap-2">
+        <button id="share-whatsapp" class="flex-1 h-9 text-xs font-medium bg-[#25D366]/80 rounded-md hover:bg-[#25D366] transition-colors">Share on WhatsApp</button>
+        <button id="share-link" class="flex-1 h-9 text-xs font-medium bg-on-primary/20 rounded-md hover:bg-on-primary/30 transition-colors">Share Link</button>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="mt-6 p-5 bg-canvas rounded-lg border border-hairline">
+      <h2 class="text-sm font-semibold text-ink mb-4">How Refer & Earn Works</h2>
+      <div class="space-y-4">
+        <div class="flex gap-3">
+          <div class="w-8 h-8 shrink-0 rounded-full bg-cyan-soft flex items-center justify-center text-xs font-bold text-cyan-deep">1</div>
+          <div>
+            <p class="text-sm font-medium text-ink">Share your referral code</p>
+            <p class="text-xs text-body">Send your unique code to friends via WhatsApp, Instagram, or any platform.</p>
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <div class="w-8 h-8 shrink-0 rounded-full bg-cyan-soft flex items-center justify-center text-xs font-bold text-cyan-deep">2</div>
+          <div>
+            <p class="text-sm font-medium text-ink">Friend signs up with your code</p>
+            <p class="text-xs text-body">They create an account using your referral link or enter your code during signup.</p>
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <div class="w-8 h-8 shrink-0 rounded-full bg-cyan-soft flex items-center justify-center text-xs font-bold text-cyan-deep">3</div>
+          <div>
+            <p class="text-sm font-medium text-ink">They complete their first task</p>
+            <p class="text-xs text-body">Once your friend posts or completes their first task on StrangerHelp...</p>
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <div class="w-8 h-8 shrink-0 rounded-full bg-warning-soft flex items-center justify-center text-xs font-bold text-warning-deep">₹</div>
+          <div>
+            <p class="text-sm font-medium text-ink">You both earn ₹50!</p>
+            <p class="text-xs text-body">₹50 added to your Karma Wallet + ₹50 to your friend. Win-win!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rewards breakdown -->
+    <div class="mt-6 p-5 bg-canvas rounded-lg border border-hairline">
+      <h2 class="text-sm font-semibold text-ink mb-4">Rewards</h2>
+      <div class="space-y-2">
+        <div class="flex items-center justify-between p-3 bg-canvas-soft rounded-md">
+          <span class="text-sm text-body">Per referral (friend completes first task)</span>
+          <span class="text-sm font-semibold text-cyan-deep">+₹50</span>
+        </div>
+        <div class="flex items-center justify-between p-3 bg-canvas-soft rounded-md">
+          <span class="text-sm text-body">Friend's signup bonus</span>
+          <span class="text-sm font-semibold text-cyan-deep">+₹50</span>
+        </div>
+        <div class="flex items-center justify-between p-3 bg-canvas-soft rounded-md">
+          <span class="text-sm text-body">Milestone: 10 referrals</span>
+          <span class="text-sm font-semibold text-warning">+₹200 bonus</span>
+        </div>
+        <div class="flex items-center justify-between p-3 bg-canvas-soft rounded-md">
+          <span class="text-sm text-body">Milestone: 50 referrals</span>
+          <span class="text-sm font-semibold text-warning">+₹1000 bonus</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="mt-6 grid grid-cols-3 gap-3">
+      <div class="p-4 bg-canvas rounded-lg border border-hairline text-center">
+        <p class="text-2xl font-bold text-ink">0</p>
+        <p class="text-xs text-mute">Invited</p>
+      </div>
+      <div class="p-4 bg-canvas rounded-lg border border-hairline text-center">
+        <p class="text-2xl font-bold text-ink">0</p>
+        <p class="text-xs text-mute">Joined</p>
+      </div>
+      <div class="p-4 bg-canvas rounded-lg border border-hairline text-center">
+        <p class="text-2xl font-bold text-cyan-deep">₹0</p>
+        <p class="text-xs text-mute">Earned</p>
+      </div>
+    </div>
+
+    <!-- Recent referrals -->
+    <div class="mt-6">
+      <h2 class="text-sm font-semibold text-ink mb-3">Your Referrals</h2>
+      <div class="p-4 bg-canvas rounded-lg border border-hairline">
+        <p class="text-sm text-mute text-center py-4">No referrals yet. Share your code to start earning!</p>
+      </div>
+    </div>
+
+    <!-- Terms -->
+    <div class="mt-6 p-4 bg-canvas-soft rounded-md border border-hairline">
+      <p class="text-xs text-body leading-relaxed">
+        <strong>Terms:</strong> Referral rewards are credited to your Karma Wallet once your referred friend completes their first task (posted or claimed). Fake accounts, self-referrals, or abuse will result in forfeiture of rewards and account suspension. Rewards are subject to change. Minimum withdrawal: 100 Karma.
+      </p>
+    </div>
+  </div>
+</AccountLayout>
+
+<script>
+  async function init() {
+    const res = await fetch('/api/auth/me');
+    if (!res.ok) { window.location.href = '/login?redirect=/referral'; return; }
+    const { user } = await res.json();
+
+    // Generate referral code from user handle or ID
+    const refCode = user.handle || user.id.slice(0, 8);
+    const refLink = `https://strangerhelp.com/register?ref=${refCode}`;
+    document.getElementById('ref-code')!.textContent = refCode;
+
+    document.getElementById('copy-code')!.addEventListener('click', () => {
+      navigator.clipboard.writeText(refCode);
+      document.getElementById('copy-code')!.textContent = '✓ Copied';
+      setTimeout(() => document.getElementById('copy-code')!.textContent = 'Copy', 2000);
+    });
+
+    const shareText = `🎉 Join StrangerHelp and earn ₹50!\n\nPost tasks or help strangers near you and earn money. Use my referral code: ${refCode}\n\nSign up: ${refLink}`;
+
+    document.getElementById('share-whatsapp')!.addEventListener('click', () => {
+      window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+    });
+
+    document.getElementById('share-link')!.addEventListener('click', () => {
+      if (navigator.share) { navigator.share({ title: 'Join StrangerHelp', text: shareText, url: refLink }); }
+      else { navigator.clipboard.writeText(shareText); alert('Copied!'); }
+    });
+  }
+  init();
+</script>
