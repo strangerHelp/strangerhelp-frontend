@@ -131,11 +131,11 @@ import Navbar from "../../components/Navbar.astro";
       
       if (m.attachments?.length > 0) {
         content += m.attachments.map((a: string) => {
-          const src = a.startsWith('/uploads/') ? '/api' + a : a;
-          if (a.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-            return `<a href="${src}" target="_blank"><img src="${src}?raw" alt="attachment" class="max-w-[200px] rounded-md mt-1" loading="lazy" /></a>`;
-          }
-          return `<a href="${src}" target="_blank" class="text-link underline text-xs">📎 ${a.split('/').pop()}</a>`;
+          const isImage = a.startsWith('data:image') || a.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+          const isAudio = a.startsWith('data:audio') || a.match(/\.(webm|mp3|ogg|wav)$/i);
+          if (isImage) return `<img src="${a}" onclick="viewImage(this.src)" class="max-w-[200px] rounded-md mt-1 cursor-pointer" loading="lazy" />`;
+          if (isAudio) return `<audio controls class="h-8 mt-1 max-w-[200px]" src="${a}"></audio>`;
+          return `<a href="${a}" target="_blank" class="text-link underline text-xs">📎 Attachment</a>`;
         }).join('');
       }
       if (m.text) content += `<p class="text-sm">${escapeHtml(m.text)}</p>`;
@@ -197,10 +197,11 @@ import Navbar from "../../components/Navbar.astro";
     let content = '';
     if (msg.attachments?.length > 0) {
       content += msg.attachments.map((a: string) => {
-        const src = a.startsWith('/uploads/') ? '/api' + a : a;
-        return a.match(/\.(jpg|jpeg|png|gif|webp)$/i) 
-          ? `<a href="${src}" target="_blank"><img src="${src}?raw" class="max-w-[200px] rounded-md mt-1" /></a>`
-          : `<a href="${src}" target="_blank" class="text-link underline text-xs">📎 ${a.split('/').pop()}</a>`;
+        const isImage = a.startsWith('data:image') || a.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+        const isAudio = a.startsWith('data:audio') || a.match(/\.(webm|mp3|ogg|wav)$/i);
+        if (isImage) return `<img src="${a}" onclick="viewImage(this.src)" class="max-w-[200px] rounded-md mt-1 cursor-pointer" />`;
+        if (isAudio) return `<audio controls class="h-8 mt-1 max-w-[200px]" src="${a}"></audio>`;
+        return `<a href="${a}" target="_blank" class="text-link underline text-xs">📎 Attachment</a>`;
       }).join('');
     }
     if (msg.text) content += `<p class="text-sm">${escapeHtml(msg.text)}</p>`;
