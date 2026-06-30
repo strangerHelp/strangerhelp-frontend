@@ -74,9 +74,9 @@ import Footer from "../../components/Footer.astro";
         <div class="mt-6 pt-6 border-t border-hairline flex flex-col sm:flex-row gap-3">
           ${!currentUser ? `<a href="/login?redirect=/meets/${meetId}" class="flex-1 h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full">Login to Join</a>` :
             isHost ? `<p class="text-sm text-cyan-deep font-medium">👑 You're hosting this meet</p>` :
-            isJoined ? `<button id="leave-btn" class="flex-1 h-11 flex items-center justify-center text-sm font-medium text-error border border-error/30 rounded-full hover:bg-error-soft">Leave Meet</button>` :
-            spotsLeft > 0 ? `<button id="join-btn" class="flex-1 h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90">Join Meet (${spotsLeft} spot${spotsLeft > 1 ? 's' : ''} left)</button>` :
-            `<p class="text-sm text-mute font-medium">Meet is full</p>`}
+            isJoined ? `<button id="leave-btn" class="flex-1 h-11 flex items-center justify-center text-sm font-medium text-error border border-error/30 rounded-full hover:bg-error-soft">Leave Meet</button><button id="msg-host-btn" class="h-11 px-6 flex items-center justify-center text-sm font-medium text-ink border border-hairline rounded-full hover:bg-canvas-soft-2">Message Host</button>` :
+            spotsLeft > 0 ? `<button id="join-btn" class="flex-1 h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90">Join Meet (${spotsLeft} spot${spotsLeft > 1 ? 's' : ''} left)</button><button id="msg-host-btn" class="h-11 px-6 flex items-center justify-center text-sm font-medium text-ink border border-hairline rounded-full hover:bg-canvas-soft-2">Message Host</button>` :
+            `<p class="text-sm text-mute font-medium">Meet is full</p><button id="msg-host-btn" class="h-11 px-6 flex items-center justify-center text-sm font-medium text-ink border border-hairline rounded-full hover:bg-canvas-soft-2">Message Host</button>`}
           <button id="share-btn" class="h-11 px-6 flex items-center justify-center gap-2 text-sm font-medium text-ink border border-hairline rounded-full hover:bg-canvas-soft-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>
             Share
@@ -105,6 +105,13 @@ import Footer from "../../components/Footer.astro";
       if (!confirm('Leave this meet?')) return;
       await fetch(`/api/meets/${meetId}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'leave' }) });
       location.reload();
+    });
+    document.getElementById('msg-host-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('msg-host-btn')!;
+      btn.textContent = 'Opening chat...';
+      const res = await fetch('/api/messages', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ recipientId: meet.host_id }) });
+      if (res.ok) { const conv = await res.json(); window.location.href = `/chat/${conv._id}`; }
+      else { btn.textContent = 'Message Host'; alert('Failed to start conversation'); }
     });
     document.getElementById('delete-btn')?.addEventListener('click', async () => {
       if (!confirm('Delete this meet permanently?')) return;
