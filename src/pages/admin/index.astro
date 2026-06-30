@@ -16,6 +16,7 @@ import Layout from "../../layouts/Layout.astro";
         <button class="admin-tab w-full text-left px-3 py-2 text-sm rounded-md text-body hover:text-ink hover:bg-canvas-soft" data-tab="tasks">Tasks</button>
         <button class="admin-tab w-full text-left px-3 py-2 text-sm rounded-md text-body hover:text-ink hover:bg-canvas-soft" data-tab="reports">Reports</button>
         <button class="admin-tab w-full text-left px-3 py-2 text-sm rounded-md text-body hover:text-ink hover:bg-canvas-soft" data-tab="verification">Verification</button>
+        <button class="admin-tab w-full text-left px-3 py-2 text-sm rounded-md text-body hover:text-ink hover:bg-canvas-soft" data-tab="support">Support Chat</button>
       </nav>
       <div class="p-3 border-t border-hairline">
         <a href="/dashboard" class="text-xs text-body hover:text-ink">← Back to App</a>
@@ -280,8 +281,62 @@ import Layout from "../../layouts/Layout.astro";
       else if (currentTab === 'tasks') loadTasks();
       else if (currentTab === 'reports') loadReports();
       else if (currentTab === 'verification') loadVerification();
+      else if (currentTab === 'support') loadSupport();
     });
   });
+
+  async function loadSupport() {
+    const res = await fetch('/api/admin/support');
+    if (!res.ok) return;
+    const convs = await res.json();
+
+    document.getElementById('admin-content')!.innerHTML = `
+      <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Support Chat</h1>
+      <p class="mt-1 text-sm text-body">${convs.length} support conversations</p>
+      <div class="mt-6 space-y-3">
+        ${convs.length === 0 ? '<p class="text-sm text-mute py-8 text-center">No support messages yet.</p>' : convs.map((c: any) => `
+          <div class="p-4 bg-canvas rounded-lg border border-hairline">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-ink">${esc(c.user_name)}</span>
+              <span class="text-xs text-mute">${c.last_message_at ? new Date(c.last_message_at).toLocaleString() : ''}</span>
+            </div>
+            <p class="text-xs text-body mb-3">${esc(c.last_message)}</p>
+            <button onclick="openSupportChat('${c.id}','${esc(c.user_name)}')" class="text-xs px-3 py-1.5 rounded bg-primary text-on-primary hover:opacity-90">View & Reply</button>
+          </div>`).join('')}
+      </div>
+      <div id="support-chat" class="hidden mt-6 p-4 bg-canvas rounded-lg border border-hairline">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-semibold text-ink" id="support-chat-title">Chat</h3>
+          <button onclick="document.getElementById('support-chat').classList.add('hidden')" class="text-xs text-mute hover:text-ink">Close</button>
+        </div>
+        <div id="support-messages" class="max-h-64 overflow-y-auto space-y-2 mb-3"></div>
+        <div class="flex gap-2">
+          <input type="text" id="support-reply" placeholder="Type reply..." class="flex-1 h-9 px-3 text-sm border border-hairline rounded-md" />
+          <button id="support-send" class="h-9 px-4 text-xs font-medium text-on-primary bg-primary rounded-md hover:opacity-90">Send</button>
+        </div>
+      </div>`;
+  }
+
+  let currentSupportConvId = '';
+  (window as any).openSupportChat = async function(convId: string, userName: string) {
+    currentSupportConvId = convId;
+    document.getElementById('support-chat')!.classList.remove('hidden');
+    document.getElementById('support-chat-title')!.textContent = `Chat with ${userName}`;
+    const res = await fetch(`/api/messages/${convId}`);
+    if (!res.ok) return;
+    const messages = await res.json();
+    document.getElementById('support-messages')!.innerHTML = messages.map((m: any) => `
+      <div class="flex ${m.senderId === 'support' ? 'justify-end' : 'justify-start'}">
+        <div class="max-w-[70%] px-3 py-2 rounded-lg text-xs ${m.senderId === 'support' ? 'bg-primary text-on-primary' : 'bg-canvas-soft-2 text-ink'}">${esc(m.text)}</div>
+      </div>`).join('');
+    document.getElementById('support-send')!.onclick = async () => {
+      const input = document.getElementById('support-reply') as HTMLInputElement;
+      if (!input.value.trim()) return;
+      await fetch('/api/admin/support', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ conversationId: currentSupportConvId, text: input.value.trim() }) });
+      input.value = '';
+      (window as any).openSupportChat(currentSupportConvId, userName);
+    };
+  };
 
   init();
 </script>

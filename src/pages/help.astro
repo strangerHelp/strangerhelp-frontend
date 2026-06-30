@@ -120,7 +120,68 @@ import Footer from "../components/Footer.astro";
           <a href="https://x.com/strangerhelp07" target="_blank" rel="noopener" class="inline-flex h-10 items-center px-5 text-sm font-medium text-ink border border-hairline rounded-full hover:border-hairline-strong transition-colors">Message on X</a>
         </div>
       </div>
+
+      <!-- Live Support Chat -->
+      <div class="mt-8 p-6 bg-canvas rounded-lg border border-hairline">
+        <h2 class="text-lg font-semibold text-ink mb-2">💬 Chat with Support</h2>
+        <p class="text-sm text-body mb-4">Get help instantly from our support team.</p>
+        <div id="support-box">
+          <div id="support-msgs" class="max-h-48 overflow-y-auto space-y-2 mb-3 p-3 bg-canvas-soft rounded-md border border-hairline min-h-[60px]">
+            <p class="text-xs text-mute text-center">Send a message to start chatting with support.</p>
+          </div>
+          <div class="flex gap-2">
+            <input type="text" id="support-input" placeholder="Type your message..." class="flex-1 h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink placeholder:text-mute" />
+            <button id="support-send-btn" class="h-10 px-4 text-sm font-medium text-on-primary bg-primary rounded-md hover:opacity-90">Send</button>
+          </div>
+          <p id="support-login-msg" class="hidden mt-2 text-xs text-mute"><a href="/login?redirect=/help" class="text-link">Log in</a> to chat with support.</p>
+        </div>
+      </div>
     </div>
   </main>
   <Footer />
 </Layout>
+
+<script>
+  let isLoggedIn = false;
+
+  async function initSupport() {
+    const authRes = await fetch('/api/auth/me');
+    if (!authRes.ok) {
+      document.getElementById('support-input')!.setAttribute('disabled', 'true');
+      document.getElementById('support-send-btn')!.setAttribute('disabled', 'true');
+      document.getElementById('support-login-msg')!.classList.remove('hidden');
+      return;
+    }
+    isLoggedIn = true;
+    loadSupportMessages();
+  }
+
+  async function loadSupportMessages() {
+    const res = await fetch('/api/support');
+    if (!res.ok) return;
+    const { messages } = await res.json();
+    const container = document.getElementById('support-msgs')!;
+    if (messages.length === 0) return;
+    container.innerHTML = messages.map((m: any) => `
+      <div class="flex ${m.isSupport ? 'justify-start' : 'justify-end'}">
+        <div class="max-w-[75%] px-3 py-2 rounded-lg text-sm ${m.isSupport ? 'bg-cyan-soft text-cyan-deep' : 'bg-primary text-on-primary'}">${m.text.replace(/</g,'&lt;')}</div>
+      </div>`).join('');
+    container.scrollTop = container.scrollHeight;
+  }
+
+  document.getElementById('support-send-btn')!.addEventListener('click', async () => {
+    if (!isLoggedIn) return;
+    const input = document.getElementById('support-input') as HTMLInputElement;
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    await fetch('/api/support', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ text }) });
+    loadSupportMessages();
+  });
+
+  document.getElementById('support-input')!.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('support-send-btn')!.click();
+  });
+
+  initSupport();
+</script>
