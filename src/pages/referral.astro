@@ -9,7 +9,7 @@ import AccountLayout from "../layouts/AccountLayout.astro";
       <div class="absolute top-3 right-3 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider bg-warning text-ink rounded-full">Coming Soon</div>
       <p class="text-xs font-mono uppercase opacity-60">Referral Earnings</p>
       <p class="mt-2 text-4xl font-semibold tracking-tight">₹0 <span class="text-lg opacity-60">earned</span></p>
-      <p class="mt-2 text-sm opacity-70">Invite friends, earn ₹50 for every friend who completes their first task!</p>
+      <p class="mt-2 text-sm opacity-70">Invite friends and earn rewards when they complete their first task! Referral program launching soon.</p>
       <div class="mt-5">
         <p class="text-xs opacity-60 mb-1.5">Your Referral Code</p>
         <div class="flex gap-2">
@@ -51,8 +51,8 @@ import AccountLayout from "../layouts/AccountLayout.astro";
         <div class="flex gap-3">
           <div class="w-8 h-8 shrink-0 rounded-full bg-warning-soft flex items-center justify-center text-xs font-bold text-warning-deep">₹</div>
           <div>
-            <p class="text-sm font-medium text-ink">You both earn ₹50!</p>
-            <p class="text-xs text-body">₹50 added to your Karma Wallet + ₹50 to your friend. Win-win!</p>
+            <p class="text-sm font-medium text-ink">You both earn rewards!</p>
+            <p class="text-xs text-body">Rewards credited to both your Karma Wallets. Exact amounts announced at launch.</p>
           </div>
         </div>
       </div>
@@ -60,39 +60,47 @@ import AccountLayout from "../layouts/AccountLayout.astro";
 
     <!-- Rewards breakdown -->
     <div class="mt-6 p-5 bg-canvas rounded-lg border border-hairline">
-      <h2 class="text-sm font-semibold text-ink mb-4">Rewards</h2>
-      <div class="space-y-2">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-semibold text-ink">Rewards</h2>
+        <span class="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider bg-warning text-ink rounded-full">Coming Soon</span>
+      </div>
+      <div class="space-y-2 opacity-60">
         <div class="flex items-center justify-between p-3 bg-canvas-soft rounded-md">
-          <span class="text-sm text-body">Per referral (friend completes first task)</span>
-          <span class="text-sm font-semibold text-cyan-deep">+₹50</span>
+          <span class="text-sm text-body">Per successful referral</span>
+          <span class="text-sm font-semibold text-cyan-deep">Level Reward</span>
         </div>
         <div class="flex items-center justify-between p-3 bg-canvas-soft rounded-md">
           <span class="text-sm text-body">Friend's signup bonus</span>
-          <span class="text-sm font-semibold text-cyan-deep">+₹50</span>
+          <span class="text-sm font-semibold text-cyan-deep">Level Reward</span>
         </div>
         <div class="flex items-center justify-between p-3 bg-canvas-soft rounded-md">
-          <span class="text-sm text-body">Milestone: 10 referrals</span>
-          <span class="text-sm font-semibold text-warning">+₹200 bonus</span>
+          <span class="text-sm text-body">Milestone: Level 1 (10 referrals)</span>
+          <span class="text-sm font-semibold text-warning">Bonus Reward</span>
         </div>
         <div class="flex items-center justify-between p-3 bg-canvas-soft rounded-md">
-          <span class="text-sm text-body">Milestone: 50 referrals</span>
-          <span class="text-sm font-semibold text-warning">+₹1000 bonus</span>
+          <span class="text-sm text-body">Milestone: Level 2 (50 referrals)</span>
+          <span class="text-sm font-semibold text-warning">Bonus Reward</span>
+        </div>
+        <div class="flex items-center justify-between p-3 bg-canvas-soft rounded-md">
+          <span class="text-sm text-body">Milestone: Level 3 (100 referrals)</span>
+          <span class="text-sm font-semibold text-warning">Premium Reward</span>
         </div>
       </div>
+      <p class="mt-3 text-xs text-mute text-center">Exact reward amounts will be announced at launch</p>
     </div>
 
     <!-- Stats -->
-    <div class="mt-6 grid grid-cols-3 gap-3">
+    <div class="mt-6 grid grid-cols-3 gap-3 opacity-60">
       <div class="p-4 bg-canvas rounded-lg border border-hairline text-center">
-        <p class="text-2xl font-bold text-ink">0</p>
+        <p class="text-2xl font-bold text-ink">—</p>
         <p class="text-xs text-mute">Invited</p>
       </div>
       <div class="p-4 bg-canvas rounded-lg border border-hairline text-center">
-        <p class="text-2xl font-bold text-ink">0</p>
+        <p class="text-2xl font-bold text-ink">—</p>
         <p class="text-xs text-mute">Joined</p>
       </div>
       <div class="p-4 bg-canvas rounded-lg border border-hairline text-center">
-        <p class="text-2xl font-bold text-cyan-deep">₹0</p>
+        <p class="text-2xl font-bold text-cyan-deep">—</p>
         <p class="text-xs text-mute">Earned</p>
       </div>
     </div>
@@ -131,7 +139,7 @@ import AccountLayout from "../layouts/AccountLayout.astro";
       setTimeout(() => document.getElementById('copy-code')!.textContent = 'Copy', 2000);
     });
 
-    const shareText = `🎉 Join StrangerHelp and earn ₹50!\n\nPost tasks or help strangers near you and earn money. Use my referral code: ${refCode}\n\nSign up: ${refLink}`;
+    const shareText = `🎉 Join StrangerHelp!\n\nPost tasks or help strangers near you and earn money. Use my referral code: ${refCode}\n\nSign up: ${refLink}`;
 
     document.getElementById('share-whatsapp')!.addEventListener('click', () => {
       window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
