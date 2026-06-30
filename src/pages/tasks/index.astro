@@ -57,6 +57,21 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
       </div>
     </div>
 
+    <!-- Search & Sort -->
+    <div class="mb-4 flex flex-col sm:flex-row gap-3">
+      <div class="relative flex-1">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-mute" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="search-input" placeholder="Search tasks by title, location, or keyword..." class="w-full h-10 pl-9 pr-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute" />
+      </div>
+      <select id="sort-select" class="h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink">
+        <option value="distance">Nearest first</option>
+        <option value="newest">Newest first</option>
+        <option value="budget_high">Budget: High → Low</option>
+        <option value="budget_low">Budget: Low → High</option>
+        <option value="urgent">Urgent first</option>
+      </select>
+    </div>
+
     <!-- Filters -->
     <div class="flex gap-2 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0">
       {categories.map((cat, i) => (
@@ -84,6 +99,9 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
   let userLat: number | null = null;
   let userLng: number | null = null;
   let currentUser: any = null;
+  let allTasks: any[] = [];
+  let searchQuery = '';
+  let sortBy = 'distance';
 
   async function loadTasks(category?: string) {
     const params = new URLSearchParams();
@@ -91,7 +109,41 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
     if (userLat && userLng) { params.set('lat', String(userLat)); params.set('lng', String(userLng)); }
 
     const res = await fetch(`/api/tasks?${params}`);
-    const tasks = await res.json();
+    allTasks = await res.json();
+    renderTasks();
+  }
+
+  function renderTasks() {
+    let tasks = [...allTasks];
+
+    // Search filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      tasks = tasks.filter((t: any) =>
+        t.title.toLowerCase().includes(q) ||
+        t.location.toLowerCase().includes(q) ||
+        t.description?.toLowerCase().includes(q) ||
+        t.category.toLowerCase().includes(q) ||
+        t.posterName?.toLowerCase().includes(q)
+      );
+    }
+
+    // Sort
+    tasks.sort((a: any, b: any) => {
+      switch (sortBy) {
+        case 'newest': return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'budget_high': return b.budget - a.budget;
+        case 'budget_low': return a.budget - b.budget;
+        case 'urgent': return (b.urgent || 0) - (a.urgent || 0);
+        case 'distance':
+        default:
+          if (a.distance == null && b.distance == null) return 0;
+          if (a.distance == null) return 1;
+          if (b.distance == null) return -1;
+          return a.distance - b.distance;
+      }
+    });
+
     const grid = document.getElementById('tasks-grid')!;
     const empty = document.getElementById('empty-state')!;
 
@@ -235,6 +287,22 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
     if (!(e.target as HTMLElement).closest('#city-input, #city-results')) {
       cityResults.classList.add('hidden');
     }
+  });
+
+  // Search
+  let searchTimeout: any;
+  document.getElementById('search-input')!.addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      searchQuery = (e.target as HTMLInputElement).value.trim();
+      renderTasks();
+    }, 300);
+  });
+
+  // Sort
+  document.getElementById('sort-select')!.addEventListener('change', (e) => {
+    sortBy = (e.target as HTMLSelectElement).value;
+    renderTasks();
   });
 
   // Category filter
