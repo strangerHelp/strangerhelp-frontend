@@ -16,6 +16,9 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     if (!email || !password) {
       return new Response(JSON.stringify({ error: 'Email and password required' }), { status: 400 });
     }
+    if (/[\x00-\x1f\x7f]/.test(email) || /[\x00-\x1f\x7f]/.test(password)) {
+      return new Response(JSON.stringify({ error: 'Invalid characters' }), { status: 400 });
+    }
 
     const user: any = await db.prepare("SELECT id, name, password, banned FROM users WHERE email = ?").bind(email).first();
     if (!user) {

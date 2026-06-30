@@ -21,7 +21,12 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       return new Response(JSON.stringify({ error: 'Password must be at least 8 characters' }), { status: 400 });
     }
     if (name.length > 100) return new Response(JSON.stringify({ error: 'Name too long' }), { status: 400 });
+    // Reject control characters, null bytes, and non-printable chars
+    if (/[\x00-\x1f\x7f]/.test(email) || /[\x00-\x1f\x7f]/.test(name)) {
+      return new Response(JSON.stringify({ error: 'Invalid characters detected' }), { status: 400 });
+    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return new Response(JSON.stringify({ error: 'Invalid email format' }), { status: 400 });
+    if (email.length > 254) return new Response(JSON.stringify({ error: 'Email too long' }), { status: 400 });
 
     const existing = await db.prepare("SELECT id FROM users WHERE email = ?").bind(email).first();
     if (existing) {
