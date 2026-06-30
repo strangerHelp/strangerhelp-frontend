@@ -19,6 +19,18 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     return new Response(JSON.stringify({ error: 'Invalid subscription' }), { status: 400 });
   }
 
+  // Validate endpoint is a legitimate push service URL (prevent SSRF)
+  try {
+    const url = new URL(endpoint);
+    if (url.protocol !== 'https:') return new Response(JSON.stringify({ error: 'Invalid endpoint: must be HTTPS' }), { status: 400 });
+    const allowedHosts = ['fcm.googleapis.com', 'updates.push.services.mozilla.com', 'wns.windows.com', 'web.push.apple.com'];
+    if (!allowedHosts.some(h => url.hostname.endsWith(h))) {
+      return new Response(JSON.stringify({ error: 'Invalid push service endpoint' }), { status: 400 });
+    }
+  } catch {
+    return new Response(JSON.stringify({ error: 'Invalid endpoint URL' }), { status: 400 });
+  }
+
   const db = (env as any).DB as D1Database;
 
   // Upsert: delete old subscription for this endpoint, insert new
