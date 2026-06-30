@@ -1,0 +1,166 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+---
+
+<Layout title="Responsible Disclosure — StrangerHelp">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="max-w-2xl mx-auto">
+      <p class="font-mono text-xs text-mute uppercase tracking-wide mb-2">Security</p>
+      <h1 class="text-3xl font-semibold text-ink tracking-[-1.28px]">Responsible Disclosure</h1>
+      <p class="mt-3 text-sm text-body leading-relaxed">We take security seriously. If you've found a vulnerability in StrangerHelp, we want to hear about it. Report responsibly and earn your place in our Hall of Fame.</p>
+
+      <!-- How to Report -->
+      <div class="mt-8 p-6 bg-canvas rounded-lg border border-hairline">
+        <h2 class="text-lg font-semibold text-ink mb-4">How to Report</h2>
+        <div class="space-y-3 text-sm text-body">
+          <p>Send your findings to:</p>
+          <div class="p-3 bg-canvas-soft rounded-md border border-hairline">
+            <p class="font-mono text-ink">security@strangerhelp.com</p>
+          </div>
+          <p class="mt-3">Include in your report:</p>
+          <ul class="list-disc pl-5 space-y-1.5">
+            <li>Description of the vulnerability</li>
+            <li>Steps to reproduce</li>
+            <li>Impact assessment (what an attacker could do)</li>
+            <li>Screenshots or proof of concept (if applicable)</li>
+            <li>Your name/handle for Hall of Fame credit</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Scope -->
+      <div class="mt-6 p-6 bg-canvas rounded-lg border border-hairline">
+        <h2 class="text-lg font-semibold text-ink mb-4">Scope</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p class="text-sm font-medium text-ink mb-2">✅ In Scope</p>
+            <ul class="text-sm text-body space-y-1">
+              <li>• strangerhelp.com (all subdomains)</li>
+              <li>• API endpoints (/api/*)</li>
+              <li>• Authentication & session management</li>
+              <li>• Authorization & access control</li>
+              <li>• Cross-site scripting (XSS)</li>
+              <li>• SQL injection</li>
+              <li>• Server-side request forgery (SSRF)</li>
+              <li>• Insecure direct object references (IDOR)</li>
+              <li>• Remote code execution</li>
+              <li>• Business logic flaws</li>
+            </ul>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-ink mb-2">❌ Out of Scope</p>
+            <ul class="text-sm text-body space-y-1">
+              <li>• Denial of service (DoS/DDoS)</li>
+              <li>• Social engineering / phishing</li>
+              <li>• Physical attacks</li>
+              <li>• Self-XSS (only exploitable by yourself)</li>
+              <li>• Missing security headers (unless exploitable)</li>
+              <li>• Rate limiting bypasses (unless critical)</li>
+              <li>• Clickjacking without demonstrated impact</li>
+              <li>• Spam or content abuse</li>
+              <li>• Third-party services (Google, Cloudflare)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rules -->
+      <div class="mt-6 p-6 bg-canvas rounded-lg border border-hairline">
+        <h2 class="text-lg font-semibold text-ink mb-4">Rules of Engagement</h2>
+        <ul class="text-sm text-body space-y-2">
+          <li>• <strong>Do not</strong> access, modify, or delete other users' data</li>
+          <li>• <strong>Do not</strong> perform actions that could harm the platform or its users</li>
+          <li>• <strong>Do not</strong> publicly disclose the vulnerability before we patch it</li>
+          <li>• <strong>Do</strong> give us reasonable time to fix (14 days for critical, 30 days for others)</li>
+          <li>• <strong>Do</strong> use test accounts you create yourself</li>
+          <li>• <strong>Do</strong> minimize any data exposure during testing</li>
+          <li>• <strong>Do</strong> report as soon as you discover the issue</li>
+        </ul>
+        <p class="mt-4 text-sm text-body">We will <strong>not</strong> take legal action against researchers who follow these rules.</p>
+      </div>
+
+      <!-- What You Get -->
+      <div class="mt-6 p-6 bg-canvas rounded-lg border border-hairline">
+        <h2 class="text-lg font-semibold text-ink mb-4">Recognition</h2>
+        <div class="space-y-3 text-sm text-body">
+          <p>For valid reports, you'll receive:</p>
+          <ul class="list-disc pl-5 space-y-1.5">
+            <li><strong>Hall of Fame</strong> — your name/handle displayed below permanently</li>
+            <li><strong>Acknowledgment</strong> — personal thank you from the founder</li>
+            <li><strong>Karma</strong> — bonus karma points on your StrangerHelp account</li>
+            <li><strong>Swag</strong> — exclusive StrangerHelp security researcher badge on profile (coming soon)</li>
+          </ul>
+          <p class="mt-3 text-xs text-mute">Note: We do not offer monetary bounties at this time. This may change as we grow.</p>
+        </div>
+      </div>
+
+      <!-- Severity Levels -->
+      <div class="mt-6 p-6 bg-canvas rounded-lg border border-hairline">
+        <h2 class="text-lg font-semibold text-ink mb-4">Severity Classification</h2>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between p-3 bg-error-soft/50 rounded-md">
+            <span class="text-sm font-medium text-error">Critical</span>
+            <span class="text-xs text-body">RCE, auth bypass, full data breach, account takeover</span>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-warning-soft/50 rounded-md">
+            <span class="text-sm font-medium text-warning-deep">High</span>
+            <span class="text-xs text-body">Stored XSS, IDOR with sensitive data, privilege escalation</span>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-canvas-soft-2 rounded-md">
+            <span class="text-sm font-medium text-body">Medium</span>
+            <span class="text-xs text-body">CSRF, reflected XSS, information disclosure</span>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-canvas-soft rounded-md">
+            <span class="text-sm font-medium text-mute">Low</span>
+            <span class="text-xs text-body">Verbose errors, minor misconfigurations</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hall of Fame -->
+      <div class="mt-10">
+        <h2 class="text-2xl font-semibold text-ink tracking-[-0.96px] mb-2">🏆 Hall of Fame</h2>
+        <p class="text-sm text-body mb-6">Security researchers who have responsibly disclosed vulnerabilities and helped make StrangerHelp safer for everyone.</p>
+
+        <div class="space-y-3" id="hall-of-fame">
+          <div class="p-4 bg-canvas rounded-lg border border-hairline flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-warning-soft flex items-center justify-center text-lg">🥇</div>
+            <div>
+              <p class="text-sm font-semibold text-ink">Be the first!</p>
+              <p class="text-xs text-mute">Find a valid vulnerability and earn your spot here.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Template for future entries:
+        <div class="p-4 bg-canvas rounded-lg border border-hairline flex items-center gap-4">
+          <div class="w-10 h-10 rounded-full bg-warning-soft flex items-center justify-center text-lg">🥇</div>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-ink">Researcher Name</p>
+            <p class="text-xs text-mute">Critical — Session management vulnerability · June 2026</p>
+          </div>
+          <a href="https://twitter.com/handle" target="_blank" class="text-xs text-link">@handle</a>
+        </div>
+        -->
+      </div>
+
+      <!-- Response Timeline -->
+      <div class="mt-8 p-6 bg-canvas-soft rounded-lg border border-hairline">
+        <h2 class="text-sm font-semibold text-ink mb-3">Our Response Timeline</h2>
+        <div class="space-y-2 text-sm text-body">
+          <div class="flex justify-between"><span>Acknowledgment</span><span class="font-medium text-ink">Within 24 hours</span></div>
+          <div class="flex justify-between"><span>Initial assessment</span><span class="font-medium text-ink">Within 48 hours</span></div>
+          <div class="flex justify-between"><span>Fix deployed (Critical)</span><span class="font-medium text-ink">Within 7 days</span></div>
+          <div class="flex justify-between"><span>Fix deployed (High/Medium)</span><span class="font-medium text-ink">Within 14-30 days</span></div>
+          <div class="flex justify-between"><span>Hall of Fame update</span><span class="font-medium text-ink">After fix deployed</span></div>
+        </div>
+      </div>
+
+      <p class="mt-8 text-sm text-body text-center">Thank you for helping keep StrangerHelp and our community safe. 🙏</p>
+    </div>
+  </main>
+  <Footer />
+</Layout>
