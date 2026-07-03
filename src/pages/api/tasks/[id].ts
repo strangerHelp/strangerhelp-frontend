@@ -133,6 +133,36 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
     return new Response(JSON.stringify({ ok: true }));
   }
 
+  if (action === 'edit') {
+    // Only poster can edit, and only if task is still open
+    const task: any = await db.prepare("SELECT poster_id, status FROM tasks WHERE id = ?").bind(params.id).first();
+    if (!task) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
+    if (task.poster_id !== session) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+    if (task.status !== 'open') return new Response(JSON.stringify({ error: 'Cannot edit a task that has been claimed or completed' }), { status: 400 });
+
+    const body = await request.json() as any;
+    const updates: string[] = [];
+    const values: any[] = [];
+
+    if (body.title && body.title.length <= 200) { updates.push("title = ?"); values.push(body.title.trim()); }
+    if (body.description !== undefined) { updates.push("description = ?"); values.push(body.description); }
+    if (body.budget) {
+      const b = parseInt(body.budget);
+      if (b >= 1 && b <= 500000) { updates.push("budget = ?"); values.push(b); }
+    }
+    if (body.deadline) { updates.push("deadline = ?"); values.push(body.deadline); }
+    if (body.location) { updates.push("location = ?"); values.push(body.location); }
+    if (body.category) { updates.push("category = ?"); values.push(body.category); }
+    if (body.urgent !== undefined) { updates.push("urgent = ?"); values.push(body.urgent ? 1 : 0); }
+    if (body.lat !== undefined) { updates.push("lat = ?"); values.push(body.lat); }
+    if (body.lng !== undefined) { updates.push("lng = ?"); values.push(body.lng); }
+
+    if (updates.length === 0) return new Response(JSON.stringify({ error: 'No fields to update' }), { status: 400 });
+    values.push(params.id);
+    await db.prepare(`UPDATE tasks SET ${updates.join(', ')} WHERE id = ?`).bind(...values).run();
+    return new Response(JSON.stringify({ ok: true }));
+  }
+
   return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400 });
 };
 

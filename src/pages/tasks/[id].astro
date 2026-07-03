@@ -99,6 +99,9 @@ import Footer from "../../components/Footer.astro";
     if (isOwner || isAdmin) {
       topActions += `<button id="delete-btn" class="h-8 px-3 text-xs font-medium text-error border border-error/30 rounded-md hover:bg-error-soft transition-colors">Delete Task</button>`;
     }
+    if (isOwner && task.status === 'open') {
+      topActions += `<button id="edit-btn" class="h-8 px-3 text-xs font-medium text-link border border-hairline rounded-md hover:bg-canvas-soft-2 transition-colors">Edit</button>`;
+    }
     if (currentUser && !isOwner) {
       topActions += `<button id="report-btn" class="h-8 px-3 text-xs font-medium text-warning-deep border border-warning/30 rounded-md hover:bg-warning-soft transition-colors">Report</button>`;
     }
