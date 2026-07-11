@@ -6,13 +6,12 @@ import { getSessionUserId } from '../../../lib/auth';
 
 export const GET: APIRoute = async ({ params }) => {
   const db = (env as any).DB as D1Database;
-  const task: any = await db.prepare("SELECT * FROM tasks WHERE id = ?").bind(params.id).first();
+  const task: any = await db.prepare(
+    "SELECT t.*, up.verified as poster_verified, uc.verified as claimer_verified FROM tasks t LEFT JOIN users up ON t.poster_id = up.id LEFT JOIN users uc ON t.claimed_by = uc.id WHERE t.id = ?"
+  ).bind(params.id).first();
   if (!task) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
 
-  const poster: any = task.poster_id ? await db.prepare("SELECT verified FROM users WHERE id = ?").bind(task.poster_id).first() : null;
-  const claimer: any = task.claimed_by ? await db.prepare("SELECT verified FROM users WHERE id = ?").bind(task.claimed_by).first() : null;
-
-  // Get claimed users for group tasks
+  // Get claimed users for group tasks only (avoid extra query for normal tasks)
   let claimedUsers: any[] = [];
   if ((task.max_claimers || 1) > 1) {
     const { results } = await db.prepare("SELECT user_id, user_name, claimed_at FROM claimed_users WHERE task_id = ?").bind(params.id).all();
@@ -21,9 +20,9 @@ export const GET: APIRoute = async ({ params }) => {
 
   return new Response(JSON.stringify({
     ...task, _id: task.id, posterId: task.poster_id, posterName: task.poster_name,
-    posterVerified: poster?.verified === 1,
+    posterVerified: task.poster_verified === 1,
     claimedBy: task.claimed_by, claimedByName: task.claimed_by_name,
-    claimerVerified: claimer?.verified === 1,
+    claimerVerified: task.claimer_verified === 1,
     maxClaimers: task.max_claimers || 1,
     claimedUsers,
     completionProof: JSON.parse(task.completion_proof || '[]'),

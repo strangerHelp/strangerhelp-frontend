@@ -6,7 +6,6 @@ import Footer from "../../components/Footer.astro";
 
 <Layout title="Task Detail — StrangerHelp">
   <Navbar />
-  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
   <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
     <div class="max-w-3xl mx-auto">
       <nav class="flex items-center gap-2 text-sm text-mute mb-6">
@@ -26,6 +25,60 @@ import Footer from "../../components/Footer.astro";
     </div>
   </main>
   <Footer />
+
+<!-- Edit Task Modal -->
+<div id="edit-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-ink/50 backdrop-blur-sm p-4">
+  <div class="bg-canvas rounded-lg border border-hairline shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="text-base font-semibold text-ink">Edit Task</h3>
+      <button id="edit-modal-close" class="text-mute hover:text-ink">✕</button>
+    </div>
+    <div class="space-y-4">
+      <div id="edit-error" class="hidden p-3 text-sm text-error bg-error-soft rounded-md"></div>
+      <div>
+        <label class="block text-sm font-medium text-ink mb-1.5">Title</label>
+        <input type="text" id="edit-title" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-ink mb-1.5">Description</label>
+        <textarea id="edit-description" rows="3" class="w-full px-3 py-2.5 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink resize-none"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium text-ink mb-1.5">Budget (₹)</label>
+          <input type="number" id="edit-budget" min="1" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-ink mb-1.5">Category</label>
+          <select id="edit-category" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink">
+            <option>Simple Survey</option><option>Task</option><option>Document Submission</option>
+            <option>Photo Proof</option><option>Parcel Pickup</option><option>Queue Standing</option>
+            <option>Verification</option><option>Receipt Collection</option><option>Event / Group Work</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-ink mb-1.5">Location</label>
+        <input type="text" id="edit-location" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-ink mb-1.5">Deadline</label>
+        <select id="edit-deadline" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink">
+          <option>Within 1 hour</option><option>Within 2 hours</option><option>Within 4 hours</option>
+          <option>Today</option><option>Tomorrow</option>
+        </select>
+      </div>
+      <div class="flex items-center justify-between p-3 bg-canvas-soft rounded-md border border-hairline">
+        <div><p class="text-sm font-medium text-ink">⚡ Urgent</p><p class="text-xs text-mute">Mark as urgent task</p></div>
+        <input type="checkbox" id="edit-urgent" class="w-5 h-5 rounded border-hairline" />
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button id="edit-save-btn" class="flex-1 h-10 text-sm font-medium text-on-primary bg-primary rounded-md hover:opacity-90">Save Changes</button>
+        <button id="edit-cancel-btn" class="flex-1 h-10 text-sm font-medium text-ink border border-hairline rounded-md hover:bg-canvas-soft-2">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
 </Layout>
 
 <script>
@@ -224,6 +277,7 @@ import Footer from "../../components/Footer.astro";
     document.getElementById('message-btn')?.addEventListener('click', messageUser);
     document.getElementById('delete-btn')?.addEventListener('click', deleteTask);
     document.getElementById('report-btn')?.addEventListener('click', reportTask);
+    document.getElementById('edit-btn')?.addEventListener('click', openEditModal);
 
     // Init mini-map if task has coordinates
     if (task.lat && task.lng && document.getElementById('task-map')) {
@@ -234,6 +288,12 @@ import Footer from "../../components/Footer.astro";
 
   async function initTaskMap(lat: number, lng: number) {
     if (!(window as any).maplibregl) {
+      // Load CSS first
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css';
+      document.head.appendChild(link);
+      // Load JS
       await new Promise<void>((resolve) => {
         const s = document.createElement('script');
         s.src = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js';
@@ -436,6 +496,67 @@ import Footer from "../../components/Footer.astro";
     } else {
       const d = await res.json();
       alert(d.error || 'Failed to submit report');
+    }
+  }
+
+  function openEditModal() {
+    // Pre-fill form with current task data
+    (document.getElementById('edit-title') as HTMLInputElement).value = task.title || '';
+    (document.getElementById('edit-description') as HTMLTextAreaElement).value = task.description || '';
+    (document.getElementById('edit-budget') as HTMLInputElement).value = task.budget || '';
+    (document.getElementById('edit-location') as HTMLInputElement).value = task.location || '';
+    (document.getElementById('edit-urgent') as HTMLInputElement).checked = task.urgent === 1;
+
+    const catSelect = document.getElementById('edit-category') as HTMLSelectElement;
+    for (let i = 0; i < catSelect.options.length; i++) {
+      if (catSelect.options[i].value === task.category) { catSelect.selectedIndex = i; break; }
+    }
+    const dlSelect = document.getElementById('edit-deadline') as HTMLSelectElement;
+    for (let i = 0; i < dlSelect.options.length; i++) {
+      if (dlSelect.options[i].value === task.deadline) { dlSelect.selectedIndex = i; break; }
+    }
+
+    document.getElementById('edit-modal')!.classList.remove('hidden');
+    document.getElementById('edit-error')!.classList.add('hidden');
+
+    document.getElementById('edit-save-btn')!.onclick = saveEdit;
+    document.getElementById('edit-cancel-btn')!.onclick = () => document.getElementById('edit-modal')!.classList.add('hidden');
+    document.getElementById('edit-modal-close')!.onclick = () => document.getElementById('edit-modal')!.classList.add('hidden');
+  }
+
+  async function saveEdit() {
+    const saveBtn = document.getElementById('edit-save-btn')!;
+    saveBtn.textContent = 'Saving...';
+
+    const body = {
+      title: (document.getElementById('edit-title') as HTMLInputElement).value.trim(),
+      description: (document.getElementById('edit-description') as HTMLTextAreaElement).value,
+      budget: (document.getElementById('edit-budget') as HTMLInputElement).value,
+      category: (document.getElementById('edit-category') as HTMLSelectElement).value,
+      location: (document.getElementById('edit-location') as HTMLInputElement).value.trim(),
+      deadline: (document.getElementById('edit-deadline') as HTMLSelectElement).value,
+      urgent: (document.getElementById('edit-urgent') as HTMLInputElement).checked,
+    };
+
+    if (!body.title) { document.getElementById('edit-error')!.textContent = 'Title is required'; document.getElementById('edit-error')!.classList.remove('hidden'); saveBtn.textContent = 'Save Changes'; return; }
+
+    const res = await fetch(`/api/tasks/${taskId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'edit', ...body }),
+    });
+
+    if (res.ok) {
+      document.getElementById('edit-modal')!.classList.add('hidden');
+      // Reload task
+      const r = await fetch(`/api/tasks/${taskId}`);
+      task = await r.json();
+      render();
+    } else {
+      const d = await res.json();
+      document.getElementById('edit-error')!.textContent = d.error || 'Failed to save';
+      document.getElementById('edit-error')!.classList.remove('hidden');
+      saveBtn.textContent = 'Save Changes';
     }
   }
 
