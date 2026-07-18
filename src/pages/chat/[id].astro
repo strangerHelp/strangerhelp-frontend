@@ -5,7 +5,7 @@ import Navbar from "../../components/Navbar.astro";
 
 <Layout title="Chat — StrangerHelp">
   <Navbar />
-  <main id="chat-app" class="mx-auto max-w-[1400px] h-[calc(100dvh-64px)] flex overflow-hidden">
+  <main id="chat-app" class="mx-auto max-w-[1400px] h-[calc(100vh-64px)] flex overflow-hidden">
     <!-- Sidebar: conversations list -->
     <aside id="conv-list" class="w-full md:w-80 md:flex flex-col border-r border-hairline bg-canvas">
       <div class="p-4 border-b border-hairline">
@@ -46,6 +46,21 @@ import Navbar from "../../components/Navbar.astro";
 </Layout>
 
 <script>
+  // Handle mobile keyboard - prevent input from jumping
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      const chatApp = document.getElementById('chat-app');
+      if (chatApp) {
+        chatApp.style.height = `${window.visualViewport!.height}px`;
+      }
+    });
+    window.visualViewport.addEventListener('scroll', () => {
+      const chatApp = document.getElementById('chat-app');
+      if (chatApp) {
+        chatApp.style.height = `${window.visualViewport!.height}px`;
+      }
+    });
+  }
   let currentUser: any = null;
   let currentConvId: string | null = null;
   let pollInterval: ReturnType<typeof setInterval> | null = null;
