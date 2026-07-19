@@ -1,0 +1,100 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+
+const tasks = [
+  { title: "Submit PAN card application at RTO office", category: "Document Submission", budget: 350, location: "Koramangala, Bangalore", deadline: "Today", urgent: true, distance: "1.2 km" },
+  { title: "Pick up courier from Bluedart depot", category: "Parcel Pickup", budget: 200, location: "Indiranagar, Bangalore", deadline: "Within 2 hours", urgent: false, distance: "2.5 km" },
+  { title: "Stand in queue at Passport Seva Kendra", category: "Queue Standing", budget: 450, location: "Lalbagh, Bangalore", deadline: "Today", urgent: true, distance: "3.1 km" },
+  { title: "Take photos of apartment for rent listing", category: "Photo Proof", budget: 300, location: "HSR Layout, Bangalore", deadline: "Tomorrow", urgent: false, distance: "4.2 km" },
+  { title: "Collect receipt from electricity office", category: "Receipt Collection", budget: 150, location: "Jayanagar, Bangalore", deadline: "Today", urgent: false, distance: "1.8 km" },
+  { title: "Submit BBMP property tax form", category: "Document Submission", budget: 400, location: "Rajajinagar, Bangalore", deadline: "Within 4 hours", urgent: true, distance: "5.3 km" },
+  { title: "Verify address at local police station", category: "Verification", budget: 250, location: "Whitefield, Bangalore", deadline: "Today", urgent: false, distance: "8.1 km" },
+  { title: "Pick up medicine from Apollo Pharmacy", category: "Parcel Pickup", budget: 100, location: "BTM Layout, Bangalore", deadline: "Within 1 hour", urgent: true, distance: "0.8 km" },
+  { title: "Catering helpers needed for wedding", category: "Event / Group Work", budget: 500, location: "JP Nagar, Bangalore", deadline: "Tomorrow", urgent: false, distance: "6.4 km", group: 8 },
+  { title: "Check parking availability at Phoenix Mall", category: "Simple Survey", budget: 120, location: "Mahadevapura, Bangalore", deadline: "Within 2 hours", urgent: false, distance: "7.2 km" },
+  { title: "Submit college fee challan at SBI", category: "Document Submission", budget: 200, location: "Malleshwaram, Bangalore", deadline: "Today", urgent: false, distance: "4.9 km" },
+  { title: "Collect Amazon return parcel from locker", category: "Parcel Pickup", budget: 150, location: "Electronic City, Bangalore", deadline: "Today", urgent: false, distance: "12.3 km" },
+  { title: "Take photos of construction site progress", category: "Photo Proof", budget: 350, location: "Yelahanka, Bangalore", deadline: "Tomorrow", urgent: false, distance: "15.1 km" },
+  { title: "Stand in queue at BBMP office for NOC", category: "Queue Standing", budget: 400, location: "Vijayanagar, Bangalore", deadline: "Within 4 hours", urgent: true, distance: "6.7 km" },
+  { title: "Verify shop is open at Commercial Street", category: "Verification", budget: 100, location: "Shivajinagar, Bangalore", deadline: "Within 1 hour", urgent: false, distance: "3.4 km" },
+  { title: "Submit driving license renewal form at RTO", category: "Document Submission", budget: 300, location: "Marathahalli, Bangalore", deadline: "Today", urgent: false, distance: "9.2 km" },
+  { title: "Pick up birthday cake from Monginis", category: "Parcel Pickup", budget: 150, location: "Basavanagudi, Bangalore", deadline: "Within 2 hours", urgent: true, distance: "2.1 km" },
+  { title: "Event setup helpers needed — 5 people", category: "Event / Group Work", budget: 400, location: "Palace Grounds, Bangalore", deadline: "Tomorrow", urgent: false, distance: "5.8 km", group: 5 },
+  { title: "Collect registered post from India Post", category: "Receipt Collection", budget: 180, location: "Banashankari, Bangalore", deadline: "Today", urgent: false, distance: "4.5 km" },
+  { title: "Take photo proof of water leakage in flat", category: "Photo Proof", budget: 200, location: "Hebbal, Bangalore", deadline: "Within 4 hours", urgent: false, distance: "10.3 km" },
+  { title: "Submit insurance claim form at LIC office", category: "Document Submission", budget: 350, location: "MG Road, Bangalore", deadline: "Today", urgent: false, distance: "3.8 km" },
+  { title: "Queue for gas connection transfer at HP", category: "Queue Standing", budget: 300, location: "Peenya, Bangalore", deadline: "Today", urgent: false, distance: "11.5 km" },
+  { title: "Pick up laptop from service center", category: "Parcel Pickup", budget: 200, location: "Koramangala 4th Block, Bangalore", deadline: "Within 2 hours", urgent: false, distance: "1.5 km" },
+  { title: "Plantation drive volunteers — 20 needed", category: "Event / Group Work", budget: 100, location: "Cubbon Park, Bangalore", deadline: "Tomorrow", urgent: false, distance: "4.0 km", group: 20 },
+  { title: "Submit rental agreement at sub-registrar", category: "Document Submission", budget: 450, location: "Bommanahalli, Bangalore", deadline: "Today", urgent: true, distance: "7.6 km" },
+  { title: "Verify restaurant timings and menu photos", category: "Simple Survey", budget: 150, location: "Church Street, Bangalore", deadline: "Today", urgent: false, distance: "3.2 km" },
+  { title: "Collect Flipkart order from delivery point", category: "Parcel Pickup", budget: 120, location: "Sarjapur Road, Bangalore", deadline: "Within 1 hour", urgent: true, distance: "6.1 km" },
+  { title: "Take photos of property for sale", category: "Photo Proof", budget: 400, location: "Mysore Road, Bangalore", deadline: "Tomorrow", urgent: false, distance: "9.8 km" },
+  { title: "Submit form at BESCOM for meter transfer", category: "Document Submission", budget: 300, location: "Kengeri, Bangalore", deadline: "Today", urgent: false, distance: "13.2 km" },
+  { title: "Check if Namma Metro card reload works", category: "Simple Survey", budget: 100, location: "Majestic, Bangalore", deadline: "Within 2 hours", urgent: false, distance: "5.0 km" },
+  { title: "Submit Aadhaar update form at centre", category: "Document Submission", budget: 250, location: "RT Nagar, Bangalore", deadline: "Today", urgent: false, distance: "8.4 km" },
+  { title: "Pick up courier from DTDC office", category: "Parcel Pickup", budget: 180, location: "Domlur, Bangalore", deadline: "Today", urgent: false, distance: "2.9 km" },
+  { title: "Distribute flyers at tech park — 3 people", category: "Event / Group Work", budget: 300, location: "Manyata Tech Park, Bangalore", deadline: "Tomorrow", urgent: false, distance: "14.0 km", group: 3 },
+  { title: "Stand in queue at Regional Transport Office", category: "Queue Standing", budget: 500, location: "Kasturba Road, Bangalore", deadline: "Today", urgent: true, distance: "4.1 km" },
+  { title: "Submit water connection form at BWSSB", category: "Document Submission", budget: 280, location: "Vidhana Soudha area, Bangalore", deadline: "Within 4 hours", urgent: false, distance: "4.6 km" },
+  { title: "Verify that ATM is functional near my area", category: "Verification", budget: 100, location: "Bannerghatta Road, Bangalore", deadline: "Within 1 hour", urgent: false, distance: "5.5 km" },
+  { title: "Collect medical reports from Manipal Hospital", category: "Receipt Collection", budget: 200, location: "HAL Airport Road, Bangalore", deadline: "Today", urgent: true, distance: "6.8 km" },
+  { title: "Submit scholarship form at BMS College", category: "Document Submission", budget: 200, location: "Bull Temple Road, Bangalore", deadline: "Tomorrow", urgent: false, distance: "3.7 km" },
+  { title: "Take photos of PG accommodation for listing", category: "Photo Proof", budget: 250, location: "Marathahalli, Bangalore", deadline: "Today", urgent: false, distance: "9.0 km" },
+  { title: "Pick up printed wedding cards from shop", category: "Parcel Pickup", budget: 150, location: "Avenue Road, Bangalore", deadline: "Within 2 hours", urgent: false, distance: "5.2 km" },
+  { title: "Submit passport application at PSK", category: "Document Submission", budget: 400, location: "Lalbagh, Bangalore", deadline: "Today", urgent: true, distance: "3.3 km" },
+  { title: "Check queue length at Aadhaar centre", category: "Simple Survey", budget: 100, location: "Koramangala, Bangalore", deadline: "Within 1 hour", urgent: false, distance: "1.4 km" },
+  { title: "Collect delivery from Delhivery warehouse", category: "Parcel Pickup", budget: 200, location: "Yeshwanthpur, Bangalore", deadline: "Today", urgent: false, distance: "7.9 km" },
+  { title: "Beach cleanup volunteers — Mangalore", category: "Event / Group Work", budget: 100, location: "Panambur Beach, Mangalore", deadline: "Tomorrow", urgent: false, distance: "350 km", group: 15 },
+  { title: "Submit documents at Mysore University", category: "Document Submission", budget: 350, location: "Manasagangothri, Mysore", deadline: "Today", urgent: false, distance: "145 km" },
+  { title: "Pick up courier from Hubli bus stand", category: "Parcel Pickup", budget: 250, location: "Hubli Bus Stand, Karnataka", deadline: "Today", urgent: false, distance: "420 km" },
+  { title: "Take photos of historical site for blog", category: "Photo Proof", budget: 300, location: "Hampi, Karnataka", deadline: "Tomorrow", urgent: false, distance: "340 km" },
+  { title: "Submit form at Chennai passport office", category: "Document Submission", budget: 400, location: "Anna Salai, Chennai", deadline: "Today", urgent: false, distance: "350 km" },
+  { title: "Stand in queue at Hyderabad MRO office", category: "Queue Standing", budget: 350, location: "Ameerpet, Hyderabad", deadline: "Today", urgent: false, distance: "570 km" },
+  { title: "Collect documents from Mumbai sub-registrar", category: "Receipt Collection", budget: 450, location: "Andheri, Mumbai", deadline: "Tomorrow", urgent: false, distance: "980 km" },
+];
+---
+
+<Layout title="Earn with StrangerHelp — Available Tasks">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-semibold text-ink tracking-[-1.28px]">Earn Money Helping Strangers</h1>
+      <p class="mt-2 text-sm text-body max-w-xl mx-auto">50+ tasks available near you. Claim one, complete it, earn ₹100-500. No investment, no boss.</p>
+      <a href="/register" class="mt-4 inline-flex h-11 items-center px-6 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90">Start Earning — Sign Up Free</a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {tasks.map((t) => (
+        <div class="group p-5 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong shadow-[0px_1px_1px_#00000005,0px_2px_2px_#0000000a] transition-colors">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-1.5">
+              <span class="px-2 py-0.5 text-xs font-medium text-body bg-canvas-soft-2 rounded-full">{t.category}</span>
+              {t.urgent && <span class="px-2 py-0.5 text-xs font-medium bg-error-soft text-error rounded-full">⚡</span>}
+              {t.group && <span class="px-2 py-0.5 text-xs font-medium bg-cyan-soft text-cyan-deep rounded-full">👥 {t.group}</span>}
+            </div>
+            <span class="text-base font-semibold text-ink">₹{t.budget}{t.group ? '/person' : ''}</span>
+          </div>
+          <h3 class="text-sm font-semibold text-ink leading-snug">{t.title}</h3>
+          <div class="mt-3 flex items-center gap-3 text-xs text-mute">
+            <span class="flex items-center gap-1">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              {t.location}
+            </span>
+            <span class="text-link font-medium">{t.distance} away</span>
+          </div>
+          <div class="mt-3 pt-3 border-t border-hairline flex items-center justify-between">
+            <span class="text-xs text-body">Anonymous <span class="text-link text-[10px]">✓ Verified</span></span>
+            <span class="px-2 py-0.5 text-xs rounded-full bg-cyan-soft text-cyan-deep">open</span>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <div class="mt-12 text-center">
+      <p class="text-sm text-body mb-4">Ready to start earning?</p>
+      <a href="/register" class="inline-flex h-11 items-center px-6 text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90">Sign Up Free — Start Claiming Tasks</a>
+    </div>
+  </main>
+</Layout>
