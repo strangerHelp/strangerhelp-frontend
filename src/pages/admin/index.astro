@@ -57,6 +57,10 @@ import Layout from "../../layouts/Layout.astro";
     document.getElementById('admin-content')!.innerHTML = `
       <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Overview</h1>
       <p class="mt-1 text-sm text-body">Platform statistics at a glance.</p>
+      <div class="mt-4 flex gap-2">
+        <button onclick="downloadMetricsCSV()" class="h-8 px-3 text-xs font-medium text-ink border border-hairline rounded-md hover:bg-canvas-soft-2">📊 Download Metrics (CSV)</button>
+        <button onclick="downloadMetricsJSON()" class="h-8 px-3 text-xs font-medium text-ink border border-hairline rounded-md hover:bg-canvas-soft-2">📋 Download Metrics (JSON)</button>
+      </div>
       <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="p-4 bg-canvas rounded-lg border border-hairline">
           <p class="text-xs text-mute font-mono uppercase">Users</p>
@@ -336,6 +340,62 @@ import Layout from "../../layouts/Layout.astro";
       input.value = '';
       (window as any).openSupportChat(currentSupportConvId, userName);
     };
+  };
+
+  (window as any).downloadMetricsCSV = async function() {
+    const res = await fetch('/api/admin?resource=stats');
+    const stats = await res.json();
+    const usersRes = await fetch('/api/admin?resource=users');
+    const users = await usersRes.json();
+    const tasksRes = await fetch('/api/admin?resource=tasks');
+    const tasks = await tasksRes.json();
+
+    const date = new Date().toISOString().split('T')[0];
+    let csv = `StrangerHelp Metrics Report - ${date}\n\n`;
+    csv += `PLATFORM STATS\n`;
+    csv += `Metric,Value\n`;
+    csv += `Total Users,${stats.users}\n`;
+    csv += `Total Tasks,${stats.tasks}\n`;
+    csv += `Open Tasks,${stats.openTasks}\n`;
+    csv += `Claimed Tasks,${stats.claimedTasks}\n`;
+    csv += `Completed Tasks,${stats.completedTasks}\n`;
+    csv += `Total Messages,${stats.messages}\n`;
+    csv += `Total Conversations,${stats.conversations}\n`;
+    csv += `Completion Rate,${stats.tasks > 0 ? Math.round((stats.completedTasks / stats.tasks) * 100) : 0}%\n`;
+    csv += `\nUSERS\n`;
+    csv += `Name,Email,City,Status,Joined\n`;
+    users.forEach((u: any) => { csv += `${u.name},${u.email},${u.city || ''},${u.banned ? 'Banned' : u.isAdmin ? 'Admin' : 'Active'},${u.createdAt}\n`; });
+    csv += `\nTASKS\n`;
+    csv += `Title,Category,Budget,Location,Status,Posted By,Created\n`;
+    tasks.forEach((t: any) => { csv += `"${t.title}",${t.category},${t.budget},"${t.location || ''}",${t.status},${t.posterName || ''},${t.createdAt}\n`; });
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `strangerhelp-metrics-${date}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  (window as any).downloadMetricsJSON = async function() {
+    const res = await fetch('/api/admin?resource=stats');
+    const stats = await res.json();
+    const usersRes = await fetch('/api/admin?resource=users');
+    const users = await usersRes.json();
+    const tasksRes = await fetch('/api/admin?resource=tasks');
+    const tasks = await tasksRes.json();
+
+    const date = new Date().toISOString().split('T')[0];
+    const report = {
+      generatedAt: new Date().toISOString(),
+      platform: 'StrangerHelp',
+      stats: { ...stats, completionRate: stats.tasks > 0 ? Math.round((stats.completedTasks / stats.tasks) * 100) : 0 },
+      users: users.map((u: any) => ({ name: u.name, email: u.email, city: u.city, status: u.banned ? 'banned' : u.isAdmin ? 'admin' : 'active', joined: u.createdAt })),
+      tasks: tasks.map((t: any) => ({ title: t.title, category: t.category, budget: t.budget, location: t.location, status: t.status, postedBy: t.posterName, created: t.createdAt })),
+    };
+
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `strangerhelp-metrics-${date}.json`; a.click();
+    URL.revokeObjectURL(url);
   };
 
   init();
