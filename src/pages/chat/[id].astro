@@ -17,7 +17,7 @@ import Navbar from "../../components/Navbar.astro";
     </aside>
 
     <!-- Chat area -->
-    <div id="chat-area" class="hidden md:flex flex-1 flex-col bg-canvas-soft min-w-0 overflow-hidden">
+    <div id="chat-area" class="hidden md:flex flex-1 flex-col bg-canvas-soft min-w-0 h-full max-h-full overflow-hidden">
       <div id="chat-header" class="flex items-center gap-3 px-4 py-3 border-b border-hairline bg-canvas">
         <button id="back-btn" class="md:hidden p-1 text-body hover:text-ink">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -27,7 +27,7 @@ import Navbar from "../../components/Navbar.astro";
           <p class="text-xs text-mute" id="chat-status"></p>
         </div>
       </div>
-      <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+      <div id="messages-container" class="flex-1 min-h-0 overflow-y-auto p-4 space-y-3"></div>
       <div id="chat-input-area" class="hidden p-3 border-t border-hairline bg-canvas shrink-0">
         <form id="msg-form" class="flex items-center gap-2 max-w-full">
           <label class="shrink-0 p-2 text-mute hover:text-ink cursor-pointer transition-colors">
