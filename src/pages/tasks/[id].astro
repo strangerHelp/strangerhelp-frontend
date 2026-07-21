@@ -129,7 +129,15 @@ import Footer from "../../components/Footer.astro";
           ? `<p class="text-sm text-cyan-deep font-medium">✓ You joined this task</p>${messageBtn}`
           : `<button id="claim-btn" class="flex-1 h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">Join Task (${slotsLeft} spot${slotsLeft > 1 ? 's' : ''} left)</button>${messageBtn}`;
       } else {
-        actionsHtml = `<button id="claim-btn" class="flex-1 h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">Claim This Task</button>${messageBtn}`;
+        // Check if user already sent a request
+        const myRequest = task.claimRequests?.find((r: any) => r.requester_id === currentUser.id);
+        if (myRequest) {
+          if (myRequest.status === 'pending') actionsHtml = `<p class="text-sm text-warning-deep font-medium">⏳ Claim request sent — waiting for approval</p>${messageBtn}`;
+          else if (myRequest.status === 'approved') actionsHtml = `<p class="text-sm text-cyan-deep font-medium">✓ Your claim was approved!</p>${messageBtn}`;
+          else actionsHtml = `<p class="text-sm text-mute font-medium">Request was declined</p>${messageBtn}`;
+        } else {
+          actionsHtml = `<button id="claim-btn" class="flex-1 h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">Request to Claim</button>${messageBtn}`;
+        }
       }
     } else if (task.status === 'open' && !currentUser) {
       actionsHtml = `<a href="/login?redirect=/tasks/${taskId}" class="flex-1 h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full">Login to Claim</a>`;
@@ -231,6 +239,24 @@ import Footer from "../../components/Footer.astro";
         <div class="mt-6 pt-6 border-t border-hairline flex flex-col sm:flex-row gap-3">
           ${actionsHtml}
         </div>
+        ${isOwner && task.status === 'open' && task.claimRequests?.filter((r: any) => r.status === 'pending').length > 0 ? `
+        <div class="mt-4 p-4 bg-canvas-soft rounded-lg border border-hairline">
+          <p class="text-sm font-semibold text-ink mb-3">📋 Claim Requests (${task.claimRequests.filter((r: any) => r.status === 'pending').length})</p>
+          <div class="space-y-2">
+            ${task.claimRequests.filter((r: any) => r.status === 'pending').map((r: any) => `
+              <div class="flex items-center justify-between p-3 bg-canvas rounded-md border border-hairline">
+                <div>
+                  <p class="text-sm font-medium text-ink">${escapeHtml(r.requester_name)}</p>
+                  <p class="text-xs text-mute">${(window as any).timeAgoIST(r.created_at)}</p>
+                </div>
+                <div class="flex gap-2">
+                  <button onclick="approveClaim('${r.requester_id}')" class="h-8 px-3 text-xs font-medium text-on-primary bg-primary rounded-md hover:opacity-90">Approve</button>
+                  <button onclick="rejectClaim('${r.requester_id}')" class="h-8 px-3 text-xs font-medium text-error border border-error/30 rounded-md hover:bg-error-soft">Reject</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>` : ''}
         ${proofHtml}
       </div>
       <!-- Share button -->
@@ -377,33 +403,27 @@ import Footer from "../../components/Footer.astro";
   }
 
   async function claimTask() {
-    // Show payment warning
-    const confirmed = confirm(
-      '⚠️ IMPORTANT: Payment Notice\n\n' +
-      '• The task poster will pay you directly (UPI, cash, etc.)\n' +
-      '• StrangerHelp does NOT hold or process payments\n' +
-      '• Verify payment terms with the poster via messages BEFORE starting work\n' +
-      '• Karma Wallet (escrow) is coming soon\n\n' +
-      'Do you want to proceed and claim this task?'
-    );
-    if (!confirmed) return;
-
     const btn = document.getElementById('claim-btn')!;
-    btn.textContent = 'Claiming...';
+    btn.textContent = 'Sending request...';
     const res = await fetch(`/api/tasks/${taskId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'claim' }),
     });
+    const data = await res.json();
     if (res.ok) {
-      // Reload task
-      const r = await fetch(`/api/tasks/${taskId}`);
-      task = await r.json();
-      render();
+      if (data.status === 'requested') {
+        alert('✅ Request Sent!\n\nPlease confirm your availability and discuss task details with the poster via messages. The poster will approve your claim once ready.');
+        if (data.conversationId) window.location.href = `/chat/${data.conversationId}`;
+        else { const r = await fetch(`/api/tasks/${taskId}`); task = await r.json(); render(); }
+      } else {
+        const r = await fetch(`/api/tasks/${taskId}`);
+        task = await r.json();
+        render();
+      }
     } else {
-      const d = await res.json();
-      alert(d.error || 'Failed to claim');
-      btn.textContent = 'Claim This Task';
+      alert(data.error || 'Failed to send request');
+      btn.textContent = 'Request to Claim';
     }
   }
 
@@ -460,6 +480,20 @@ import Footer from "../../components/Footer.astro";
       btn.textContent = isOwner ? 'Message Helper' : 'Message Poster';
     }
   }
+
+  (window as any).approveClaim = async function(requesterId: string) {
+    if (!confirm('Approve this claim request? The task will be assigned to this helper.')) return;
+    const res = await fetch(`/api/tasks/${taskId}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'approve_claim', requesterId }) });
+    if (res.ok) { const r = await fetch(`/api/tasks/${taskId}`); task = await r.json(); render(); }
+    else { const d = await res.json(); alert(d.error || 'Failed'); }
+  };
+
+  (window as any).rejectClaim = async function(requesterId: string) {
+    if (!confirm('Reject this claim request?')) return;
+    const res = await fetch(`/api/tasks/${taskId}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'reject_claim', requesterId }) });
+    if (res.ok) { const r = await fetch(`/api/tasks/${taskId}`); task = await r.json(); render(); }
+    else { const d = await res.json(); alert(d.error || 'Failed'); }
+  };
 
   async function deleteTask() {
     if (!confirm('Are you sure you want to delete this task? This cannot be undone.')) return;

@@ -18,6 +18,9 @@ export const GET: APIRoute = async ({ params }) => {
     claimedUsers = results || [];
   }
 
+  // Get pending claim requests
+  const { results: claimRequests } = await db.prepare("SELECT id, requester_id, requester_name, status, created_at FROM claim_requests WHERE task_id = ? ORDER BY created_at DESC").bind(params.id).all();
+
   return new Response(JSON.stringify({
     ...task, _id: task.id, posterId: task.poster_id, posterName: task.poster_name,
     posterVerified: task.poster_verified === 1,
@@ -25,6 +28,7 @@ export const GET: APIRoute = async ({ params }) => {
     claimerVerified: task.claimer_verified === 1,
     maxClaimers: task.max_claimers || 1,
     claimedUsers,
+    claimRequests: claimRequests || [],
     completionProof: JSON.parse(task.completion_proof || '[]'),
     attachments: JSON.parse(task.attachments || '[]'), createdAt: task.created_at,
   }));
@@ -60,7 +64,7 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
     return new Response(JSON.stringify({ ok: true, proofs: proofUrls }));
   }
 
-  const { action } = await request.json();
+  const { action, requesterId } = await request.json() as any;
 
   if (action === 'claim') {
     const task: any = await db.prepare("SELECT * FROM tasks WHERE id = ?").bind(params.id).first();
@@ -99,22 +103,62 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
       await createNotification(db, task.poster_id, 'task_claimed', 'Helper Joined', `${user?.name || 'Someone'} joined: ${task.title} (${newCount}/${maxClaimers})`, `/tasks/${params.id}`);
       return new Response(JSON.stringify({ ok: true, status: newCount >= maxClaimers ? 'claimed' : 'open', claimedCount: newCount, maxClaimers }));
     } else {
-      // Single claimer (original behavior)
+      // Single claimer — request-based flow
       if (task.status !== 'open') return new Response(JSON.stringify({ error: 'Task not available' }), { status: 400 });
 
-      await db.prepare("UPDATE tasks SET status = 'claimed', claimed_by = ?, claimed_by_name = ?, claimed_at = datetime('now') WHERE id = ? AND status = 'open'")
-        .bind(session, user?.name || 'Helper', params.id).run();
-
-      const existing: any = await db.prepare("SELECT id FROM conversations WHERE task_id = ? AND ((participant_1 = ? AND participant_2 = ?) OR (participant_1 = ? AND participant_2 = ?))").bind(params.id, task.poster_id, session, session, task.poster_id).first();
-      if (!existing) {
-        const convId = genId();
-        await db.prepare("INSERT INTO conversations (id, task_id, participant_1, participant_2, participant_1_name, participant_2_name, last_message) VALUES (?, ?, ?, ?, ?, ?, ?)")
-          .bind(convId, params.id, task.poster_id, session, task.poster_name, user?.name || 'Helper', 'Task claimed — chat started').run();
+      // Check if already requested
+      const existingReq: any = await db.prepare("SELECT id, status FROM claim_requests WHERE task_id = ? AND requester_id = ?").bind(params.id, session).first();
+      if (existingReq) {
+        if (existingReq.status === 'approved') return new Response(JSON.stringify({ error: 'Already approved' }), { status: 400 });
+        return new Response(JSON.stringify({ error: 'Request already sent' }), { status: 409 });
       }
 
-      await createNotification(db, task.poster_id, 'task_claimed', 'Task Claimed', `${user?.name || 'Someone'} claimed: ${task.title}`, `/tasks/${params.id}`);
-      return new Response(JSON.stringify({ ok: true, status: 'claimed' }));
+      // Create claim request
+      const reqId = genId();
+      await db.prepare("INSERT INTO claim_requests (id, task_id, requester_id, requester_name) VALUES (?, ?, ?, ?)")
+        .bind(reqId, params.id, session, user?.name || 'Helper').run();
+
+      // Create conversation so they can discuss
+      const existing: any = await db.prepare("SELECT id FROM conversations WHERE task_id = ? AND ((participant_1 = ? AND participant_2 = ?) OR (participant_1 = ? AND participant_2 = ?))").bind(params.id, task.poster_id, session, session, task.poster_id).first();
+      let convId = existing?.id;
+      if (!existing) {
+        convId = genId();
+        await db.prepare("INSERT INTO conversations (id, task_id, participant_1, participant_2, participant_1_name, participant_2_name, last_message) VALUES (?, ?, ?, ?, ?, ?, ?)")
+          .bind(convId, params.id, task.poster_id, session, task.poster_name, user?.name || 'Helper', 'Claim request sent — discuss details').run();
+      }
+
+      // Notify poster
+      await createNotification(db, task.poster_id, 'claim_request', 'Claim Request', `${user?.name || 'Someone'} wants to claim: ${task.title}`, `/tasks/${params.id}`);
+      return new Response(JSON.stringify({ ok: true, status: 'requested', conversationId: convId }));
     }
+  }
+
+  if (action === 'approve_claim') {
+    const task: any = await db.prepare("SELECT * FROM tasks WHERE id = ?").bind(params.id).first();
+    if (!task) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
+    if (task.poster_id !== session) return new Response(JSON.stringify({ error: 'Only poster can approve' }), { status: 403 });
+    if (task.status !== 'open') return new Response(JSON.stringify({ error: 'Task already claimed' }), { status: 400 });
+    if (!requesterId) return new Response(JSON.stringify({ error: 'requesterId required' }), { status: 400 });
+
+    await db.prepare("UPDATE claim_requests SET status = 'approved' WHERE task_id = ? AND requester_id = ?").bind(params.id, requesterId).run();
+    await db.prepare("UPDATE claim_requests SET status = 'rejected' WHERE task_id = ? AND requester_id != ? AND status = 'pending'").bind(params.id, requesterId).run();
+
+    const requester: any = await db.prepare("SELECT name FROM users WHERE id = ?").bind(requesterId).first();
+    await db.prepare("UPDATE tasks SET status = 'claimed', claimed_by = ?, claimed_by_name = ?, claimed_at = datetime('now') WHERE id = ?")
+      .bind(requesterId, requester?.name || 'Helper', params.id).run();
+
+    await createNotification(db, requesterId, 'claim_approved', 'Claim Approved!', `Your claim for "${task.title}" was approved!`, `/tasks/${params.id}`);
+    return new Response(JSON.stringify({ ok: true, status: 'claimed' }));
+  }
+
+  if (action === 'reject_claim') {
+    const task: any = await db.prepare("SELECT poster_id, title FROM tasks WHERE id = ?").bind(params.id).first();
+    if (!task || task.poster_id !== session) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+    if (!requesterId) return new Response(JSON.stringify({ error: 'requesterId required' }), { status: 400 });
+
+    await db.prepare("UPDATE claim_requests SET status = 'rejected' WHERE task_id = ? AND requester_id = ?").bind(params.id, requesterId).run();
+    await createNotification(db, requesterId, 'claim_rejected', 'Claim Rejected', `Your claim for "${task.title}" was not approved.`, `/tasks/${params.id}`);
+    return new Response(JSON.stringify({ ok: true }));
   }
 
   if (action === 'complete') {
