@@ -74,7 +74,14 @@ import Navbar from "../../components/Navbar.astro";
     if (!res.ok) { window.location.href = '/login'; return; }
     const data = await res.json();
     currentUser = data.user;
-    loadConversations();
+    await loadConversations();
+
+    // Auto-open conversation from URL (e.g., /chat/abc123)
+    const pathParts = window.location.pathname.split('/chat/');
+    const urlConvId = pathParts[1];
+    if (urlConvId && urlConvId.length > 3) {
+      openConversation(urlConvId);
+    }
   }
 
   async function loadConversations() {
