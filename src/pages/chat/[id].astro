@@ -169,7 +169,8 @@ import Navbar from "../../components/Navbar.astro";
         </div>
       </div>`;
     }).join('');
-    container.scrollTop = container.scrollHeight;
+    // Scroll to bottom after DOM renders
+    setTimeout(() => { container.scrollTop = container.scrollHeight; }, 50);
   }
 
   async function pollMessages(convId: string) {
@@ -234,7 +235,7 @@ import Navbar from "../../components/Navbar.astro";
         <span class="text-xs ${isMe ? 'opacity-60' : 'text-mute'} mt-1 block">${time}</span>
       </div>
     </div>`);
-    container.scrollTop = container.scrollHeight;
+    setTimeout(() => { container.scrollTop = container.scrollHeight; }, 50);
   }
 
   // Send message
