@@ -81,9 +81,28 @@ const canonicalUrl = canonical || new URL(Astro.url.pathname, "https://strangerh
 
     <script src="/compress.js" is:inline></script>
     <script src="/time.js" is:inline></script>
+    <script is:inline>
+      // Google Translate integration
+      function googleTranslateInit() {
+        new google.translate.TranslateElement({ pageLanguage: 'en', autoDisplay: false, includedLanguages: 'en,hi,kn,ta,te,bn,mr,ml,gu' }, 'google_translate_element');
+      }
+      // Auto-translate from URL ?lang= param or localStorage
+      (function() {
+        var params = new URLSearchParams(window.location.search);
+        var lang = params.get('lang') || localStorage.getItem('sh_lang') || 'en';
+        if (lang && lang !== 'en') {
+          localStorage.setItem('sh_lang', lang);
+          // Set Google Translate cookie to trigger translation
+          document.cookie = 'googtrans=/en/' + lang + ';path=/';
+          document.cookie = 'googtrans=/en/' + lang + ';path=/;domain=' + window.location.hostname;
+        }
+      })();
+    </script>
+    <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateInit" is:inline></script>
     <slot name="head" />
   </head>
   <body class="min-h-screen bg-canvas-soft text-ink">
+    <div id="google_translate_element" style="display:none;"></div>
     <slot />
     <!-- Global Image Viewer -->
     <div id="img-viewer" class="hidden fixed inset-0 z-[999] bg-ink/90 flex items-center justify-center p-4" onclick="this.classList.add('hidden')">
@@ -97,5 +116,12 @@ const canonicalUrl = canonical || new URL(Astro.url.pathname, "https://strangerh
         v.classList.remove('hidden');
       };
     </script>
+    <style is:global>
+      .goog-te-banner-frame { display: none !important; }
+      body { top: 0 !important; }
+      .goog-te-gadget { font-size: 0 !important; }
+      .skiptranslate { display: none !important; }
+      .goog-te-spinner-pos { display: none !important; }
+    </style>
   </body>
 </html>
