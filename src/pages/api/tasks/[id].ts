@@ -64,7 +64,8 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
     return new Response(JSON.stringify({ ok: true, proofs: proofUrls }));
   }
 
-  const { action, requesterId } = await request.json() as any;
+  const body = await request.json() as any;
+  const { action, requesterId } = body;
 
   if (action === 'claim') {
     const task: any = await db.prepare("SELECT * FROM tasks WHERE id = ?").bind(params.id).first();
@@ -183,7 +184,6 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
     if (task.poster_id !== session) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
     if (task.status !== 'open') return new Response(JSON.stringify({ error: 'Cannot edit a task that has been claimed or completed' }), { status: 400 });
 
-    const body = await request.json() as any;
     const updates: string[] = [];
     const values: any[] = [];
 
