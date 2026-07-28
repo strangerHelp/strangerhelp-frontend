@@ -55,10 +55,10 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
 
     if (action === 'complete' && proofUrls.length > 0) {
       const task: any = await db.prepare("SELECT poster_id, title FROM tasks WHERE id = ?").bind(params.id).first();
-      await db.prepare("UPDATE tasks SET status = 'completed', completed_at = datetime('now'), completion_proof = ? WHERE id = ? AND claimed_by = ?")
+      await db.prepare("UPDATE tasks SET completion_status = 'pending', completion_proof = ? WHERE id = ? AND claimed_by = ?")
         .bind(JSON.stringify(proofUrls), params.id, session).run();
       if (task) {
-        await createNotification(db, task.poster_id, 'task_completed', 'Task Completed', `${user?.name || 'Helper'} completed: ${task.title}`, `/tasks/${params.id}`);
+        await createNotification(db, task.poster_id, 'completion_pending', 'Proof Submitted', `${user?.name || 'Helper'} submitted completion proof for: ${task.title}. Please review and approve.`, `/tasks/${params.id}`);
       }
     }
     return new Response(JSON.stringify({ ok: true, proofs: proofUrls }));
@@ -173,6 +173,29 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
     await db.prepare("UPDATE tasks SET status = 'completed', completed_at = datetime('now') WHERE id = ? AND (claimed_by = ? OR ? IN (SELECT user_id FROM claimed_users WHERE task_id = ?))").bind(params.id, session, session, params.id).run();
     if (task) {
       await createNotification(db, task.poster_id, 'task_completed', 'Task Completed', `${user?.name || 'Helper'} completed: ${task.title}`, `/tasks/${params.id}`);
+    }
+    return new Response(JSON.stringify({ ok: true }));
+  }
+
+  if (action === 'accept_completion') {
+    const task: any = await db.prepare("SELECT poster_id, title, claimed_by FROM tasks WHERE id = ?").bind(params.id).first();
+    if (!task) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
+    if (task.poster_id !== session) return new Response(JSON.stringify({ error: 'Only poster can accept' }), { status: 403 });
+    await db.prepare("UPDATE tasks SET status = 'completed', completion_status = 'accepted', completed_at = datetime('now') WHERE id = ?").bind(params.id).run();
+    if (task.claimed_by) {
+      await createNotification(db, task.claimed_by, 'completion_accepted', 'Task Accepted! ✓', `Your work on "${task.title}" was accepted by the poster.`, `/tasks/${params.id}`);
+    }
+    return new Response(JSON.stringify({ ok: true, status: 'completed' }));
+  }
+
+  if (action === 'reject_completion') {
+    const task: any = await db.prepare("SELECT poster_id, title, claimed_by FROM tasks WHERE id = ?").bind(params.id).first();
+    if (!task) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
+    if (task.poster_id !== session) return new Response(JSON.stringify({ error: 'Only poster can reject' }), { status: 403 });
+    const reason = body.reason || 'No reason provided';
+    await db.prepare("UPDATE tasks SET completion_status = 'rejected', rejection_reason = ?, completion_proof = '[]' WHERE id = ?").bind(reason, params.id).run();
+    if (task.claimed_by) {
+      await createNotification(db, task.claimed_by, 'completion_rejected', 'Proof Rejected', `Your proof for "${task.title}" was rejected. Reason: ${reason}`, `/tasks/${params.id}`);
     }
     return new Response(JSON.stringify({ ok: true }));
   }
