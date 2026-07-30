@@ -29,6 +29,16 @@ import Navbar from "../../components/Navbar.astro";
       </div>
       <div id="messages-container" class="flex-1 min-h-0 overflow-y-auto p-4 space-y-3"></div>
       <div id="chat-input-area" class="hidden p-3 border-t border-hairline bg-canvas shrink-0">
+        <div id="quick-replies" class="flex gap-2 overflow-x-auto pb-2 mb-2 -mx-1 px-1">
+          <button class="quick-reply shrink-0 px-3 py-1.5 text-xs bg-canvas-soft-2 border border-hairline rounded-full text-body hover:bg-canvas-soft hover:border-hairline-strong transition-colors">Can you explain more about the task?</button>
+          <button class="quick-reply shrink-0 px-3 py-1.5 text-xs bg-canvas-soft-2 border border-hairline rounded-full text-body hover:bg-canvas-soft hover:border-hairline-strong transition-colors">I'm available now</button>
+          <button class="quick-reply shrink-0 px-3 py-1.5 text-xs bg-canvas-soft-2 border border-hairline rounded-full text-body hover:bg-canvas-soft hover:border-hairline-strong transition-colors">What's the exact location?</button>
+          <button class="quick-reply shrink-0 px-3 py-1.5 text-xs bg-canvas-soft-2 border border-hairline rounded-full text-body hover:bg-canvas-soft hover:border-hairline-strong transition-colors">How should I send the proof?</button>
+          <button class="quick-reply shrink-0 px-3 py-1.5 text-xs bg-canvas-soft-2 border border-hairline rounded-full text-body hover:bg-canvas-soft hover:border-hairline-strong transition-colors">Task completed ✓</button>
+          <button class="quick-reply shrink-0 px-3 py-1.5 text-xs bg-canvas-soft-2 border border-hairline rounded-full text-body hover:bg-canvas-soft hover:border-hairline-strong transition-colors">What's the deadline?</button>
+          <button class="quick-reply shrink-0 px-3 py-1.5 text-xs bg-canvas-soft-2 border border-hairline rounded-full text-body hover:bg-canvas-soft hover:border-hairline-strong transition-colors">Payment done ✓</button>
+          <button class="quick-reply shrink-0 px-3 py-1.5 text-xs bg-canvas-soft-2 border border-hairline rounded-full text-body hover:bg-canvas-soft hover:border-hairline-strong transition-colors">On my way</button>
+        </div>
         <form id="msg-form" class="flex items-center gap-2 max-w-full">
           <label class="shrink-0 p-2 text-mute hover:text-ink cursor-pointer transition-colors">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
@@ -237,6 +247,15 @@ import Navbar from "../../components/Navbar.astro";
     </div>`);
     setTimeout(() => { container.scrollTop = container.scrollHeight; }, 50);
   }
+
+  // Quick replies - fill input on click
+  document.querySelectorAll('.quick-reply').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById('msg-input') as HTMLInputElement;
+      input.value = (btn as HTMLElement).textContent || '';
+      input.focus();
+    });
+  });
 
   // Send message
   document.getElementById('msg-form')!.addEventListener('submit', async (e) => {
