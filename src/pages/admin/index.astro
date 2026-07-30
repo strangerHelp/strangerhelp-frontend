@@ -54,43 +54,105 @@ import Layout from "../../layouts/Layout.astro";
   async function loadOverview() {
     const res = await fetch('/api/admin?resource=stats');
     const stats = await res.json();
+    const completionRate = stats.tasks > 0 ? Math.round((stats.completedTasks / stats.tasks) * 100) : 0;
     document.getElementById('admin-content')!.innerHTML = `
-      <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Overview</h1>
-      <p class="mt-1 text-sm text-body">Platform statistics at a glance.</p>
-      <div class="mt-4 flex gap-2">
-        <button onclick="downloadMetricsCSV()" class="h-8 px-3 text-xs font-medium text-ink border border-hairline rounded-md hover:bg-canvas-soft-2">📊 Download Metrics (CSV)</button>
-        <button onclick="downloadMetricsJSON()" class="h-8 px-3 text-xs font-medium text-ink border border-hairline rounded-md hover:bg-canvas-soft-2">📋 Download Metrics (JSON)</button>
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Admin Dashboard</h1>
+          <p class="mt-1 text-sm text-body">Platform health at a glance</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="downloadMetricsCSV()" class="h-8 px-3 text-xs font-medium text-ink border border-hairline rounded-md hover:bg-canvas-soft-2">📊 CSV</button>
+          <button onclick="downloadMetricsJSON()" class="h-8 px-3 text-xs font-medium text-ink border border-hairline rounded-md hover:bg-canvas-soft-2">📋 JSON</button>
+        </div>
       </div>
-      <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+
+      <!-- Today's Activity -->
+      <div class="mt-6 p-4 bg-cyan-soft/20 rounded-lg border border-cyan/20">
+        <p class="text-xs font-mono uppercase text-cyan-deep mb-2">📈 Today's Activity</p>
+        <div class="grid grid-cols-3 gap-4">
+          <div><p class="text-xl font-bold text-ink">${stats.todayUsers}</p><p class="text-xs text-mute">New Users</p></div>
+          <div><p class="text-xl font-bold text-ink">${stats.todayTasks}</p><p class="text-xs text-mute">Tasks Posted</p></div>
+          <div><p class="text-xl font-bold text-ink">${stats.weekTasks}</p><p class="text-xs text-mute">This Week</p></div>
+        </div>
+      </div>
+
+      <!-- Alerts -->
+      ${stats.openReports > 0 || stats.pendingClaims > 0 ? `
+      <div class="mt-4 p-3 bg-warning-soft rounded-lg border border-warning/20">
+        <p class="text-xs font-semibold text-warning-deep">⚠️ Requires Attention</p>
+        <div class="mt-1 flex gap-4 text-xs text-body">
+          ${stats.openReports > 0 ? `<span>• ${stats.openReports} open report(s)</span>` : ''}
+          ${stats.pendingClaims > 0 ? `<span>• ${stats.pendingClaims} pending claim request(s)</span>` : ''}
+        </div>
+      </div>` : ''}
+
+      <!-- Core Stats -->
+      <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
         <div class="p-4 bg-canvas rounded-lg border border-hairline">
           <p class="text-xs text-mute font-mono uppercase">Users</p>
           <p class="mt-1 text-2xl font-semibold text-ink">${stats.users}</p>
+          <p class="text-xs text-cyan-deep">${stats.verifiedUsers} verified</p>
         </div>
         <div class="p-4 bg-canvas rounded-lg border border-hairline">
           <p class="text-xs text-mute font-mono uppercase">Total Tasks</p>
           <p class="mt-1 text-2xl font-semibold text-ink">${stats.tasks}</p>
+          <p class="text-xs text-mute">Avg ₹${stats.avgBudget}/task</p>
         </div>
         <div class="p-4 bg-canvas rounded-lg border border-hairline">
           <p class="text-xs text-mute font-mono uppercase">Messages</p>
           <p class="mt-1 text-2xl font-semibold text-ink">${stats.messages}</p>
+          <p class="text-xs text-mute">${stats.conversations} conversations</p>
         </div>
         <div class="p-4 bg-canvas rounded-lg border border-hairline">
-          <p class="text-xs text-mute font-mono uppercase">Conversations</p>
-          <p class="mt-1 text-2xl font-semibold text-ink">${stats.conversations}</p>
+          <p class="text-xs text-mute font-mono uppercase">GMV</p>
+          <p class="mt-1 text-2xl font-semibold text-ink">₹${stats.totalGMV.toLocaleString()}</p>
+          <p class="text-xs text-mute">Completed tasks value</p>
         </div>
       </div>
-      <div class="mt-4 grid grid-cols-3 gap-4">
-        <div class="p-4 bg-canvas rounded-lg border border-hairline">
-          <p class="text-xs text-mute font-mono uppercase">Open</p>
-          <p class="mt-1 text-xl font-semibold text-cyan-deep">${stats.openTasks}</p>
+
+      <!-- Task Pipeline -->
+      <div class="mt-4">
+        <p class="text-xs font-mono uppercase text-mute mb-2">Task Pipeline</p>
+        <div class="grid grid-cols-4 gap-3">
+          <div class="p-3 bg-canvas rounded-lg border border-hairline text-center">
+            <p class="text-lg font-bold text-cyan-deep">${stats.openTasks}</p>
+            <p class="text-xs text-mute">Open</p>
+          </div>
+          <div class="p-3 bg-canvas rounded-lg border border-hairline text-center">
+            <p class="text-lg font-bold text-warning">${stats.claimedTasks}</p>
+            <p class="text-xs text-mute">Claimed</p>
+          </div>
+          <div class="p-3 bg-canvas rounded-lg border border-hairline text-center">
+            <p class="text-lg font-bold text-ink">${stats.completedTasks}</p>
+            <p class="text-xs text-mute">Completed</p>
+          </div>
+          <div class="p-3 bg-canvas rounded-lg border border-hairline text-center">
+            <p class="text-lg font-bold ${completionRate >= 50 ? 'text-cyan-deep' : 'text-warning'}">${completionRate}%</p>
+            <p class="text-xs text-mute">Rate</p>
+          </div>
         </div>
-        <div class="p-4 bg-canvas rounded-lg border border-hairline">
-          <p class="text-xs text-mute font-mono uppercase">Claimed</p>
-          <p class="mt-1 text-xl font-semibold text-warning">${stats.claimedTasks}</p>
+        <!-- Progress bar -->
+        <div class="mt-2 w-full h-2 bg-hairline rounded-full overflow-hidden flex">
+          <div class="h-full bg-cyan-deep" style="width:${stats.tasks > 0 ? (stats.openTasks/stats.tasks*100) : 0}%"></div>
+          <div class="h-full bg-warning" style="width:${stats.tasks > 0 ? (stats.claimedTasks/stats.tasks*100) : 0}%"></div>
+          <div class="h-full bg-primary" style="width:${stats.tasks > 0 ? (stats.completedTasks/stats.tasks*100) : 0}%"></div>
         </div>
-        <div class="p-4 bg-canvas rounded-lg border border-hairline">
-          <p class="text-xs text-mute font-mono uppercase">Completed</p>
-          <p class="mt-1 text-xl font-semibold text-ink">${stats.completedTasks}</p>
+      </div>
+
+      <!-- Platform Features -->
+      <div class="mt-4 grid grid-cols-3 gap-3">
+        <div class="p-3 bg-canvas rounded-lg border border-hairline text-center">
+          <p class="text-lg font-bold text-ink">${stats.meets}</p>
+          <p class="text-xs text-mute">Meets</p>
+        </div>
+        <div class="p-3 bg-canvas rounded-lg border border-hairline text-center">
+          <p class="text-lg font-bold text-ink">${stats.activePaths}</p>
+          <p class="text-xs text-mute">Active Paths</p>
+        </div>
+        <div class="p-3 bg-canvas rounded-lg border border-hairline text-center">
+          <p class="text-lg font-bold text-ink">${stats.pendingClaims}</p>
+          <p class="text-xs text-mute">Pending Claims</p>
         </div>
       </div>`;
   }
