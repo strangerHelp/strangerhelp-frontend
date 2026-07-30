@@ -287,14 +287,18 @@ import Footer from "../../components/Footer.astro";
           <p class="text-sm font-semibold text-ink mb-3">📋 Claim Requests (${task.claimRequests.filter((r: any) => r.status === 'pending').length})</p>
           <div class="space-y-2">
             ${task.claimRequests.filter((r: any) => r.status === 'pending').map((r: any) => `
-              <div class="flex items-center justify-between p-3 bg-canvas rounded-md border border-hairline">
-                <div>
-                  <p class="text-sm font-medium text-ink">${escapeHtml(r.requester_name)}</p>
-                  <p class="text-xs text-mute">${(window as any).timeAgoIST(r.created_at)}</p>
-                </div>
-                <div class="flex gap-2">
-                  <button onclick="approveClaim('${r.requester_id}')" class="h-8 px-3 text-xs font-medium text-on-primary bg-primary rounded-md hover:opacity-90">Approve</button>
-                  <button onclick="rejectClaim('${r.requester_id}')" class="h-8 px-3 text-xs font-medium text-error border border-error/30 rounded-md hover:bg-error-soft">Reject</button>
+              <div class="p-3 bg-canvas rounded-md border border-hairline">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm font-medium text-ink">${escapeHtml(r.requester_name)}</p>
+                    ${r.offered_budget ? `<p class="text-xs text-warning-deep font-medium mt-0.5">Asking: ₹${r.offered_budget} ${r.offered_budget > task.budget ? '(+₹' + (r.offered_budget - task.budget) + ' extra)' : r.offered_budget < task.budget ? '(₹' + (task.budget - r.offered_budget) + ' less)' : '(same as budget)'}</p>` : ''}
+                    ${r.message ? `<p class="text-xs text-body mt-0.5 italic">"${escapeHtml(r.message)}"</p>` : ''}
+                    <p class="text-xs text-mute mt-0.5">${(window as any).timeAgoIST(r.created_at)}</p>
+                  </div>
+                  <div class="flex gap-2 shrink-0 ml-2">
+                    <button onclick="approveClaim('${r.requester_id}')" class="h-8 px-3 text-xs font-medium text-on-primary bg-primary rounded-md hover:opacity-90">Approve</button>
+                    <button onclick="rejectClaim('${r.requester_id}')" class="h-8 px-3 text-xs font-medium text-error border border-error/30 rounded-md hover:bg-error-soft">Reject</button>
+                  </div>
                 </div>
               </div>
             `).join('')}
@@ -457,12 +461,18 @@ import Footer from "../../components/Footer.astro";
   }
 
   async function claimTask() {
+    // Show claim request form
+    const budgetInput = prompt(`Request to Claim\n\nTask budget: ₹${task.budget}\n\nWant to suggest a different budget? (Leave empty to accept ₹${task.budget})\n\nYour suggested budget (₹):`);
+    const offeredBudget = budgetInput ? parseInt(budgetInput) : null;
+    
+    const message = prompt('Add a message to the poster (optional):\n\nE.g., "I am near the location and can do it in 30 minutes"') || '';
+
     const btn = document.getElementById('claim-btn')!;
     btn.textContent = 'Sending request...';
     const res = await fetch(`/api/tasks/${taskId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'claim' }),
+      body: JSON.stringify({ action: 'claim', offered_budget: offeredBudget, message }),
     });
     const data = await res.json();
     if (res.ok) {

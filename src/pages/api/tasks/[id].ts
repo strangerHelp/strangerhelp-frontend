@@ -19,7 +19,7 @@ export const GET: APIRoute = async ({ params }) => {
   }
 
   // Get pending claim requests
-  const { results: claimRequests } = await db.prepare("SELECT id, requester_id, requester_name, status, created_at FROM claim_requests WHERE task_id = ? ORDER BY created_at DESC").bind(params.id).all();
+  const { results: claimRequests } = await db.prepare("SELECT id, requester_id, requester_name, status, offered_budget, message, created_at FROM claim_requests WHERE task_id = ? ORDER BY created_at DESC").bind(params.id).all();
 
   return new Response(JSON.stringify({
     ...task, _id: task.id, posterId: task.poster_id, posterName: task.poster_name,
@@ -116,8 +116,8 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
 
       // Create claim request
       const reqId = genId();
-      await db.prepare("INSERT INTO claim_requests (id, task_id, requester_id, requester_name) VALUES (?, ?, ?, ?)")
-        .bind(reqId, params.id, session, user?.name || 'Helper').run();
+      await db.prepare("INSERT INTO claim_requests (id, task_id, requester_id, requester_name, offered_budget, message) VALUES (?, ?, ?, ?, ?, ?)")
+        .bind(reqId, params.id, session, user?.name || 'Helper', body.offered_budget || null, body.message || '').run();
 
       // Create conversation so they can discuss
       const existing: any = await db.prepare("SELECT id FROM conversations WHERE task_id = ? AND ((participant_1 = ? AND participant_2 = ?) OR (participant_1 = ? AND participant_2 = ?))").bind(params.id, task.poster_id, session, session, task.poster_id).first();
@@ -129,7 +129,8 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
       }
 
       // Notify poster
-      await createNotification(db, task.poster_id, 'claim_request', 'Claim Request', `${user?.name || 'Someone'} wants to claim: ${task.title}`, `/tasks/${params.id}`);
+      const budgetNote = body.offered_budget ? ` (asking ₹${body.offered_budget})` : '';
+      await createNotification(db, task.poster_id, 'claim_request', 'Claim Request', `${user?.name || 'Someone'} wants to claim: ${task.title}${budgetNote}`, `/tasks/${params.id}`);
       return new Response(JSON.stringify({ ok: true, status: 'requested', conversationId: convId }));
     }
   }
