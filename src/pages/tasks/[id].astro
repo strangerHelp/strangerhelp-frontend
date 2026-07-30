@@ -152,7 +152,12 @@ import Footer from "../../components/Footer.astro";
               <p class="text-xs text-body mt-1">Reason: ${escapeHtml(task.rejection_reason || 'Not specified')}</p>
             </div>
             <p class="text-sm font-medium text-ink mb-2">Re-upload completion proof:</p>
-            <input type="file" id="proof-files" accept="image/*,.pdf" multiple class="text-sm text-body" />
+            <label for="proof-files" class="flex flex-col items-center justify-center h-24 border-2 border-dashed border-hairline rounded-lg hover:border-ink cursor-pointer transition-colors bg-canvas-soft">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-mute mb-1"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+              <span class="text-xs text-mute">Tap to upload new proof</span>
+              <span id="proof-file-names" class="text-xs text-link mt-1"></span>
+            </label>
+            <input type="file" id="proof-files" accept="image/*,.pdf" multiple class="hidden" />
             <button id="complete-btn" class="mt-3 w-full h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">Resubmit Proof</button>
             <div class="mt-2">${messageBtn}</div>
           </div>`;
@@ -160,7 +165,12 @@ import Footer from "../../components/Footer.astro";
         actionsHtml = `
           <div class="w-full">
             <p class="text-sm font-medium text-ink mb-2">Upload completion proof:</p>
-            <input type="file" id="proof-files" accept="image/*,.pdf" multiple class="text-sm text-body" />
+            <label for="proof-files" class="flex flex-col items-center justify-center h-24 border-2 border-dashed border-hairline rounded-lg hover:border-ink cursor-pointer transition-colors bg-canvas-soft">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-mute mb-1"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+              <span class="text-xs text-mute">Tap to upload photos or PDF</span>
+              <span id="proof-file-names" class="text-xs text-link mt-1"></span>
+            </label>
+            <input type="file" id="proof-files" accept="image/*,.pdf" multiple class="hidden" />
             <button id="complete-btn" class="mt-3 w-full h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">Submit Proof & Complete</button>
             <div class="mt-3">${messageBtn}</div>
           </div>`;
@@ -339,6 +349,15 @@ import Footer from "../../components/Footer.astro";
     document.getElementById('edit-btn')?.addEventListener('click', openEditModal);
     document.getElementById('accept-completion-btn')?.addEventListener('click', acceptCompletion);
     document.getElementById('reject-completion-btn')?.addEventListener('click', rejectCompletion);
+
+    // Show file names when selected
+    document.getElementById('proof-files')?.addEventListener('change', (e) => {
+      const input = e.target as HTMLInputElement;
+      const nameEl = document.getElementById('proof-file-names');
+      if (nameEl && input.files) {
+        nameEl.textContent = Array.from(input.files).map(f => f.name).join(', ');
+      }
+    });
 
     // Init mini-map if task has coordinates
     if (task.lat && task.lng && document.getElementById('task-map')) {
