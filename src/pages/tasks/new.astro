@@ -146,7 +146,15 @@ import Navbar from "../../components/Navbar.astro";
           <input type="checkbox" id="anonymous" name="anonymous" class="w-5 h-5 rounded border-hairline" />
         </div>
 
-        <button type="submit" id="submit-btn" class="w-full h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">
+        <!-- Terms acceptance -->
+        <div class="flex items-start gap-3 p-4 bg-canvas-soft rounded-md border border-hairline">
+          <input type="checkbox" id="terms-accept" required class="w-5 h-5 mt-0.5 rounded border-hairline shrink-0" />
+          <label for="terms-accept" class="text-xs text-body leading-relaxed">
+            I confirm that this task does not involve any <strong class="text-ink">illegal, harmful, or fraudulent activities</strong>. I agree to the <a href="/terms" target="_blank" class="text-link hover:underline">Terms of Service</a> and <a href="/trust-safety" target="_blank" class="text-link hover:underline">Trust & Safety guidelines</a>. Posting tasks that promote illegal activity will result in immediate account suspension.
+          </label>
+        </div>
+
+        <button type="submit" id="submit-btn" class="w-full h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity disabled:opacity-50">
           Post Task
         </button>
       </form>
@@ -270,6 +278,14 @@ import Navbar from "../../components/Navbar.astro";
     e.preventDefault();
     errorMsg.classList.add('hidden');
     successMsg.classList.add('hidden');
+
+    // Check terms acceptance
+    if (!(document.getElementById('terms-accept') as HTMLInputElement).checked) {
+      errorMsg.textContent = 'Please accept the terms and conditions to post a task';
+      errorMsg.classList.remove('hidden');
+      return;
+    }
+
     submitBtn.textContent = 'Posting...';
     submitBtn.setAttribute('disabled', 'true');
 
