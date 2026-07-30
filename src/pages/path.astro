@@ -1,0 +1,216 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+---
+
+<Layout title="Path — Find Tasks on Your Route">
+  <Navbar />
+  <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+    <div class="max-w-lg mx-auto">
+      <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">🛣️ Path</h1>
+      <p class="mt-2 text-sm text-body">Tell us where you're going — we'll find tasks along your route.</p>
+
+      <!-- Set Path Form -->
+      <div id="path-form" class="mt-6 p-5 bg-canvas rounded-lg border border-hairline">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-ink mb-1.5">From</label>
+            <div class="relative">
+              <input type="text" id="from-input" placeholder="Starting point..." autocomplete="off" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink placeholder:text-mute" />
+              <div id="from-results" class="hidden absolute z-20 left-0 right-0 top-11 bg-canvas border border-hairline rounded-md shadow-lg max-h-40 overflow-y-auto"></div>
+            </div>
+            <input type="hidden" id="from-lat" />
+            <input type="hidden" id="from-lng" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-ink mb-1.5">To</label>
+            <div class="relative">
+              <input type="text" id="to-input" placeholder="Destination..." autocomplete="off" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink placeholder:text-mute" />
+              <div id="to-results" class="hidden absolute z-20 left-0 right-0 top-11 bg-canvas border border-hairline rounded-md shadow-lg max-h-40 overflow-y-auto"></div>
+            </div>
+            <input type="hidden" id="to-lat" />
+            <input type="hidden" id="to-lng" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-medium text-ink mb-1.5">Radius (off-path)</label>
+              <select id="radius" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md">
+                <option value="0.5">0.5 km</option>
+                <option value="1" selected>1 km</option>
+                <option value="2">2 km</option>
+                <option value="3">3 km</option>
+                <option value="5">5 km</option>
+              </select>
+            </div>
+            <div class="flex items-end">
+              <label class="flex items-center gap-2 h-10 text-sm text-body">
+                <input type="checkbox" id="recurring" class="w-4 h-4 rounded border-hairline" />
+                Daily route
+              </label>
+            </div>
+          </div>
+
+          <button id="find-btn" class="w-full h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">
+            Find Tasks on My Path
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Path Display -->
+      <div id="active-path" class="hidden mt-4 p-4 bg-cyan-soft/30 rounded-lg border border-cyan/20">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-ink">🛣️ Active Path</p>
+            <p class="text-xs text-body mt-0.5" id="path-route"></p>
+          </div>
+          <button id="clear-path" class="h-8 px-3 text-xs font-medium text-error border border-error/30 rounded-md hover:bg-error-soft">Clear</button>
+        </div>
+      </div>
+
+      <!-- Matched Tasks -->
+      <div id="path-results" class="mt-6">
+        <div id="results-content"></div>
+      </div>
+
+      <!-- Info -->
+      <div class="mt-8 p-4 bg-canvas-soft rounded-md border border-hairline">
+        <p class="text-xs text-body leading-relaxed">💡 <strong>How Path works:</strong> Share your daily route (commute, college, errands) and we'll match tasks along the way. Earn money doing pickups, deliveries, and verifications without going out of your way.</p>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Layout>
+
+<script>
+  fetch('/api/auth/me').then(r => { if (!r.ok) window.location.href = '/login?redirect=/path'; });
+
+  let searchTimeout: any;
+
+  // Nominatim autocomplete for both inputs
+  function setupAutocomplete(inputId: string, resultsId: string, latId: string, lngId: string) {
+    const input = document.getElementById(inputId) as HTMLInputElement;
+    const results = document.getElementById(resultsId)!;
+    const latInput = document.getElementById(latId) as HTMLInputElement;
+    const lngInput = document.getElementById(lngId) as HTMLInputElement;
+
+    input.addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      const q = input.value.trim();
+      if (q.length < 3) { results.classList.add('hidden'); return; }
+      searchTimeout = setTimeout(async () => {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5&countrycodes=in`);
+        const data = await res.json();
+        if (data.length === 0) { results.classList.add('hidden'); return; }
+        results.innerHTML = data.map((r: any) =>
+          `<div class="px-3 py-2.5 text-sm text-body hover:bg-canvas-soft cursor-pointer border-b border-hairline last:border-0" data-lat="${r.lat}" data-lng="${r.lon}" data-name="${r.display_name}">${r.display_name}</div>`
+        ).join('');
+        results.classList.remove('hidden');
+        results.querySelectorAll('div').forEach(el => {
+          el.addEventListener('click', () => {
+            input.value = (el as HTMLElement).dataset.name!.split(',').slice(0, 3).join(',');
+            latInput.value = (el as HTMLElement).dataset.lat!;
+            lngInput.value = (el as HTMLElement).dataset.lng!;
+            results.classList.add('hidden');
+          });
+        });
+      }, 400);
+    });
+  }
+
+  setupAutocomplete('from-input', 'from-results', 'from-lat', 'from-lng');
+  setupAutocomplete('to-input', 'to-results', 'to-lat', 'to-lng');
+
+  // Close dropdowns on outside click
+  document.addEventListener('click', (e) => {
+    if (!(e.target as HTMLElement).closest('#from-input, #from-results')) document.getElementById('from-results')!.classList.add('hidden');
+    if (!(e.target as HTMLElement).closest('#to-input, #to-results')) document.getElementById('to-results')!.classList.add('hidden');
+  });
+
+  // Find tasks
+  document.getElementById('find-btn')!.addEventListener('click', async () => {
+    const fromLat = (document.getElementById('from-lat') as HTMLInputElement).value;
+    const fromLng = (document.getElementById('from-lng') as HTMLInputElement).value;
+    const toLat = (document.getElementById('to-lat') as HTMLInputElement).value;
+    const toLng = (document.getElementById('to-lng') as HTMLInputElement).value;
+    const fromLoc = (document.getElementById('from-input') as HTMLInputElement).value;
+    const toLoc = (document.getElementById('to-input') as HTMLInputElement).value;
+
+    if (!fromLat || !toLat) { alert('Please select both From and To locations'); return; }
+
+    const btn = document.getElementById('find-btn')!;
+    btn.textContent = 'Searching...';
+
+    const res = await fetch('/api/path', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from_location: fromLoc, from_lat: parseFloat(fromLat), from_lng: parseFloat(fromLng),
+        to_location: toLoc, to_lat: parseFloat(toLat), to_lng: parseFloat(toLng),
+        radius_km: parseFloat((document.getElementById('radius') as HTMLSelectElement).value),
+        recurring: (document.getElementById('recurring') as HTMLInputElement).checked,
+      }),
+    });
+
+    if (res.ok) {
+      loadPath();
+    } else {
+      const d = await res.json();
+      alert(d.error || 'Failed');
+    }
+    btn.textContent = 'Find Tasks on My Path';
+  });
+
+  // Load active path and matched tasks
+  async function loadPath() {
+    const res = await fetch('/api/path');
+    if (!res.ok) return;
+    const { path, tasks } = await res.json();
+
+    if (path) {
+      document.getElementById('active-path')!.classList.remove('hidden');
+      document.getElementById('path-route')!.textContent = `${path.from_location} → ${path.to_location} (${path.radius_km} km radius)`;
+      document.getElementById('path-form')!.classList.add('hidden');
+    }
+
+    const content = document.getElementById('results-content')!;
+    if (tasks.length === 0) {
+      content.innerHTML = path ? '<p class="text-sm text-mute text-center py-8">No tasks found on your route right now. Check back later!</p>' : '';
+      return;
+    }
+
+    content.innerHTML = `
+      <p class="text-sm font-semibold text-ink mb-3">🎯 ${tasks.length} task${tasks.length > 1 ? 's' : ''} found on your route</p>
+      <div class="space-y-3">
+        ${tasks.map((t: any) => `
+          <a href="/tasks/${t._id}" class="block p-4 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong transition-colors">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 text-xs font-medium bg-canvas-soft-2 rounded-full">${t.category}</span>
+                ${t.urgent ? '<span class="px-2 py-0.5 text-xs font-bold bg-error-soft text-error rounded-full">⚡ Urgent</span>' : ''}
+              </div>
+              <span class="text-base font-semibold text-ink">₹${t.budget}</span>
+            </div>
+            <p class="text-sm font-medium text-ink">${t.title}</p>
+            <div class="mt-2 flex items-center gap-3 text-xs text-mute">
+              <span>📍 ${t.location}</span>
+              <span class="text-cyan-deep font-medium">${t.offPath < 0.1 ? 'ON your route' : t.offPath + ' km off route'}</span>
+            </div>
+          </a>
+        `).join('')}
+      </div>`;
+  }
+
+  // Clear path
+  document.getElementById('clear-path')!.addEventListener('click', async () => {
+    await fetch('/api/path', { method: 'DELETE' });
+    document.getElementById('active-path')!.classList.add('hidden');
+    document.getElementById('path-form')!.classList.remove('hidden');
+    document.getElementById('results-content')!.innerHTML = '';
+  });
+
+  // Load on page open
+  loadPath();
+</script>
