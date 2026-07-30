@@ -96,6 +96,14 @@ import Navbar from "../../components/Navbar.astro";
           <input type="checkbox" id="anonymous" class="w-5 h-5 rounded border-hairline" />
         </div>
 
+        <!-- Terms acceptance -->
+        <div class="flex items-start gap-3 p-4 bg-canvas-soft rounded-md border border-hairline">
+          <input type="checkbox" id="meet-terms" required class="w-5 h-5 mt-0.5 rounded border-hairline shrink-0" />
+          <label for="meet-terms" class="text-xs text-body leading-relaxed">
+            I confirm that this meet does not promote any <strong class="text-ink">illegal, harmful, or dangerous activities</strong>. I take responsibility for the safety of attendees and agree to the <a href="/terms" target="_blank" class="text-link hover:underline">Terms of Service</a> and <a href="/trust-safety" target="_blank" class="text-link hover:underline">Trust & Safety guidelines</a>.
+          </label>
+        </div>
+
         <button type="submit" id="submit-btn" class="w-full h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">Create Meet</button>
       </form>
     </div>
@@ -127,6 +135,13 @@ import Navbar from "../../components/Navbar.astro";
   document.getElementById('meet-form')!.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('submit-btn')!;
+
+    if (!(document.getElementById('meet-terms') as HTMLInputElement).checked) {
+      document.getElementById('error-msg')!.textContent = 'Please accept the terms and conditions';
+      document.getElementById('error-msg')!.classList.remove('hidden');
+      return;
+    }
+
     btn.textContent = 'Creating...';
 
     const fd = new FormData();
