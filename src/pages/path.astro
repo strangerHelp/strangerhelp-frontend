@@ -61,12 +61,21 @@ import Footer from "../components/Footer.astro";
 
       <!-- Active Path Display -->
       <div id="active-path" class="hidden mt-4 p-4 bg-cyan-soft/30 rounded-lg border border-cyan/20">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between mb-2">
           <div>
             <p class="text-sm font-medium text-ink">🛣️ Active Path</p>
             <p class="text-xs text-body mt-0.5" id="path-route"></p>
           </div>
           <button id="clear-path" class="h-8 px-3 text-xs font-medium text-error border border-error/30 rounded-md hover:bg-error-soft">Clear</button>
+        </div>
+        <p id="path-notified" class="text-xs text-cyan-deep mt-1"></p>
+        <!-- Broadcast to posters -->
+        <div class="mt-3 pt-3 border-t border-cyan/20">
+          <p class="text-xs text-body mb-2">💬 Let posters know you're passing by:</p>
+          <div class="flex gap-2">
+            <input type="text" id="broadcast-msg" value="I'm traveling on this route today. Do you have any task I can help with?" class="flex-1 h-9 px-3 text-xs bg-canvas border border-hairline rounded-md" />
+            <button id="broadcast-btn" class="h-9 px-3 text-xs font-medium text-on-primary bg-primary rounded-md hover:opacity-90 shrink-0">Send to Posters</button>
+          </div>
         </div>
       </div>
 
@@ -155,6 +164,10 @@ import Footer from "../components/Footer.astro";
     });
 
     if (res.ok) {
+      const data = await res.json();
+      if (data.matchedTasks > 0) {
+        document.getElementById('path-notified')!.textContent = `✓ ${data.matchedTasks} task poster(s) notified that you're passing by!`;
+      }
       loadPath();
     } else {
       const d = await res.json();
@@ -202,6 +215,34 @@ import Footer from "../components/Footer.astro";
         `).join('')}
       </div>`;
   }
+
+  // Broadcast message to posters along path
+  document.getElementById('broadcast-btn')!.addEventListener('click', async () => {
+    const msg = (document.getElementById('broadcast-msg') as HTMLInputElement).value.trim();
+    if (!msg) return;
+    const btn = document.getElementById('broadcast-btn')!;
+    btn.textContent = 'Sending...';
+
+    // Get matched tasks and message each poster
+    const res = await fetch('/api/path');
+    if (res.ok) {
+      const { tasks } = await res.json();
+      const sentTo = new Set();
+      for (const t of tasks) {
+        if (t.poster_id && !sentTo.has(t.poster_id)) {
+          sentTo.add(t.poster_id);
+          // Create conversation and send message
+          const convRes = await fetch('/api/messages', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ recipientId: t.poster_id, taskId: t._id }) });
+          if (convRes.ok) {
+            const conv = await convRes.json();
+            await fetch(`/api/messages/${conv._id}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ text: msg }) });
+          }
+        }
+      }
+      btn.textContent = `✓ Sent to ${sentTo.size} poster(s)!`;
+      setTimeout(() => { btn.textContent = 'Send to Posters'; }, 3000);
+    }
+  });
 
   // Clear path
   document.getElementById('clear-path')!.addEventListener('click', async () => {

@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import { genId } from '../../lib/db';
 import { getSessionUserId } from '../../lib/auth';
+import { createNotification } from './notifications';
 
 // GET /api/path - get matched tasks along user's active path
 export const GET: APIRoute = async ({ cookies, url }) => {
@@ -67,7 +68,24 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   await db.prepare("INSERT INTO paths (id, user_id, user_name, from_location, from_lat, from_lng, to_location, to_lat, to_lng, radius_km, recurring, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
     .bind(id, session, user?.name || 'User', from_location, from_lat, from_lng, to_location, to_lat, to_lng, radius, recurring ? 1 : 0, expiresAt).run();
 
-  return new Response(JSON.stringify({ ok: true, id }), { status: 201 });
+  // Notify posters whose tasks are along this path
+  const { results: openTasks } = await db.prepare("SELECT id, title, poster_id, lat, lng FROM tasks WHERE status = 'open' AND lat IS NOT NULL AND lng IS NOT NULL AND poster_id != ?").bind(session).all();
+  const matchedPosters = new Set<string>();
+  (openTasks || []).forEach((t: any) => {
+    const distFromStart = haversine(from_lat, from_lng, t.lat, t.lng);
+    const distFromEnd = haversine(to_lat, to_lng, t.lat, t.lng);
+    const pathLength = haversine(from_lat, from_lng, to_lat, to_lng);
+    const onSegment = (distFromStart + distFromEnd) < (pathLength + radius * 2);
+    const s = (distFromStart + distFromEnd + pathLength) / 2;
+    const area = Math.sqrt(Math.max(0, s * (s - distFromStart) * (s - distFromEnd) * (s - pathLength)));
+    const offPath = pathLength > 0 ? (2 * area) / pathLength : distFromStart;
+    if (onSegment && offPath <= radius && !matchedPosters.has(t.poster_id)) {
+      matchedPosters.add(t.poster_id);
+      createNotification(db, t.poster_id, 'helper_nearby', 'Helper Passing By!', `${user?.name || 'A helper'} is traveling near your task "${t.title}". They might be able to help!`, `/tasks/${t.id}`);
+    }
+  });
+
+  return new Response(JSON.stringify({ ok: true, id, matchedTasks: matchedPosters.size }), { status: 201 });
 };
 
 // DELETE /api/path - deactivate path
