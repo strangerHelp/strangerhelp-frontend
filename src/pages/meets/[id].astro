@@ -65,8 +65,16 @@ import Footer from "../../components/Footer.astro";
         <!-- Attendees -->
         <div class="mt-6">
           <p class="text-sm font-medium text-ink mb-3">Attendees (${meet.attendeeCount})</p>
-          <div class="flex flex-wrap gap-2">
-            ${(meet.attendees || []).map((a: any) => `<span class="px-3 py-1.5 text-xs font-medium bg-canvas-soft-2 rounded-full">${esc(a.user_name)}${a.user_id === meet.host_id ? ' 👑' : ''}</span>`).join('')}
+          <div class="space-y-2">
+            ${(meet.attendees || []).map((a: any) => `
+              <div class="flex items-center justify-between p-2 bg-canvas-soft-2 rounded-lg">
+                <div class="flex items-center gap-2">
+                  <span class="w-8 h-8 rounded-full bg-canvas flex items-center justify-center text-xs font-semibold text-body">${(a.user_name || '?')[0].toUpperCase()}</span>
+                  <span class="text-sm font-medium text-ink">${esc(a.user_name)}${a.user_id === meet.host_id ? ' 👑' : ''}</span>
+                </div>
+                ${currentUser && a.user_id !== currentUser.id && (isJoined || isHost) ? `<button onclick="messageAttendee('${a.user_id}')" class="h-7 px-2 text-xs font-medium text-link border border-hairline rounded hover:bg-canvas-soft">Message</button>` : ''}
+              </div>
+            `).join('')}
           </div>
         </div>
 
@@ -113,6 +121,13 @@ import Footer from "../../components/Footer.astro";
       if (res.ok) { const conv = await res.json(); window.location.href = `/chat/${conv._id}`; }
       else { btn.textContent = 'Message Host'; alert('Failed to start conversation'); }
     });
+
+    // Message any attendee
+    (window as any).messageAttendee = async function(userId: string) {
+      const res = await fetch('/api/messages', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ recipientId: userId }) });
+      if (res.ok) { const conv = await res.json(); window.location.href = `/chat/${conv._id}`; }
+      else { alert('Failed to start conversation'); }
+    };
     document.getElementById('delete-btn')?.addEventListener('click', async () => {
       if (!confirm('Delete this meet permanently?')) return;
       await fetch(`/api/meets/${meetId}`, { method: 'DELETE' });
