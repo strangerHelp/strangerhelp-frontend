@@ -57,12 +57,21 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
     }
 
     if (action === 'complete' && proofUrls.length > 0) {
-      const task: any = await db.prepare("SELECT poster_id, title FROM tasks WHERE id = ?").bind(params.id).first();
-      await db.prepare("UPDATE tasks SET completion_status = 'pending', completion_proof = ? WHERE id = ? AND claimed_by = ?")
-        .bind(JSON.stringify(proofUrls), params.id, session).run();
-      if (task) {
-        await createNotification(db, task.poster_id, 'completion_pending', 'Proof Submitted', `${user?.name || 'Helper'} submitted completion proof for: ${task.title}. Please review and approve.`, `/tasks/${params.id}`);
+      const task: any = await db.prepare("SELECT poster_id, title, claimed_by, max_claimers FROM tasks WHERE id = ?").bind(params.id).first();
+      if (!task) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
+
+      // Confirm the caller holds the task before writing proof or notifying,
+      // so a non-assignee cannot spoof a "proof submitted" alert to the poster.
+      let isAssignee = task.claimed_by === session;
+      if (!isAssignee && (task.max_claimers || 1) > 1) {
+        const isClaimer: any = await db.prepare("SELECT id FROM claimed_users WHERE task_id = ? AND user_id = ?").bind(params.id, session).first();
+        isAssignee = !!isClaimer;
       }
+      if (!isAssignee) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+
+      await db.prepare("UPDATE tasks SET completion_status = 'pending', completion_proof = ? WHERE id = ?")
+        .bind(JSON.stringify(proofUrls), params.id).run();
+      await createNotification(db, task.poster_id, 'completion_pending', 'Proof Submitted', `${user?.name || 'Helper'} submitted completion proof for: ${task.title}. Please review and approve.`, `/tasks/${params.id}`);
     }
     return new Response(JSON.stringify({ ok: true, proofs: proofUrls }));
   }
@@ -167,18 +176,31 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
   }
 
   if (action === 'complete') {
-    const task: any = await db.prepare("SELECT poster_id, title, max_claimers FROM tasks WHERE id = ?").bind(params.id).first();
+    const task: any = await db.prepare("SELECT poster_id, title, max_claimers, claimed_by, completion_proof FROM tasks WHERE id = ?").bind(params.id).first();
     if (!task) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
-    // For group tasks, verify user is a claimer
-    if ((task.max_claimers || 1) > 1) {
+
+    // Verify the caller actually holds this task. Previously only group tasks
+    // were checked, and the notification fired regardless of whether the
+    // UPDATE matched, letting anyone spam "task completed" alerts to a poster.
+    let isAssignee = task.claimed_by === session;
+    if (!isAssignee && (task.max_claimers || 1) > 1) {
       const isClaimer: any = await db.prepare("SELECT id FROM claimed_users WHERE task_id = ? AND user_id = ?").bind(params.id, session).first();
-      if (!isClaimer) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+      isAssignee = !!isClaimer;
     }
-    await db.prepare("UPDATE tasks SET status = 'completed', completed_at = datetime('now') WHERE id = ? AND (claimed_by = ? OR ? IN (SELECT user_id FROM claimed_users WHERE task_id = ?))").bind(params.id, session, session, params.id).run();
-    if (task) {
-      await createNotification(db, task.poster_id, 'task_completed', 'Task Completed', `${user?.name || 'Helper'} completed: ${task.title}`, `/tasks/${params.id}`);
+    if (!isAssignee) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+
+    // Completion requires proof the poster can review. This path used to set
+    // status straight to 'completed', skipping the proof + approval flow that
+    // the multipart upload path enforces.
+    let proofs: unknown[] = [];
+    try { proofs = JSON.parse(task.completion_proof || '[]'); } catch { proofs = []; }
+    if (!Array.isArray(proofs) || proofs.length === 0) {
+      return new Response(JSON.stringify({ error: 'Submit completion proof before marking this task complete.' }), { status: 400 });
     }
-    return new Response(JSON.stringify({ ok: true }));
+
+    await db.prepare("UPDATE tasks SET completion_status = 'pending' WHERE id = ?").bind(params.id).run();
+    await createNotification(db, task.poster_id, 'completion_pending', 'Proof Submitted', `${user?.name || 'Helper'} marked "${task.title}" complete. Please review and approve.`, `/tasks/${params.id}`);
+    return new Response(JSON.stringify({ ok: true, status: 'pending' }));
   }
 
   if (action === 'start_tracking') {
@@ -191,8 +213,11 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
   if (action === 'update_location') {
     const task: any = await db.prepare("SELECT claimed_by FROM tasks WHERE id = ?").bind(params.id).first();
     if (!task || task.claimed_by !== session) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
-    const lat = body.lat; const lng = body.lng;
-    if (!lat || !lng) return new Response(JSON.stringify({ error: 'lat/lng required' }), { status: 400 });
+    const lat = Number(body.lat); const lng = Number(body.lng);
+    // `!lat` rejected the valid coordinate 0 and accepted out-of-range values.
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+      return new Response(JSON.stringify({ error: 'Valid lat/lng required' }), { status: 400 });
+    }
     await db.prepare("UPDATE tasks SET helper_lat = ?, helper_lng = ? WHERE id = ?").bind(lat, lng, params.id).run();
     return new Response(JSON.stringify({ ok: true }));
   }

@@ -21,7 +21,13 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   const hashed = await bcrypt.hash(password, 10);
-  await db.prepare("UPDATE users SET password = ? WHERE id = ?").bind(hashed, result.userId).run();
+
+  // Revoke every session issued before this moment. Session tokens are
+  // stateless HMACs, so without this an attacker holding a stolen cookie
+  // keeps access for the full 7-day window even after the victim resets.
+  const now = Math.floor(Date.now() / 1000);
+  await db.prepare("UPDATE users SET password = ?, token_valid_from = ? WHERE id = ?")
+    .bind(hashed, now, result.userId).run();
 
   return new Response(JSON.stringify({ ok: true, message: 'Password reset successfully. You can now log in.' }));
 };

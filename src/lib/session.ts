@@ -37,6 +37,16 @@ export async function createSession(userId: string): Promise<string> {
 
 /** Verify and extract userId from signed token. Returns null if invalid/expired. */
 export async function verifySession(token: string): Promise<string | null> {
+  const meta = await verifySessionWithMeta(token);
+  return meta ? meta.userId : null;
+}
+
+/**
+ * Verify a token and return both the userId and when it was issued.
+ * `issuedAt` lets callers reject tokens minted before a credential change,
+ * which is what gives us session revocation on password reset.
+ */
+export async function verifySessionWithMeta(token: string): Promise<{ userId: string; issuedAt: number } | null> {
   if (!token) return null;
   const parts = token.split(SEPARATOR);
   if (parts.length !== 3) return null;
@@ -47,8 +57,10 @@ export async function verifySession(token: string): Promise<string | null> {
   if (!(await hmacVerify(payload, sig))) return null;
 
   const created = parseInt(timestamp, 36);
+  if (!Number.isFinite(created)) return null;
+
   const now = Math.floor(Date.now() / 1000);
   if (now - created > SESSION_MAX_AGE) return null;
 
-  return userId;
+  return { userId, issuedAt: created };
 }

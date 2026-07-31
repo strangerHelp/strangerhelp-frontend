@@ -69,8 +69,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     .bind(id, session, user?.name || 'User', from_location, from_lat, from_lng, to_location, to_lat, to_lng, radius, recurring ? 1 : 0, expiresAt).run();
 
   // Notify posters whose tasks are along this path
-  const { results: openTasks } = await db.prepare("SELECT id, title, poster_id, lat, lng FROM tasks WHERE status = 'open' AND lat IS NOT NULL AND lng IS NOT NULL AND poster_id != ?").bind(session).all();
-  const matchedPosters = new Set<string>();
+  const { results: openTasks } = await db.prepare("SELECT id, title, poster_id, lat, lng FROM tasks WHERE status = 'open' AND lat IS NOT NULL AND lng IS NOT NULL AND poster_id != ? LIMIT 500").bind(session).all();
+  const matched = new Map<string, any>();
   (openTasks || []).forEach((t: any) => {
     const distFromStart = haversine(from_lat, from_lng, t.lat, t.lng);
     const distFromEnd = haversine(to_lat, to_lng, t.lat, t.lng);
@@ -79,13 +79,20 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const s = (distFromStart + distFromEnd + pathLength) / 2;
     const area = Math.sqrt(Math.max(0, s * (s - distFromStart) * (s - distFromEnd) * (s - pathLength)));
     const offPath = pathLength > 0 ? (2 * area) / pathLength : distFromStart;
-    if (onSegment && offPath <= radius && !matchedPosters.has(t.poster_id)) {
-      matchedPosters.add(t.poster_id);
-      createNotification(db, t.poster_id, 'helper_nearby', 'Helper Passing By!', `${user?.name || 'A helper'} is traveling near your task "${t.title}". They might be able to help!`, `/tasks/${t.id}`);
+    if (onSegment && offPath <= radius && !matched.has(t.poster_id)) {
+      matched.set(t.poster_id, t);
     }
   });
 
-  return new Response(JSON.stringify({ ok: true, id, matchedTasks: matchedPosters.size }), { status: 201 });
+  // These were previously fired inside forEach without await, so the Worker
+  // could return before they ran and the notifications were silently dropped.
+  // Capped so one path cannot fan out to unbounded writes.
+  const toNotify = Array.from(matched.values()).slice(0, 25);
+  await Promise.allSettled(toNotify.map((t: any) =>
+    createNotification(db, t.poster_id, 'helper_nearby', 'Helper Passing By!', `${user?.name || 'A helper'} is traveling near your task "${t.title}". They might be able to help!`, `/tasks/${t.id}`)
+  ));
+
+  return new Response(JSON.stringify({ ok: true, id, matchedTasks: matched.size }), { status: 201 });
 };
 
 // DELETE /api/path - deactivate path

@@ -57,7 +57,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     await db.prepare("UPDATE users SET verification_status = 'pending' WHERE id = ?").bind(session).run();
 
     return new Response(JSON.stringify({ ok: true }), { status: 200 });
-  } catch (e: any) {
-    return new Response(JSON.stringify({ error: 'Upload failed: ' + (e.message || 'Unknown error. Try smaller images.') }), { status: 500 });
+  } catch {
+    // Don't surface e.message - it can expose internal/database details.
+    return new Response(JSON.stringify({ error: 'Upload failed. Please try smaller images (under 2MB each).' }), { status: 500 });
   }
 };

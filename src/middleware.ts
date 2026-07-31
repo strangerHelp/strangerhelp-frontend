@@ -1,6 +1,7 @@
 import { defineMiddleware } from "astro:middleware";
 import { env } from "cloudflare:workers";
 import { verifySession } from "./lib/session";
+import { clearSessionCookie } from "./lib/cookies";
 
 const PROTECTED_ROUTES = ["/dashboard", "/tasks/my-tasks", "/tasks/new", "/chat", "/karma", "/referral", "/admin"];
 const AUTH_ROUTES = ["/login", "/register"];
@@ -40,19 +41,21 @@ export const onRequest = defineMiddleware(async ({ cookies, url, redirect, reque
       const db = (env as any).DB as D1Database;
       const user: any = await db.prepare("SELECT banned FROM users WHERE id = ?").bind(userId).first();
       if (user?.banned) {
-        cookies.delete("session", { path: "/" });
+        clearSessionCookie(cookies, url);
         return redirect("/banned");
       }
     } catch {}
   }
 
-  // Only cache GET requests from non-authenticated contexts for public data
+  // Only cache GET requests for public data.
   if (request.method === "GET" && !NO_CACHE.some(p => url.pathname.startsWith(p))) {
     const cacheDuration = CACHE_RULES.find(([path]) => url.pathname.startsWith(path))?.[1];
     if (cacheDuration) {
-      // Don't cache if user is logged in and it's a personalized route
       const isPersonalized = url.searchParams.get('mine') === 'true';
-      if (!isPersonalized) {
+      // Never serve or populate the shared edge cache for a signed-in request:
+      // /api/tasks varies by session, so a cached copy could otherwise be
+      // handed to a different user.
+      if (!isPersonalized && !userId) {
         const cache = caches.default;
         const cacheKey = new Request(url.toString(), { method: "GET" });
         const cached = await cache.match(cacheKey);
