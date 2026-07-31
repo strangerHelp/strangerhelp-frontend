@@ -41,19 +41,39 @@ export async function verifyEmailToken(db: D1Database, token: string, type: 'res
   return { userId: row.user_id, email: row.email };
 }
 
-/** Send email — PLACEHOLDER: Replace with real email service (Cloudflare Email, Resend, etc.) */
+/** Send email via Brevo API */
 export async function sendEmail(to: string, subject: string, html: string) {
-  // TODO: Replace with your no-reply@strangerhelp.com email service
-  // Options:
-  // 1. Cloudflare Email Routing + Workers Email Send
-  // 2. Resend API: await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: 'Bearer YOUR_KEY', 'Content-Type': 'application/json' }, body: JSON.stringify({ from: 'no-reply@strangerhelp.com', to, subject, html }) })
-  // 3. SMTP via MailChannels (free for Cloudflare Workers)
+  const apiKey = (env as any).BREVO_API_KEY;
+  if (!apiKey) {
+    console.log(`[EMAIL] No API key — To: ${to} | Subject: ${subject}`);
+    return false;
+  }
 
-  console.log(`[EMAIL] To: ${to} | Subject: ${subject}`);
-  console.log(`[EMAIL] Body: ${html.slice(0, 200)}...`);
+  try {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key': apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: { name: 'StrangerHelp', email: 'no-reply@strangerhelp.com' },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+      }),
+    });
 
-  // For now, log to Workers logs (visible via wrangler tail)
-  return true;
+    if (!res.ok) {
+      const err = await res.text();
+      console.error(`[EMAIL] Brevo error: ${res.status} ${err}`);
+      return false;
+    }
+    return true;
+  } catch (e: any) {
+    console.error(`[EMAIL] Failed: ${e.message}`);
+    return false;
+  }
 }
 
 /** Send password reset email */
