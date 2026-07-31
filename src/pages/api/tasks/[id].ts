@@ -29,6 +29,9 @@ export const GET: APIRoute = async ({ params }) => {
     maxClaimers: task.max_claimers || 1,
     claimedUsers,
     claimRequests: claimRequests || [],
+    trackingActive: task.tracking_active === 1,
+    helperLat: task.helper_lat,
+    helperLng: task.helper_lng,
     completionProof: JSON.parse(task.completion_proof || '[]'),
     attachments: JSON.parse(task.attachments || '[]'), createdAt: task.created_at,
   }));
@@ -175,6 +178,29 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
     if (task) {
       await createNotification(db, task.poster_id, 'task_completed', 'Task Completed', `${user?.name || 'Helper'} completed: ${task.title}`, `/tasks/${params.id}`);
     }
+    return new Response(JSON.stringify({ ok: true }));
+  }
+
+  if (action === 'start_tracking') {
+    const task: any = await db.prepare("SELECT claimed_by FROM tasks WHERE id = ?").bind(params.id).first();
+    if (!task || task.claimed_by !== session) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+    await db.prepare("UPDATE tasks SET tracking_active = 1 WHERE id = ?").bind(params.id).run();
+    return new Response(JSON.stringify({ ok: true }));
+  }
+
+  if (action === 'update_location') {
+    const task: any = await db.prepare("SELECT claimed_by FROM tasks WHERE id = ?").bind(params.id).first();
+    if (!task || task.claimed_by !== session) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+    const lat = body.lat; const lng = body.lng;
+    if (!lat || !lng) return new Response(JSON.stringify({ error: 'lat/lng required' }), { status: 400 });
+    await db.prepare("UPDATE tasks SET helper_lat = ?, helper_lng = ? WHERE id = ?").bind(lat, lng, params.id).run();
+    return new Response(JSON.stringify({ ok: true }));
+  }
+
+  if (action === 'stop_tracking') {
+    const task: any = await db.prepare("SELECT claimed_by, poster_id, title FROM tasks WHERE id = ?").bind(params.id).first();
+    if (!task || task.claimed_by !== session) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+    await db.prepare("UPDATE tasks SET tracking_active = 0, helper_lat = NULL, helper_lng = NULL WHERE id = ?").bind(params.id).run();
     return new Response(JSON.stringify({ ok: true }));
   }
 

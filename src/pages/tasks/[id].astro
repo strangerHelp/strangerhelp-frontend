@@ -164,18 +164,41 @@ import Footer from "../../components/Footer.astro";
       } else {
         actionsHtml = `
           <div class="w-full">
-            <p class="text-sm font-medium text-ink mb-2">Upload completion proof:</p>
-            <label for="proof-files" class="flex flex-col items-center justify-center h-24 border-2 border-dashed border-hairline rounded-lg hover:border-ink cursor-pointer transition-colors bg-canvas-soft">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-mute mb-1"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-              <span class="text-xs text-mute">Tap to upload photos or PDF</span>
-              <span id="proof-file-names" class="text-xs text-link mt-1"></span>
-            </label>
-            <input type="file" id="proof-files" accept="image/*,.pdf" multiple class="hidden" />
-            <button id="complete-btn" class="mt-3 w-full h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity">Submit Proof & Complete</button>
+            ${!task.trackingActive ? `
+              <button id="start-task-btn" class="w-full h-11 flex items-center justify-center gap-2 text-sm font-medium text-on-primary bg-cyan-deep rounded-full hover:opacity-90 transition-opacity mb-3">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                Start Task (Share Live Location)
+              </button>` : `
+              <div class="p-3 bg-cyan-soft/30 rounded-md border border-cyan/20 mb-3">
+                <p class="text-xs text-cyan-deep font-medium">📍 Live tracking active — poster can see your location</p>
+                <button id="stop-tracking-btn" class="mt-2 text-xs text-error hover:underline">Stop sharing location</button>
+              </div>`}
+            <p class="text-sm font-medium text-ink mb-2">Submit completion proof (GPS camera):</p>
+            <button id="open-camera-btn" class="w-full h-12 flex items-center justify-center gap-2 text-sm font-medium text-ink border-2 border-dashed border-hairline rounded-lg hover:border-ink cursor-pointer transition-colors mb-2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              Take Photo with GPS Stamp
+            </button>
+            <canvas id="proof-canvas" class="hidden"></canvas>
+            <div id="proof-preview" class="hidden mb-2"></div>
+            <input type="file" id="proof-camera" accept="image/*" capture="environment" class="hidden" />
+            <button id="complete-btn" class="w-full h-11 flex items-center justify-center text-sm font-medium text-on-primary bg-primary rounded-full hover:opacity-90 transition-opacity disabled:opacity-50" disabled>Submit Proof & Complete</button>
             <div class="mt-3">${messageBtn}</div>
           </div>`;
       }
     } else if (task.status === 'claimed' && isOwner) {
+      // Live tracking section
+      let trackingHtml = '';
+      if (task.trackingActive && task.helperLat && task.helperLng) {
+        const distToTask = task.lat && task.lng ? haversineJS(task.helperLat, task.helperLng, task.lat, task.lng) : null;
+        trackingHtml = `
+          <div class="mb-3 p-3 bg-cyan-soft/30 rounded-md border border-cyan/20">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-deep opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-deep"></span></span>
+              <p class="text-xs font-medium text-cyan-deep">📍 Live Tracking Active</p>
+            </div>
+            <p class="text-xs text-body">Helper is ${distToTask ? distToTask.toFixed(1) + ' km from task location' : 'on the move'}</p>
+          </div>`;
+      }
       if (task.completion_status === 'pending') {
         actionsHtml = `
           <div class="w-full">
@@ -192,7 +215,7 @@ import Footer from "../../components/Footer.astro";
       } else if (task.completion_status === 'rejected') {
         actionsHtml = `<p class="text-sm text-warning-deep font-medium">⚠️ Proof rejected — waiting for helper to resubmit</p><p class="text-xs text-mute mt-1">Reason: ${escapeHtml(task.rejection_reason || '')}</p>${messageBtn}`;
       } else {
-        actionsHtml = `<p class="text-sm text-cyan-deep font-medium">✓ Claimed by ${escapeHtml(task.claimedByName || 'a helper')}${task.claimerVerified ? ' <span class="text-link text-xs">✓ Verified</span>' : ''}</p><p class="text-xs text-mute mt-1">Waiting for helper to submit completion proof</p>${messageBtn}`;
+        actionsHtml = `${trackingHtml}<p class="text-sm text-cyan-deep font-medium">✓ Claimed by ${escapeHtml(task.claimedByName || 'a helper')}${task.claimerVerified ? ' <span class="text-link text-xs">✓ Verified</span>' : ''}</p><p class="text-xs text-mute mt-1">Waiting for helper to submit completion proof</p>${messageBtn}`;
       }
     } else if (task.status === 'completed') {
       actionsHtml = `<p class="text-sm text-mute font-medium">✓ Task completed</p>${messageBtn}`;
@@ -363,6 +386,76 @@ import Footer from "../../components/Footer.astro";
       }
     });
 
+    // Start task tracking
+    document.getElementById('start-task-btn')?.addEventListener('click', async () => {
+      if (!navigator.geolocation) { alert('Geolocation not supported'); return; }
+      await fetch(`/api/tasks/${taskId}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'start_tracking' }) });
+      // Start broadcasting location
+      (window as any)._trackingWatch = navigator.geolocation.watchPosition(async (pos) => {
+        await fetch(`/api/tasks/${taskId}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'update_location', lat: pos.coords.latitude, lng: pos.coords.longitude }) });
+      }, () => {}, { enableHighAccuracy: true, maximumAge: 10000 });
+      const r = await fetch(`/api/tasks/${taskId}`); task = await r.json(); render();
+    });
+
+    // Stop tracking
+    document.getElementById('stop-tracking-btn')?.addEventListener('click', async () => {
+      if ((window as any)._trackingWatch) navigator.geolocation.clearWatch((window as any)._trackingWatch);
+      await fetch(`/api/tasks/${taskId}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'stop_tracking' }) });
+      const r = await fetch(`/api/tasks/${taskId}`); task = await r.json(); render();
+    });
+
+    // GPS Camera — take photo with watermark
+    document.getElementById('open-camera-btn')?.addEventListener('click', () => {
+      document.getElementById('proof-camera')!.click();
+    });
+
+    document.getElementById('proof-camera')?.addEventListener('change', async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      // Get GPS
+      const pos: any = await new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(resolve, () => resolve(null), { enableHighAccuracy: true });
+      });
+      const lat = pos?.coords?.latitude?.toFixed(6) || 'N/A';
+      const lng = pos?.coords?.longitude?.toFixed(6) || 'N/A';
+      const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+
+      // Draw watermark on canvas
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.getElementById('proof-canvas') as HTMLCanvasElement;
+        const maxW = 1200;
+        const scale = img.width > maxW ? maxW / img.width : 1;
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // Watermark background
+        const barH = 60;
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillRect(0, canvas.height - barH, canvas.width, barH);
+
+        // Text
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 14px system-ui';
+        ctx.fillText('StrangerHelp — Verified Proof', 12, canvas.height - barH + 20);
+        ctx.font = '12px system-ui';
+        ctx.fillText(`📍 ${lat}, ${lng}  |  🕐 ${now}`, 12, canvas.height - barH + 42);
+        ctx.fillText('strangerhelp.com', canvas.width - 130, canvas.height - barH + 42);
+
+        // Show preview
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        document.getElementById('proof-preview')!.innerHTML = `<img src="${dataUrl}" class="w-full rounded-md border border-hairline" />`;
+        document.getElementById('proof-preview')!.classList.remove('hidden');
+        document.getElementById('complete-btn')!.removeAttribute('disabled');
+
+        // Store for upload
+        (window as any)._proofDataUrl = dataUrl;
+      };
+      img.src = URL.createObjectURL(file);
+    });
+
     // Init mini-map if task has coordinates
     if (task.lat && task.lng && document.getElementById('task-map')) {
       initTaskMap(task.lat, task.lng);
@@ -492,25 +585,40 @@ import Footer from "../../components/Footer.astro";
   }
 
   async function completeTask() {
-    const files = (document.getElementById('proof-files') as HTMLInputElement).files;
-    if (!files || files.length === 0) {
-      alert('Please upload at least one proof photo');
+    const proofDataUrl = (window as any)._proofDataUrl;
+    const files = (document.getElementById('proof-files') as HTMLInputElement)?.files;
+
+    // Use GPS camera proof if available, otherwise fallback to file input
+    if (!proofDataUrl && (!files || files.length === 0)) {
+      alert('Please take a photo with GPS stamp to submit proof');
       return;
     }
+
     const btn = document.getElementById('complete-btn')!;
     btn.textContent = 'Submitting...';
 
     const fd = new FormData();
     fd.append('action', 'complete');
-    for (let i = 0; i < files.length; i++) fd.append('proof', await (window as any).compressImage(files[i]));
 
-    const res = await fetch(`/api/tasks/${taskId}`, { method: 'PATCH', body: fd });
-    if (res.ok) {
+    if (proofDataUrl) {
+      // Convert data URL to blob
+      const res = await fetch(proofDataUrl);
+      const blob = await res.blob();
+      fd.append('proof', new File([blob], 'gps-proof.jpg', { type: 'image/jpeg' }));
+    } else if (files) {
+      for (let i = 0; i < files.length; i++) fd.append('proof', await (window as any).compressImage(files[i]));
+    }
+
+    const result = await fetch(`/api/tasks/${taskId}`, { method: 'PATCH', body: fd });
+    if (result.ok) {
+      // Stop tracking if active
+      if ((window as any)._trackingWatch) navigator.geolocation.clearWatch((window as any)._trackingWatch);
+      await fetch(`/api/tasks/${taskId}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'stop_tracking' }) });
       const r = await fetch(`/api/tasks/${taskId}`);
       task = await r.json();
       render();
     } else {
-      alert('Failed to complete task');
+      alert('Failed to submit proof');
       btn.textContent = 'Submit Proof & Complete';
     }
   }
@@ -675,6 +783,14 @@ import Footer from "../../components/Footer.astro";
 
   function escapeHtml(s: string) {
     return s?.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') || '';
+  }
+
+  function haversineJS(lat1: number, lng1: number, lat2: number, lng2: number): number {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   }
 
   init();
