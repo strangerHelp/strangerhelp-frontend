@@ -21,23 +21,6 @@ import Navbar from "../components/Navbar.astro";
         </div>
         <p class="text-xs text-body mb-3">Real-time view of helpers and open tasks near you.</p>
 
-        <!-- Stats row -->
-        <div class="grid grid-cols-3 gap-2 mb-3">
-          <div class="p-2 bg-canvas-soft rounded text-center">
-            <p class="text-sm font-bold text-cyan-deep" id="stat-helpers">0</p>
-            <p class="text-[9px] text-mute">Helpers</p>
-          </div>
-          <div class="p-2 bg-canvas-soft rounded text-center">
-            <p class="text-sm font-bold text-warning" id="stat-tasks">0</p>
-            <p class="text-[9px] text-mute">Tasks</p>
-          </div>
-          <div class="p-2 bg-canvas-soft rounded text-center">
-            <p class="text-sm font-bold text-ink" id="stat-total-budget">₹0</p>
-            <p class="text-[9px] text-mute">Available</p>
-          </div>
-        </div>
-
-        <!-- Go online toggle -->
         <div class="flex items-center justify-between p-2.5 bg-canvas-soft rounded-md border border-hairline mb-3">
           <div>
             <p class="text-xs font-medium text-ink">Go Online as Helper</p>
@@ -48,38 +31,22 @@ import Navbar from "../components/Navbar.astro";
           </button>
         </div>
 
-        <!-- Path shortcut -->
-        <a href="/path" class="flex items-center gap-2 p-2 bg-canvas-soft rounded-md border border-hairline hover:border-hairline-strong transition-colors">
-          <span class="text-sm">🛣️</span>
-          <div>
-            <p class="text-xs font-medium text-ink">Set Your Path</p>
-            <p class="text-[10px] text-mute">Find tasks along your route</p>
-          </div>
-        </a>
-
-        <!-- Legend -->
-        <div class="flex gap-3 mt-3 text-[10px] text-mute">
+        <div class="flex gap-3 text-[10px] text-mute">
           <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-cyan-deep"></span> Helpers</span>
-          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-warning"></span> Tasks</span>
-          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-error"></span> Urgent</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-warning"></span> Open Tasks</span>
         </div>
       </div>
     </div>
 
     <div class="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 z-10 space-y-2">
-      <div id="tasks-panel" class="max-h-56 overflow-y-auto p-3 bg-canvas/95 backdrop-blur-md rounded-lg border border-hairline shadow-[0px_8px_16px_-4px_#0000000a]">
+      <div id="tasks-panel" class="max-h-48 overflow-y-auto p-3 bg-canvas/95 backdrop-blur-md rounded-lg border border-hairline shadow-[0px_8px_16px_-4px_#0000000a]">
         <p class="text-xs font-semibold text-ink mb-2">Open Tasks Nearby</p>
         <div id="tasks-list" class="space-y-1.5 text-xs text-body">Loading...</div>
       </div>
-      <div class="flex gap-2">
-        <a href="/tasks/new" class="flex-1 flex items-center justify-center gap-2 h-11 bg-primary text-on-primary text-sm font-medium rounded-full shadow-lg hover:opacity-90 transition-opacity">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-          Post Task
-        </a>
-        <a href="/tasks" class="flex items-center justify-center h-11 px-4 bg-canvas text-ink text-sm font-medium rounded-full border border-hairline shadow-lg hover:bg-canvas-soft-2 transition-colors">
-          Browse All
-        </a>
-      </div>
+      <a href="/tasks/new" class="flex items-center justify-center gap-2 h-11 bg-primary text-on-primary text-sm font-medium rounded-full shadow-lg hover:opacity-90 transition-opacity">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Post a Task
+      </a>
     </div>
   </main>
   <script is:inline src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
@@ -108,10 +75,6 @@ import Navbar from "../components/Navbar.astro";
       fetch('/api/pulse').then(function(r) { return r.json(); }).then(function(data) {
         var tasks = data.tasks, helpers = data.helpers;
         document.getElementById('online-count').textContent = helpers.length + ' online';
-        document.getElementById('stat-helpers').textContent = helpers.length;
-        document.getElementById('stat-tasks').textContent = tasks.length;
-        var totalBudget = tasks.reduce(function(s, t) { return s + (t.budget || 0); }, 0);
-        document.getElementById('stat-total-budget').textContent = '₹' + totalBudget.toLocaleString();
 
         helperMarkers.forEach(function(m) { m.remove(); });
         taskMarkers.forEach(function(m) { m.remove(); });
@@ -120,7 +83,7 @@ import Navbar from "../components/Navbar.astro";
 
         helpers.forEach(function(h) {
           var el = document.createElement('div');
-          el.style.cssText = 'width:18px;height:18px;background:#29bc9b;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 8px rgba(41,188,155,.4);cursor:pointer;animation:pulse-dot 2s infinite;';
+          el.style.cssText = 'width:16px;height:16px;background:#29bc9b;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);cursor:pointer;';
           var popup = new maplibregl.Popup({ offset: 12 }).setHTML(
             '<div style="font-size:13px;font-weight:600;">' + esc(h.name) + '</div><div style="font-size:11px;color:#666;">' + esc(h.city || 'Helper') + '</div>'
           );
@@ -130,11 +93,10 @@ import Navbar from "../components/Navbar.astro";
 
         tasks.forEach(function(t) {
           if (!t.lat || !t.lng) return;
-          var isUrgent = t.urgent === 1;
           var el = document.createElement('div');
-          el.style.cssText = 'width:18px;height:18px;background:' + (isUrgent ? '#ee0000' : '#f5a623') + ';border-radius:50%;border:2px solid #fff;box-shadow:0 2px 8px rgba(245,166,35,.4);cursor:pointer;' + (isUrgent ? 'animation:pulse-urgent 1s infinite;' : '');
+          el.style.cssText = 'width:16px;height:16px;background:#f5a623;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);cursor:pointer;';
           var popup = new maplibregl.Popup({ offset: 12 }).setHTML(
-            '<div style="font-size:13px;font-weight:600;">' + (isUrgent ? '⚡ ' : '') + esc(t.title) + '</div><div style="font-size:11px;color:#666;">₹' + t.budget + ' · ' + esc(t.location) + '</div><div style="font-size:10px;color:#888;margin-top:2px;">' + (t.category || '') + '</div><a href="/tasks/' + t._id + '" style="display:inline-block;margin-top:6px;font-size:11px;color:#fff;background:#171717;padding:4px 10px;border-radius:12px;text-decoration:none;">Claim Task →</a>'
+            '<div style="font-size:13px;font-weight:600;">' + esc(t.title) + '</div><div style="font-size:11px;color:#666;">₹' + t.budget + ' · ' + esc(t.location) + '</div><a href="/tasks/' + t._id + '" style="font-size:11px;color:#0070f3;">View Task →</a>'
           );
           var marker = new maplibregl.Marker({ element: el }).setLngLat([t.lng, t.lat]).setPopup(popup).addTo(map);
           taskMarkers.push(marker);
@@ -142,10 +104,10 @@ import Navbar from "../components/Navbar.astro";
 
         var list = document.getElementById('tasks-list');
         if (tasks.length === 0) {
-          list.innerHTML = '<p class="text-mute text-center py-4">No open tasks right now. Post one!</p>';
+          list.innerHTML = '<p class="text-mute">No open tasks right now.</p>';
         } else {
-          list.innerHTML = tasks.slice(0, 8).map(function(t) {
-            return '<a href="/tasks/' + t._id + '" class="flex items-center gap-2 p-2 rounded-md hover:bg-canvas-soft-2 transition-colors"><span class="w-2 h-2 rounded-full shrink-0 ' + (t.urgent ? 'bg-error' : 'bg-warning') + '"></span><div class="flex-1 min-w-0"><p class="text-xs font-medium text-ink truncate">' + esc(t.title) + '</p><p class="text-[10px] text-mute">' + esc((t.location || '').split(',')[0]) + '</p></div><span class="text-xs font-bold text-ink shrink-0">₹' + t.budget + '</span></a>';
+          list.innerHTML = tasks.slice(0, 6).map(function(t) {
+            return '<a href="/tasks/' + t._id + '" class="flex items-center justify-between p-1.5 rounded hover:bg-canvas-soft-2 transition-colors"><span class="truncate">' + esc(t.title) + '</span><span class="shrink-0 ml-2 font-medium text-ink">₹' + t.budget + '</span></a>';
           }).join('');
         }
       }).catch(function() {});
@@ -181,8 +143,4 @@ import Navbar from "../components/Navbar.astro";
     initPulseMap();
     setInterval(loadPulseData, 5000);
   </script>
-  <style is:inline>
-    @keyframes pulse-dot { 0%,100% { transform: scale(1); } 50% { transform: scale(1.2); } }
-    @keyframes pulse-urgent { 0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(238,0,0,.4); } 50% { transform: scale(1.3); box-shadow: 0 0 0 8px rgba(238,0,0,0); } }
-  </style>
 </Layout>
