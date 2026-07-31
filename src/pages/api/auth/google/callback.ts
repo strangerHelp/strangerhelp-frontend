@@ -57,7 +57,7 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   }
 
   const token = await createSession(user.id);
-  cookies.set('session', token, { httpOnly: true, secure: true, path: '/', maxAge: 60 * 60 * 24 * 7, sameSite: 'lax' });
+  cookies.set('session', token, { httpOnly: true, secure: true, path: '/', maxAge: 60 * 60 * 24 * 7, sameSite: 'lax', domain: '.strangerhelp.com' });
 
   return redirect('/dashboard');
 };

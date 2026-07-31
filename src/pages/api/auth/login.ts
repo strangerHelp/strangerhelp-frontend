@@ -35,7 +35,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     }
 
     const token = await createSession(user.id);
-    cookies.set('session', token, { httpOnly: true, secure: true, path: '/', maxAge: 60 * 60 * 24 * 7, sameSite: 'lax' });
+    cookies.set('session', token, { httpOnly: true, secure: true, path: '/', maxAge: 60 * 60 * 24 * 7, sameSite: 'lax', domain: '.strangerhelp.com' });
     return new Response(JSON.stringify({ id: user.id, name: user.name }), { status: 200 });
   } catch (e: any) {
     return new Response(JSON.stringify({ error: 'Server error' }), { status: 500 });

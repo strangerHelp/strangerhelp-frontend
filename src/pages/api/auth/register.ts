@@ -39,7 +39,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     await db.prepare("INSERT INTO users (id, name, email, password, city, area, bio) VALUES (?, ?, ?, ?, ?, ?, ?)").bind(id, name, email, hashed, city, address || '', country || '').run();
 
     const token = await createSession(id);
-    cookies.set('session', token, { httpOnly: true, secure: true, path: '/', maxAge: 60 * 60 * 24 * 7, sameSite: 'lax' });
+    cookies.set('session', token, { httpOnly: true, secure: true, path: '/', maxAge: 60 * 60 * 24 * 7, sameSite: 'lax', domain: '.strangerhelp.com' });
 
     // Send verification email (non-blocking)
     try {
