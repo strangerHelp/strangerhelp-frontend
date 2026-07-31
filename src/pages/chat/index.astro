@@ -39,11 +39,12 @@ import Navbar from "../../components/Navbar.astro";
     container.innerHTML = convs.map((c: any) => {
       const otherIdx = c.participants.findIndex((p: string) => p !== user.id);
       const otherName = c.participantNames?.[otherIdx] || 'User';
-      return `<a href="/chat/${c._id}" class="flex items-start gap-3 p-4 border-b border-hairline hover:bg-canvas-soft transition-colors">
-        <div class="w-9 h-9 rounded-full bg-canvas-soft-2 flex items-center justify-center text-xs font-semibold text-body shrink-0">${otherName.slice(0,2).toUpperCase()}</div>
+      const esc = (window as any).escapeHtml;
+      return `<a href="/chat/${encodeURIComponent(c._id)}" class="flex items-start gap-3 p-4 border-b border-hairline hover:bg-canvas-soft transition-colors">
+        <div class="w-9 h-9 rounded-full bg-canvas-soft-2 flex items-center justify-center text-xs font-semibold text-body shrink-0">${esc(otherName.slice(0,2).toUpperCase())}</div>
         <div class="flex-1 min-w-0">
-          <span class="text-sm font-medium text-ink truncate block">${otherName}</span>
-          <p class="text-xs text-mute truncate mt-0.5">${c.lastMessage || 'No messages'}</p>
+          <span class="text-sm font-medium text-ink truncate block">${esc(otherName)}</span>
+          <p class="text-xs text-mute truncate mt-0.5">${c.lastMessage ? esc(c.lastMessage) : 'No messages'}</p>
         </div>
       </a>`;
     }).join('');

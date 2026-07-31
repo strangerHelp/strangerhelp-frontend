@@ -62,17 +62,27 @@ const categories = ["All", "Govt. Offices", "Traffic", "Weather", "Schools", "Ho
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 mb-1">
-            <span class="px-2 py-0.5 text-xs font-medium text-body bg-canvas-soft-2 rounded-full">${q.category}</span>
+            <span class="px-2 py-0.5 text-xs font-medium text-body bg-canvas-soft-2 rounded-full">${esc(q.category)}</span>
           </div>
-          <h3 class="text-sm font-semibold text-ink group-hover:text-link transition-colors">${q.text}</h3>
+          <h3 class="text-sm font-semibold text-ink group-hover:text-link transition-colors">${esc(q.text)}</h3>
           <div class="mt-2 flex items-center gap-3 text-xs text-mute">
-            <span>${q.location}</span>
+            <span>${esc(q.location)}</span>
             <span>·</span>
-            <span>${time}</span>
+            <span>${esc(time)}</span>
           </div>
         </div>
       </a>`;
     }).join('');
+  }
+
+  function esc(s: any) {
+    if (s === null || s === undefined) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   document.querySelectorAll('.cat-btn').forEach(btn => {

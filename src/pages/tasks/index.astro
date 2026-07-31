@@ -157,7 +157,7 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
       return `<a href="/tasks/${t._id}" class="group p-5 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong hover:shadow-md shadow-[0px_1px_1px_#00000005,0px_2px_2px_#0000000a] transition-all">
         <div class="flex items-center justify-between mb-2">
           <div class="flex items-center gap-1.5 flex-wrap">
-            <span class="px-2 py-0.5 text-xs font-medium text-body bg-canvas-soft-2 rounded-full">${t.category}</span>
+            <span class="px-2 py-0.5 text-xs font-medium text-body bg-canvas-soft-2 rounded-full">${esc(t.category)}</span>
             ${t.urgent ? '<span class="px-2 py-0.5 text-xs font-bold bg-error-soft text-error rounded-full">⚡ Urgent</span>' : ''}
             ${t.maxClaimers > 1 ? `<span class="px-2 py-0.5 text-xs font-medium bg-violet-soft text-violet-deep rounded-full">👥 ${t.maxClaimers}</span>` : ''}
           </div>
@@ -178,7 +178,7 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
         </div>
         <div class="mt-3 pt-3 border-t border-hairline flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span class="w-5 h-5 rounded-full bg-canvas-soft-2 flex items-center justify-center text-[8px] font-bold text-body">${t.anonymous ? '?' : (t.posterName || 'U')[0].toUpperCase()}</span>
+            <span class="w-5 h-5 rounded-full bg-canvas-soft-2 flex items-center justify-center text-[8px] font-bold text-body">${t.anonymous ? '?' : esc((t.posterName || 'U')[0].toUpperCase())}</span>
             <span class="text-xs text-body">${t.anonymous ? 'Anonymous' : esc(t.posterName || 'User')}${t.posterVerified ? ' <span class="text-link text-[10px]">✓</span>' : ''}</span>
           </div>
           <span class="px-2 py-0.5 text-[10px] font-medium rounded-full ${t.status === 'open' ? 'bg-cyan-soft text-cyan-deep' : t.status === 'claimed' ? 'bg-warning-soft text-warning-deep' : 'bg-canvas-soft-2 text-mute'}">${t.status}</span>
@@ -187,7 +187,16 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
     }).join('');
   }
 
-  function esc(s: string) { return s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || ''; }
+  // Escapes quotes too, so values are safe in attributes as well as content.
+  function esc(s: any) {
+    if (s === null || s === undefined) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 
   function showActiveState(name: string) {
     document.getElementById('loc-ask')!.classList.add('hidden');

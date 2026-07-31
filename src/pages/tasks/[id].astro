@@ -236,11 +236,13 @@ import Footer from "../../components/Footer.astro";
     let attachmentsHtml = '';
     if (task.attachments?.length > 0) {
       attachmentsHtml = `<div class="mt-4"><p class="text-xs text-mute font-mono uppercase mb-2">Attachments</p><div class="flex gap-2 flex-wrap">${task.attachments.map((a: string, i: number) => {
-        const isImage = a.startsWith('data:image') || a.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-        const isAudio = a.startsWith('data:audio') || a.match(/\.(webm|mp3|ogg|wav)$/i);
-        if (isAudio) return `<audio controls class="h-10 max-w-full" src="${a}"></audio>`;
-        if (isImage) return `<img src="${a}" onclick="viewImage(this.src)" class="w-24 h-24 object-cover rounded-md border border-hairline cursor-pointer" />`;
-        return `<a href="${a}" target="_blank" class="inline-flex h-9 items-center px-3 text-xs font-medium text-link border border-hairline rounded-md hover:bg-canvas-soft-2">View File ${i + 1}</a>`;
+        const url = safeUrl(a);
+        if (!url) return '';
+        const isImage = url.startsWith('data:image') || url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+        const isAudio = url.startsWith('data:audio') || url.match(/\.(webm|mp3|ogg|wav)$/i);
+        if (isAudio) return `<audio controls class="h-10 max-w-full" src="${url}"></audio>`;
+        if (isImage) return `<img src="${url}" onclick="viewImage(this.src)" class="w-24 h-24 object-cover rounded-md border border-hairline cursor-pointer" />`;
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="inline-flex h-9 items-center px-3 text-xs font-medium text-link border border-hairline rounded-md hover:bg-canvas-soft-2">View File ${i + 1}</a>`;
       }).join('')}</div></div>`;
     }
 
@@ -249,10 +251,12 @@ import Footer from "../../components/Footer.astro";
       proofHtml = `<div class="mt-6 p-4 bg-cyan-soft/30 rounded-lg border border-cyan/20">
         <p class="text-sm font-medium text-ink mb-2">Completion Proof</p>
         <div class="flex gap-2 flex-wrap">${task.completionProof.map((p: string, i: number) => {
-          const isImage = p.startsWith('data:image') || p.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+          const url = safeUrl(p);
+          if (!url) return '';
+          const isImage = url.startsWith('data:image') || url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
           return isImage
-            ? `<img src="${p}" onclick="viewImage(this.src)" class="w-24 h-24 object-cover rounded-md border border-hairline cursor-pointer" />`
-            : `<a href="${p}" target="_blank" class="inline-flex h-9 items-center px-3 text-xs font-medium text-link border border-hairline rounded-md hover:bg-canvas-soft-2">View Proof ${i + 1}</a>`;
+            ? `<img src="${url}" onclick="viewImage(this.src)" class="w-24 h-24 object-cover rounded-md border border-hairline cursor-pointer" />`
+            : `<a href="${url}" target="_blank" rel="noopener noreferrer" class="inline-flex h-9 items-center px-3 text-xs font-medium text-link border border-hairline rounded-md hover:bg-canvas-soft-2">View Proof ${i + 1}</a>`;
         }).join('')}</div>
       </div>`;
     }
@@ -283,7 +287,7 @@ import Footer from "../../components/Footer.astro";
             <span class="px-2 py-0.5 text-xs font-medium rounded-full ${(task.claimedUsers?.length || 0) >= task.maxClaimers ? 'bg-error-soft text-error' : 'bg-cyan-soft text-cyan-deep'}">${(task.claimedUsers?.length || 0) >= task.maxClaimers ? 'Full' : 'Open'}</span>
           </div>
           <div class="w-full h-2 bg-hairline rounded-full overflow-hidden"><div class="h-full bg-cyan-deep rounded-full" style="width:${Math.round(((task.claimedUsers?.length || 0) / task.maxClaimers) * 100)}%"></div></div>
-          ${task.claimedUsers?.length > 0 ? `<div class="mt-3 space-y-1">${task.claimedUsers.map((u: any) => `<div class="flex items-center gap-2 text-xs text-body"><span class="w-5 h-5 rounded-full bg-canvas-soft-2 flex items-center justify-center text-[10px] font-semibold">${(u.user_name || '?')[0].toUpperCase()}</span>${escapeHtml(u.user_name)}</div>`).join('')}</div>` : ''}
+          ${task.claimedUsers?.length > 0 ? `<div class="mt-3 space-y-1">${task.claimedUsers.map((u: any) => `<div class="flex items-center gap-2 text-xs text-body"><span class="w-5 h-5 rounded-full bg-canvas-soft-2 flex items-center justify-center text-[10px] font-semibold">${escapeHtml((u.user_name || '?')[0].toUpperCase())}</span>${escapeHtml(u.user_name)}</div>`).join('')}</div>` : ''}
         </div>` : ''}
         ${task.lat && task.lng ? `
         <div class="mt-6">
@@ -553,7 +557,7 @@ import Footer from "../../components/Footer.astro";
     fetch(`/api/reviews?taskId=${taskId}`).then(r => r.json()).then(data => {
       const myReview = data.reviews?.find((r: any) => r.reviewer_id === currentUser.id);
       if (myReview) {
-        document.getElementById('review-form-container')!.innerHTML = `<p class="text-sm text-body">You rated ${'★'.repeat(myReview.rating)}${'☆'.repeat(5 - myReview.rating)} ${myReview.comment ? `— "${myReview.comment}"` : ''}</p>`;
+        document.getElementById('review-form-container')!.innerHTML = `<p class="text-sm text-body">You rated ${'★'.repeat(myReview.rating)}${'☆'.repeat(5 - myReview.rating)} ${myReview.comment ? `— "${escapeHtml(myReview.comment)}"` : ''}</p>`;
       }
     });
 
@@ -817,8 +821,31 @@ import Footer from "../../components/Footer.astro";
     }
   }
 
-  function escapeHtml(s: string) {
-    return s?.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') || '';
+  // Escapes quotes too, so values are safe inside HTML attributes as well as
+  // in element content.
+  function escapeHtml(s: any) {
+    if (s === null || s === undefined) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // Attachments and proofs are data: URLs supplied by other users. Validate
+  // the shape so a crafted value cannot inject an attribute or handler.
+  function safeUrl(v: any): string {
+    if (v === null || v === undefined) return '';
+    const raw = String(v).trim();
+    if (!raw || /["'<>\s]/.test(raw)) return '';
+    const lower = raw.toLowerCase();
+    if (lower.startsWith('data:')) {
+      return /^data:(image|audio|video|application)\/[a-z0-9.+-]+;base64,[a-z0-9+/=]+$/i.test(raw) ? raw : '';
+    }
+    if (lower.startsWith('http://') || lower.startsWith('https://')) return raw;
+    if (raw.startsWith('/') && !raw.startsWith('//')) return raw;
+    return '';
   }
 
   function haversineJS(lat1: number, lng1: number, lat2: number, lng2: number): number {

@@ -34,7 +34,7 @@ import Footer from "../../components/Footer.astro";
         <!-- Header -->
         <div class="flex items-center gap-4">
           <div class="w-20 h-20 rounded-full bg-canvas-soft-2 flex items-center justify-center text-2xl font-bold text-body overflow-hidden border border-hairline">
-            ${u.avatar ? `<img src="${u.avatar}" class="w-full h-full object-cover" />` : u.name.slice(0, 2).toUpperCase()}
+            ${safeUrl(u.avatar) ? `<img src="${safeUrl(u.avatar)}" class="w-full h-full object-cover" />` : esc(u.name.slice(0, 2).toUpperCase())}
           </div>
           <div>
             <div class="flex items-center gap-2">
@@ -127,6 +127,31 @@ import Footer from "../../components/Footer.astro";
     return Math.min(100, Math.round((rate * 0.4) + (verified ? 20 : 0) + Math.min(reviews * 4, 40)));
   }
 
-  function esc(s: string) { return s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || ''; }
+  // Escapes quotes too, so values are safe inside HTML attributes as well as
+  // in element content.
+  function esc(s: any) {
+    if (s === null || s === undefined) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // Avatars are stored as data: URLs. A crafted upload Content-Type could
+  // previously inject an event handler here, so validate the shape strictly.
+  function safeUrl(v: any): string {
+    if (v === null || v === undefined) return '';
+    const raw = String(v).trim();
+    if (!raw || /["'<>\s]/.test(raw)) return '';
+    const lower = raw.toLowerCase();
+    if (lower.startsWith('data:')) {
+      return /^data:(image|audio|video|application)\/[a-z0-9.+-]+;base64,[a-z0-9+/=]+$/i.test(raw) ? raw : '';
+    }
+    if (lower.startsWith('http://') || lower.startsWith('https://')) return raw;
+    if (raw.startsWith('/') && !raw.startsWith('//')) return raw;
+    return '';
+  }
   init();
 </script>

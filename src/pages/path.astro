@@ -201,19 +201,29 @@ import Footer from "../components/Footer.astro";
           <a href="/tasks/${t._id}" class="block p-4 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong transition-colors">
             <div class="flex items-center justify-between mb-2">
               <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 text-xs font-medium bg-canvas-soft-2 rounded-full">${t.category}</span>
+                <span class="px-2 py-0.5 text-xs font-medium bg-canvas-soft-2 rounded-full">${esc(t.category)}</span>
                 ${t.urgent ? '<span class="px-2 py-0.5 text-xs font-bold bg-error-soft text-error rounded-full">⚡ Urgent</span>' : ''}
               </div>
               <span class="text-base font-semibold text-ink">₹${t.budget}</span>
             </div>
-            <p class="text-sm font-medium text-ink">${t.title}</p>
+            <p class="text-sm font-medium text-ink">${esc(t.title)}</p>
             <div class="mt-2 flex items-center gap-3 text-xs text-mute">
-              <span>📍 ${t.location}</span>
+              <span>📍 ${esc(t.location)}</span>
               <span class="text-cyan-deep font-medium">${t.offPath < 0.1 ? 'ON your route' : t.offPath + ' km off route'}</span>
             </div>
           </a>
         `).join('')}
       </div>`;
+  }
+
+  function esc(s: any) {
+    if (s === null || s === undefined) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   // Broadcast message to posters along path

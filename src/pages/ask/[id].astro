@@ -42,7 +42,7 @@ import Footer from "../../components/Footer.astro";
       <div class="p-6 bg-canvas rounded-lg border border-hairline shadow-[0px_2px_2px_#0000000a,0px_8px_8px_-8px_#0000000a]">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
-            <span class="px-2.5 py-0.5 text-xs font-medium bg-canvas-soft-2 text-body rounded-full">${q.category}</span>
+            <span class="px-2.5 py-0.5 text-xs font-medium bg-canvas-soft-2 text-body rounded-full">${esc(q.category)}</span>
             <span class="text-xs text-mute">${(window as any).formatIST(q.created_at)}</span>
           </div>
           <div class="flex items-center gap-2">
@@ -140,7 +140,7 @@ import Footer from "../../components/Footer.astro";
     else alert('Failed to submit report');
   }
 
-  function esc(s: string) { return s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || ''; }
+  function esc(s: any) { return s === null || s === undefined ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
   init();
 </script>

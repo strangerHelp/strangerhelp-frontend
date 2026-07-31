@@ -330,7 +330,22 @@ import Layout from "../../layouts/Layout.astro";
     else loadOverview();
   };
 
-  function esc(s: string) { return s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || ''; }
+  function esc(s: any) { return s === null || s === undefined ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+  /**
+   * Quote a value for CSV output.
+   *
+   * Always quotes and doubles embedded quotes so a comma or newline in user
+   * data cannot shift columns. Also prefixes a single quote when the value
+   * starts with =, +, - or @, which spreadsheets would otherwise evaluate as a
+   * formula when the admin opens the export.
+   */
+  function csvCell(v: any): string {
+    if (v === null || v === undefined) return '""';
+    let s = String(v);
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
 
   // Tab switching
   document.querySelectorAll('.admin-tab').forEach(btn => {
@@ -426,10 +441,10 @@ import Layout from "../../layouts/Layout.astro";
     csv += `Completion Rate,${stats.tasks > 0 ? Math.round((stats.completedTasks / stats.tasks) * 100) : 0}%\n`;
     csv += `\nUSERS\n`;
     csv += `Name,Email,City,Status,Joined\n`;
-    users.forEach((u: any) => { csv += `${u.name},${u.email},${u.city || ''},${u.banned ? 'Banned' : u.isAdmin ? 'Admin' : 'Active'},${u.createdAt}\n`; });
+    users.forEach((u: any) => { csv += `${csvCell(u.name)},${csvCell(u.email)},${csvCell(u.city)},${csvCell(u.banned ? 'Banned' : u.isAdmin ? 'Admin' : 'Active')},${csvCell(u.createdAt)}\n`; });
     csv += `\nTASKS\n`;
     csv += `Title,Category,Budget,Location,Status,Posted By,Created\n`;
-    tasks.forEach((t: any) => { csv += `"${t.title}",${t.category},${t.budget},"${t.location || ''}",${t.status},${t.posterName || ''},${t.createdAt}\n`; });
+    tasks.forEach((t: any) => { csv += `${csvCell(t.title)},${csvCell(t.category)},${csvCell(t.budget)},${csvCell(t.location)},${csvCell(t.status)},${csvCell(t.posterName)},${csvCell(t.createdAt)}\n`; });
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);

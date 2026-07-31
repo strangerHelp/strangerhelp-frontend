@@ -148,5 +148,5 @@ import Footer from "../components/Footer.astro";
 
   loadReports();
 
-  function escapeHtml(s: string) { return s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || ''; }
+  function escapeHtml(s: any) { return s === null || s === undefined ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 </script>

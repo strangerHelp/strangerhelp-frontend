@@ -156,6 +156,32 @@ import AccountLayout from "../../layouts/AccountLayout.astro";
 </AccountLayout>
 
 <script>
+  function escapeHtml(v: any): string {
+    if (v === null || v === undefined) return '';
+    return String(v)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // Avatars are data: URLs. A crafted upload Content-Type could previously
+  // inject an event handler into the img tag, so validate the shape.
+  function safeUrl(v: any): string {
+    if (v === null || v === undefined) return '';
+    const raw = String(v).trim();
+    if (!raw || /["'<>\s]/.test(raw)) return '';
+    const lower = raw.toLowerCase();
+    if (lower.startsWith('data:')) {
+      return /^data:(image|audio|video|application)\/[a-z0-9.+-]+;base64,[a-z0-9+/=]+$/i.test(raw) ? raw : '';
+    }
+    if (lower.startsWith('http://') || lower.startsWith('https://')) return raw;
+    if (raw.startsWith('/') && !raw.startsWith('//')) return raw;
+    if (raw.startsWith('blob:')) return raw; // local preview of a chosen file
+    return '';
+  }
+
   const SUGGESTED_SKILLS = [
     'Cooking', 'Plumbing', 'Tutoring', 'Carpentry', 'Gardening', 'Photography',
     'Driving', 'Painting', 'Cleaning', 'Moving & Lifting', 'Electrical',
@@ -175,7 +201,7 @@ import AccountLayout from "../../layouts/AccountLayout.astro";
     selectedSkills.forEach((skill, i) => {
       const tag = document.createElement('span');
       tag.className = 'skill-tag inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-link-bg-soft text-link rounded-full';
-      tag.innerHTML = `${skill}<button type="button" data-idx="${i}" class="ml-0.5 hover:text-error">&times;</button>`;
+      tag.innerHTML = `${escapeHtml(skill)}<button type="button" data-idx="${i}" class="ml-0.5 hover:text-error">&times;</button>`;
       container.insertBefore(tag, input);
     });
     document.getElementById('skills-count')!.textContent = String(selectedSkills.length);
@@ -267,8 +293,8 @@ import AccountLayout from "../../layouts/AccountLayout.astro";
     document.getElementById('hero-handle')!.textContent = user.handle ? `@${user.handle}` : '';
     document.getElementById('hero-city')!.textContent = user.city ? `📍 ${user.city}` : '';
     if (user.verified) document.getElementById('hero-verified')!.classList.remove('hidden');
-    if (user.avatar) {
-      document.getElementById('hero-avatar')!.innerHTML = `<img src="${user.avatar}" class="w-full h-full object-cover" />`;
+    if (safeUrl(user.avatar)) {
+      document.getElementById('hero-avatar')!.innerHTML = `<img src="${safeUrl(user.avatar)}" class="w-full h-full object-cover" />`;
     } else {
       document.getElementById('hero-initials')!.textContent = (user.name || '?').slice(0, 2).toUpperCase();
     }
@@ -316,8 +342,8 @@ import AccountLayout from "../../layouts/AccountLayout.astro";
       } catch {}
     }
 
-    if (user.avatar) {
-      document.getElementById('avatar-preview')!.innerHTML = `<img src="${user.avatar}" class="w-full h-full object-cover" />`;
+    if (safeUrl(user.avatar)) {
+      document.getElementById('avatar-preview')!.innerHTML = `<img src="${safeUrl(user.avatar)}" class="w-full h-full object-cover" />`;
     } else {
       document.getElementById('avatar-initials')!.textContent = user.name?.slice(0, 2).toUpperCase() || '?';
     }
