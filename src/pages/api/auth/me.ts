@@ -7,5 +7,5 @@ export const GET: APIRoute = async ({ cookies }) => {
   if (!user) {
     return new Response(JSON.stringify({ user: null }), { status: 401 });
   }
-  return new Response(JSON.stringify({ user: { id: user.id, name: user.name, email: user.email, handle: user.handle, avatar: user.avatar, city: user.city, area: user.area, country: user.country, phone: user.phone, bio: user.bio, is_admin: user.is_admin, verified: user.verified, email_verified: user.email_verified } }));
+  return new Response(JSON.stringify({ user: { id: user.id, name: user.name, email: user.email, handle: user.handle, avatar: user.avatar, city: user.city, area: user.area, country: user.country, phone: user.phone, bio: user.bio, skills: user.skills, is_admin: user.is_admin, verified: user.verified, email_verified: user.email_verified } }));
 };

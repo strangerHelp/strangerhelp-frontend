@@ -108,6 +108,17 @@ import AccountLayout from "../../layouts/AccountLayout.astro";
         <textarea id="bio" name="bio" rows="3" placeholder="A short description..." class="w-full px-3 py-2.5 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute resize-none"></textarea>
       </div>
 
+      <!-- Skills / Interests Tag Picker -->
+      <div>
+        <label class="block text-sm font-medium text-ink mb-1.5">Skills & Interests</label>
+        <p class="text-xs text-mute mb-2">Add up to 10 skills or interests. Type and press Enter or pick from suggestions.</p>
+        <div id="skills-container" class="flex flex-wrap gap-1.5 p-2.5 min-h-[42px] bg-canvas border border-hairline rounded-md focus-within:border-ink transition-colors">
+          <input type="text" id="skill-input" placeholder="e.g., Cooking, Plumbing, Tutoring..." autocomplete="off" class="flex-1 min-w-[140px] h-7 text-sm bg-transparent outline-none placeholder:text-mute" />
+        </div>
+        <div id="skill-suggestions" class="hidden mt-1 p-2 bg-canvas border border-hairline rounded-md shadow-sm max-h-32 overflow-y-auto"></div>
+        <p class="mt-1 text-xs text-mute"><span id="skills-count">0</span>/10 skills added</p>
+      </div>
+
       <div>
         <label for="city" class="block text-sm font-medium text-ink mb-1.5">City</label>
         <input type="text" id="city" name="city" placeholder="e.g., Mumbai, London" class="w-full h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute" />
@@ -145,6 +156,102 @@ import AccountLayout from "../../layouts/AccountLayout.astro";
 </AccountLayout>
 
 <script>
+  const SUGGESTED_SKILLS = [
+    'Cooking', 'Plumbing', 'Tutoring', 'Carpentry', 'Gardening', 'Photography',
+    'Driving', 'Painting', 'Cleaning', 'Moving & Lifting', 'Electrical',
+    'Computer Repair', 'Pet Care', 'Babysitting', 'Grocery Shopping',
+    'Language Translation', 'Music', 'Fitness Training', 'First Aid',
+    'Sewing & Tailoring', 'Graphic Design', 'Web Development', 'Writing',
+    'Event Planning', 'Home Organization'
+  ];
+  let selectedSkills: string[] = [];
+
+  function renderSkillTags() {
+    const container = document.getElementById('skills-container')!;
+    const input = document.getElementById('skill-input')!;
+    // Remove existing tags
+    container.querySelectorAll('.skill-tag').forEach(el => el.remove());
+    // Insert tags before the input
+    selectedSkills.forEach((skill, i) => {
+      const tag = document.createElement('span');
+      tag.className = 'skill-tag inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-link-bg-soft text-link rounded-full';
+      tag.innerHTML = `${skill}<button type="button" data-idx="${i}" class="ml-0.5 hover:text-error">&times;</button>`;
+      container.insertBefore(tag, input);
+    });
+    document.getElementById('skills-count')!.textContent = String(selectedSkills.length);
+    if (selectedSkills.length >= 10) {
+      (input as HTMLInputElement).disabled = true;
+      (input as HTMLInputElement).placeholder = 'Max 10 reached';
+    } else {
+      (input as HTMLInputElement).disabled = false;
+      (input as HTMLInputElement).placeholder = 'e.g., Cooking, Plumbing, Tutoring...';
+    }
+  }
+
+  function addSkill(skill: string) {
+    const trimmed = skill.trim().slice(0, 50);
+    if (!trimmed || selectedSkills.length >= 10) return;
+    if (selectedSkills.some(s => s.toLowerCase() === trimmed.toLowerCase())) return;
+    selectedSkills.push(trimmed);
+    renderSkillTags();
+    (document.getElementById('skill-input') as HTMLInputElement).value = '';
+    hideSuggestions();
+  }
+
+  function removeSkill(idx: number) {
+    selectedSkills.splice(idx, 1);
+    renderSkillTags();
+  }
+
+  function showSuggestions(filter: string) {
+    const box = document.getElementById('skill-suggestions')!;
+    const matches = SUGGESTED_SKILLS.filter(s =>
+      s.toLowerCase().includes(filter.toLowerCase()) &&
+      !selectedSkills.some(sel => sel.toLowerCase() === s.toLowerCase())
+    ).slice(0, 8);
+    if (!matches.length || !filter) { hideSuggestions(); return; }
+    box.innerHTML = matches.map(s =>
+      `<button type="button" class="block w-full text-left px-2 py-1.5 text-sm text-body hover:bg-canvas-soft-2 rounded">${s}</button>`
+    ).join('');
+    box.classList.remove('hidden');
+    box.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => addSkill(btn.textContent!));
+    });
+  }
+
+  function hideSuggestions() {
+    document.getElementById('skill-suggestions')!.classList.add('hidden');
+  }
+
+  // Skills input event listeners
+  document.getElementById('skill-input')!.addEventListener('input', (e) => {
+    showSuggestions((e.target as HTMLInputElement).value);
+  });
+
+  document.getElementById('skill-input')!.addEventListener('keydown', (e) => {
+    const input = e.target as HTMLInputElement;
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (input.value.trim()) addSkill(input.value);
+    }
+    if (e.key === 'Backspace' && !input.value && selectedSkills.length) {
+      removeSkill(selectedSkills.length - 1);
+    }
+  });
+
+  document.getElementById('skills-container')!.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('button[data-idx]') as HTMLElement | null;
+    if (btn) removeSkill(Number(btn.dataset.idx));
+    else (document.getElementById('skill-input') as HTMLInputElement).focus();
+  });
+
+  // Close suggestions on outside click
+  document.addEventListener('click', (e) => {
+    if (!(e.target as HTMLElement).closest('#skills-container') && !(e.target as HTMLElement).closest('#skill-suggestions')) {
+      hideSuggestions();
+    }
+  });
+
   async function init() {
     const res = await fetch('/api/auth/me');
     if (!res.ok) { window.location.href = '/login'; return; }
@@ -198,6 +305,17 @@ import AccountLayout from "../../layouts/AccountLayout.astro";
     (document.getElementById('country') as HTMLInputElement).value = user.country || '';
     (document.getElementById('phone') as HTMLInputElement).value = user.phone || '';
 
+    // Load saved skills
+    if (user.skills) {
+      try {
+        const parsed = JSON.parse(user.skills);
+        if (Array.isArray(parsed)) {
+          selectedSkills = parsed;
+          renderSkillTags();
+        }
+      } catch {}
+    }
+
     if (user.avatar) {
       document.getElementById('avatar-preview')!.innerHTML = `<img src="${user.avatar}" class="w-full h-full object-cover" />`;
     } else {
@@ -221,6 +339,7 @@ import AccountLayout from "../../layouts/AccountLayout.astro";
     fd.append('name', (document.getElementById('name') as HTMLInputElement).value);
     fd.append('handle', (document.getElementById('handle') as HTMLInputElement).value);
     fd.append('bio', (document.getElementById('bio') as HTMLTextAreaElement).value);
+    fd.append('skills', JSON.stringify(selectedSkills));
     fd.append('city', (document.getElementById('city') as HTMLInputElement).value);
     fd.append('area', (document.getElementById('address') as HTMLInputElement).value);
     fd.append('country', (document.getElementById('country') as HTMLInputElement).value);

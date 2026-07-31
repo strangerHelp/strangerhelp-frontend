@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
   verified INTEGER DEFAULT 0,
   is_admin INTEGER DEFAULT 0,
   banned INTEGER DEFAULT 0,
+  skills TEXT DEFAULT '',
   created_at TEXT DEFAULT (datetime('now'))
 );
 

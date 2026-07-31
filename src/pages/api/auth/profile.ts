@@ -17,6 +17,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const country = formData.get('country') as string;
   const phone = formData.get('phone') as string;
   const bio = formData.get('bio') as string;
+  const skills = formData.get('skills') as string | null;
   const file = formData.get('avatar') as File | null;
 
   // Validate handle uniqueness
@@ -42,6 +43,18 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   if (country) { updates.push("country = ?"); values.push(country); }
   if (phone) { updates.push("phone = ?"); values.push(phone); }
   if (bio !== undefined) { updates.push("bio = ?"); values.push(bio); }
+  if (skills !== null) {
+    // Validate skills is a JSON array of strings, max 10 items
+    try {
+      const parsed = JSON.parse(skills);
+      if (!Array.isArray(parsed) || parsed.length > 10 || !parsed.every((s: any) => typeof s === 'string' && s.length <= 50)) {
+        return new Response(JSON.stringify({ error: 'Invalid skills format (max 10 items, 50 chars each)' }), { status: 400 });
+      }
+      updates.push("skills = ?"); values.push(JSON.stringify(parsed));
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid skills format' }), { status: 400 });
+    }
+  }
   if (avatar) { updates.push("avatar = ?"); values.push(avatar); }
 
   if (updates.length > 0) {
