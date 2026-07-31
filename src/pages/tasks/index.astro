@@ -153,25 +153,35 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
     grid.innerHTML = tasks.map((t: any) => {
       const time = (window as any).timeAgoIST(t.createdAt);
       const distText = t.distance != null ? `${t.distance < 1 ? (t.distance * 1000).toFixed(0) + ' m' : t.distance.toFixed(1) + ' km'} away` : '';
-      return `<a href="/tasks/${t._id}" class="group p-5 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong shadow-[0px_1px_1px_#00000005,0px_2px_2px_#0000000a] transition-colors">
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center gap-1.5">
+      const deadlineColor = t.deadline?.includes('hour') ? 'text-error' : 'text-mute';
+      return `<a href="/tasks/${t._id}" class="group p-5 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong hover:shadow-md shadow-[0px_1px_1px_#00000005,0px_2px_2px_#0000000a] transition-all">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-1.5 flex-wrap">
             <span class="px-2 py-0.5 text-xs font-medium text-body bg-canvas-soft-2 rounded-full">${t.category}</span>
             ${t.urgent ? '<span class="px-2 py-0.5 text-xs font-bold bg-error-soft text-error rounded-full">⚡ Urgent</span>' : ''}
+            ${t.maxClaimers > 1 ? `<span class="px-2 py-0.5 text-xs font-medium bg-violet-soft text-violet-deep rounded-full">👥 ${t.maxClaimers}</span>` : ''}
           </div>
-          <span class="text-base font-semibold text-ink">₹${t.budget}</span>
+          <span class="text-lg font-bold text-ink">₹${t.budget}${t.maxClaimers > 1 ? '<span class="text-xs font-normal text-mute">/pp</span>' : ''}</span>
         </div>
-        <h3 class="text-sm font-semibold text-ink group-hover:text-link transition-colors leading-snug">${esc(t.title)}</h3>
-        <div class="mt-3 flex items-center gap-3 text-xs text-mute">
+        <h3 class="text-sm font-semibold text-ink group-hover:text-link transition-colors leading-snug line-clamp-2">${esc(t.title)}</h3>
+        ${t.description ? `<p class="mt-1.5 text-xs text-body line-clamp-2">${esc(t.description.slice(0, 100))}</p>` : ''}
+        <div class="mt-3 flex items-center gap-2 flex-wrap text-xs text-mute">
           <span class="flex items-center gap-1">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            ${esc(t.location)}
+            <span class="truncate max-w-[120px]">${esc(t.location?.split(',')[0] || t.location)}</span>
           </span>
-          ${distText ? `<span class="text-link font-medium">${distText}</span>` : `<span>${time}</span>`}
+          ${distText ? `<span class="text-link font-medium">${distText}</span>` : ''}
+          <span class="flex items-center gap-1 ${deadlineColor}">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            ${t.deadline || 'Today'}
+          </span>
         </div>
         <div class="mt-3 pt-3 border-t border-hairline flex items-center justify-between">
-          <span class="text-xs text-body">${t.anonymous ? 'Anonymous' : esc(t.posterName || 'User')}${t.posterVerified ? ' <span class="text-link text-[10px]">✓ Verified</span>' : ''}</span>
-          <span class="px-2 py-0.5 text-xs rounded-full ${t.status === 'open' ? 'bg-cyan-soft text-cyan-deep' : t.status === 'claimed' ? 'bg-warning-soft text-warning-deep' : 'bg-canvas-soft-2 text-mute'}">${t.status}</span>
+          <div class="flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full bg-canvas-soft-2 flex items-center justify-center text-[8px] font-bold text-body">${t.anonymous ? '?' : (t.posterName || 'U')[0].toUpperCase()}</span>
+            <span class="text-xs text-body">${t.anonymous ? 'Anonymous' : esc(t.posterName || 'User')}${t.posterVerified ? ' <span class="text-link text-[10px]">✓</span>' : ''}</span>
+          </div>
+          <span class="px-2 py-0.5 text-[10px] font-medium rounded-full ${t.status === 'open' ? 'bg-cyan-soft text-cyan-deep' : t.status === 'claimed' ? 'bg-warning-soft text-warning-deep' : 'bg-canvas-soft-2 text-mute'}">${t.status}</span>
         </div>
       </a>`;
     }).join('');
