@@ -420,6 +420,14 @@ import Footer from "../../components/Footer.astro";
       const lng = pos?.coords?.longitude?.toFixed(6) || 'N/A';
       const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 
+      // Reverse geocode to get location name
+      let locationName = `${lat}, ${lng}`;
+      try {
+        const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+        const geoData = await geoRes.json();
+        if (geoData.display_name) locationName = geoData.display_name.split(',').slice(0, 3).join(',').trim();
+      } catch {}
+
       // Draw watermark on canvas
       const img = new Image();
       img.onload = () => {
@@ -431,21 +439,49 @@ import Footer from "../../components/Footer.astro";
         const ctx = canvas.getContext('2d')!;
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        // Watermark background
-        const barH = 60;
-        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        // Watermark bar
+        const barH = 80;
+        ctx.fillStyle = 'rgba(23,23,23,0.85)';
         ctx.fillRect(0, canvas.height - barH, canvas.width, barH);
 
-        // Text
+        // Logo (draw the StrangerHelp icon)
+        const logoX = 12, logoY = canvas.height - barH + 12;
+        // Logo background circle
+        ctx.fillStyle = '#171717';
+        ctx.beginPath(); ctx.arc(logoX + 18, logoY + 18, 18, 0, Math.PI * 2); ctx.fill();
+        // Cyan dots (eyes)
+        ctx.fillStyle = '#50e3c2';
+        ctx.beginPath(); ctx.arc(logoX + 12, logoY + 14, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#00dfd8';
+        ctx.beginPath(); ctx.arc(logoX + 24, logoY + 14, 4, 0, Math.PI * 2); ctx.fill();
+        // Mouth line
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(logoX + 14, logoY + 24); ctx.lineTo(logoX + 22, logoY + 24); ctx.stroke();
+
+        // Text next to logo
+        const textX = logoX + 44;
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 14px system-ui';
-        ctx.fillText('StrangerHelp — Verified Proof', 12, canvas.height - barH + 20);
-        ctx.font = '12px system-ui';
-        ctx.fillText(`📍 ${lat}, ${lng}  |  🕐 ${now}`, 12, canvas.height - barH + 42);
-        ctx.fillText('strangerhelp.com', canvas.width - 130, canvas.height - barH + 42);
+        ctx.font = 'bold 16px system-ui';
+        ctx.fillText('StrangerHelp', textX, canvas.height - barH + 22);
+        ctx.font = '11px system-ui';
+        ctx.fillStyle = '#50e3c2';
+        ctx.fillText('Verified Completion Proof', textX, canvas.height - barH + 38);
+
+        // Location + time
+        ctx.fillStyle = '#cccccc';
+        ctx.font = '11px system-ui';
+        ctx.fillText(`📍 ${locationName}`, textX, canvas.height - barH + 56);
+        ctx.fillText(`🕐 ${now}  |  ${lat}, ${lng}`, textX, canvas.height - barH + 72);
+
+        // Website on right
+        ctx.fillStyle = '#888888';
+        ctx.font = '10px system-ui';
+        ctx.textAlign = 'right';
+        ctx.fillText('strangerhelp.com', canvas.width - 12, canvas.height - 10);
+        ctx.textAlign = 'left';
 
         // Show preview
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
         document.getElementById('proof-preview')!.innerHTML = `<img src="${dataUrl}" class="w-full rounded-md border border-hairline" />`;
         document.getElementById('proof-preview')!.classList.remove('hidden');
         document.getElementById('complete-btn')!.removeAttribute('disabled');
