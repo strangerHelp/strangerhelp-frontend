@@ -282,6 +282,13 @@ CREATE TABLE IF NOT EXISTS rate_limits (
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
 CREATE INDEX IF NOT EXISTS idx_tasks_poster ON tasks(poster_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_claimed ON tasks(claimed_by);
+-- Feed query patterns: status+recency, status+category, budget range, urgent,
+-- and a bounding-box prefilter for distance sorting.
+CREATE INDEX IF NOT EXISTS idx_tasks_status_created ON tasks(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_tasks_status_cat_created ON tasks(status, category, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_tasks_status_budget ON tasks(status, budget);
+CREATE INDEX IF NOT EXISTS idx_tasks_status_urgent ON tasks(status, urgent, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_tasks_geo ON tasks(lat, lng);
 CREATE INDEX IF NOT EXISTS idx_messages_conv ON messages(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_conv_p1 ON conversations(participant_1);
 CREATE INDEX IF NOT EXISTS idx_conv_p2 ON conversations(participant_2);

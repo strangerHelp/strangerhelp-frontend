@@ -6,9 +6,14 @@ import { clearSessionCookie } from "./lib/cookies";
 const PROTECTED_ROUTES = ["/dashboard", "/tasks/my-tasks", "/tasks/new", "/chat", "/karma", "/referral", "/admin"];
 const AUTH_ROUTES = ["/login", "/register"];
 
-// Cache durations in seconds
+// Cache durations in seconds.
+//
+// /api/tasks is deliberately NOT cached. It now varies by search term, sort,
+// six filters, pagination offset and the caller's lat/lng, so the shared edge
+// cache would fragment into near-unique keys (almost never hitting), would hold
+// a copy keyed by user coordinates, and would keep serving a stale feed for up
+// to 90s after someone posts a task. The underlying queries are indexed.
 const CACHE_RULES: [string, number][] = [
-  ["/api/tasks", 30],
   ["/api/questions", 60],
   ["/api/pulse", 5],
   ["/blog", 3600],

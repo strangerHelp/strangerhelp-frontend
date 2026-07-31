@@ -58,18 +58,69 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
     </div>
 
     <!-- Search & Sort -->
-    <div class="mb-4 flex flex-col sm:flex-row gap-3">
+    <div class="mb-3 flex flex-col sm:flex-row gap-3">
       <div class="relative flex-1">
         <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-mute" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-        <input type="text" id="search-input" placeholder="Search tasks by title, location, or keyword..." class="w-full h-10 pl-9 pr-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute" />
+        <input type="text" id="search-input" placeholder="Search tasks by title, location, or keyword..." class="w-full h-10 pl-9 pr-9 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink transition-colors placeholder:text-mute" />
+        <button id="search-clear" class="hidden absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-mute hover:text-ink rounded-full" aria-label="Clear search">✕</button>
       </div>
-      <select id="sort-select" class="h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink">
+      <select id="sort-select" aria-label="Sort tasks" class="h-10 px-3 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink">
         <option value="distance">Nearest first</option>
         <option value="newest">Newest first</option>
         <option value="budget_high">Budget: High → Low</option>
         <option value="budget_low">Budget: Low → High</option>
         <option value="urgent">Urgent first</option>
       </select>
+      <button id="filter-toggle" class="h-10 px-4 text-sm font-medium text-ink bg-canvas border border-hairline rounded-md hover:border-hairline-strong flex items-center gap-2" aria-expanded="false" aria-controls="filter-panel">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+        Filters
+        <span id="filter-count" class="hidden px-1.5 py-0.5 text-[10px] font-bold bg-primary text-on-primary rounded-full">0</span>
+      </button>
+    </div>
+
+    <!-- Filter panel -->
+    <div id="filter-panel" class="hidden mb-4 p-4 bg-canvas rounded-lg border border-hairline">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+          <label for="min-budget" class="block text-xs font-medium text-ink mb-1.5">Min budget (₹)</label>
+          <input type="number" id="min-budget" min="0" max="500000" placeholder="Any" class="w-full h-9 px-2.5 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink placeholder:text-mute" />
+        </div>
+        <div>
+          <label for="max-budget" class="block text-xs font-medium text-ink mb-1.5">Max budget (₹)</label>
+          <input type="number" id="max-budget" min="0" max="500000" placeholder="Any" class="w-full h-9 px-2.5 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink placeholder:text-mute" />
+        </div>
+        <div>
+          <label for="radius-select" class="block text-xs font-medium text-ink mb-1.5">Within distance</label>
+          <select id="radius-select" class="w-full h-9 px-2 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink">
+            <option value="">Any distance</option>
+            <option value="2">2 km</option>
+            <option value="5">5 km</option>
+            <option value="10">10 km</option>
+            <option value="25">25 km</option>
+            <option value="50">50 km</option>
+          </select>
+        </div>
+        <div>
+          <label for="status-select" class="block text-xs font-medium text-ink mb-1.5">Status</label>
+          <select id="status-select" class="w-full h-9 px-2 text-sm bg-canvas border border-hairline rounded-md focus:outline-none focus:border-ink">
+            <option value="open">Open only</option>
+            <option value="claimed">Claimed</option>
+            <option value="completed">Completed</option>
+            <option value="all">Any status</option>
+          </select>
+        </div>
+      </div>
+      <div class="mt-4 flex flex-wrap items-center gap-4">
+        <label class="flex items-center gap-2 text-sm text-body cursor-pointer">
+          <input type="checkbox" id="urgent-only" class="w-4 h-4 rounded border-hairline accent-[#171717]" />
+          ⚡ Urgent only
+        </label>
+        <label class="flex items-center gap-2 text-sm text-body cursor-pointer">
+          <input type="checkbox" id="verified-only" class="w-4 h-4 rounded border-hairline accent-[#171717]" />
+          ✓ Verified posters only
+        </label>
+        <button id="clear-filters" class="ml-auto h-8 px-3 text-xs font-medium text-body border border-hairline rounded-md hover:bg-canvas-soft-2">Clear all</button>
+      </div>
     </div>
 
     <!-- Filters -->
@@ -81,14 +132,26 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
       ))}
     </div>
 
+    <!-- Result count -->
+    <p id="result-count" class="mt-2 text-xs text-mute" aria-live="polite"></p>
+
     <!-- Task Grid -->
-    <div id="tasks-grid" class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div id="tasks-grid" class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <p class="col-span-full text-center text-sm text-mute py-12">Loading tasks...</p>
     </div>
 
+    <!-- Load more -->
+    <div class="mt-6 text-center">
+      <button id="load-more" class="hidden h-10 px-5 text-sm font-medium text-ink bg-canvas border border-hairline rounded-full hover:border-hairline-strong">Load more tasks</button>
+      <p id="loading-more" class="hidden text-sm text-mute py-3">Loading…</p>
+    </div>
+
     <div id="empty-state" class="hidden text-center py-16">
-      <p class="text-sm text-mute">No tasks found. Be the first to post one!</p>
-      <a href="/tasks/new" class="mt-4 inline-flex h-9 items-center px-4 text-sm font-medium text-on-primary bg-primary rounded-full">Post a Task</a>
+      <p class="text-sm text-mute" id="empty-text">No tasks found. Be the first to post one!</p>
+      <div class="mt-4 flex items-center justify-center gap-2">
+        <button id="empty-clear" class="hidden h-9 px-4 text-sm font-medium text-ink border border-hairline rounded-full hover:bg-canvas-soft-2">Clear filters</button>
+        <a href="/tasks/new" class="inline-flex h-9 items-center px-4 text-sm font-medium text-on-primary bg-primary rounded-full">Post a Task</a>
+      </div>
     </div>
   </main>
   <Footer />
@@ -103,63 +166,205 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
   let searchQuery = '';
   let sortBy = 'distance';
 
-  async function loadTasks(category?: string) {
-    const params = new URLSearchParams();
-    if (category && category !== 'All') params.set('category', category);
-    if (userLat && userLng) { params.set('lat', String(userLat)); params.set('lng', String(userLng)); }
+  // Server-side paging state. Search, sort and filters are all applied by the
+  // API now; previously they were applied in the browser to whichever 20 rows
+  // had been fetched, so anything beyond the first page was invisible.
+  let offset = 0;
+  const PAGE_SIZE = 20;
+  let hasMore = false;
+  let total = 0;
+  let loading = false;
+  let reqSeq = 0; // guards against out-of-order responses
 
-    const res = await fetch(`/api/tasks?${params}`);
-    allTasks = await res.json();
-    renderTasks();
+  const filters = {
+    minBudget: '', maxBudget: '', radius: '',
+    status: 'open', urgentOnly: false, verifiedOnly: false,
+  };
+
+  function activeFilterCount(): number {
+    let n = 0;
+    if (filters.minBudget) n++;
+    if (filters.maxBudget) n++;
+    if (filters.radius) n++;
+    if (filters.status !== 'open') n++;
+    if (filters.urgentOnly) n++;
+    if (filters.verifiedOnly) n++;
+    return n;
+  }
+
+  function buildParams(): URLSearchParams {
+    const params = new URLSearchParams();
+    if (activeCategory && activeCategory !== 'All') params.set('category', activeCategory);
+    if (searchQuery) params.set('q', searchQuery);
+    params.set('sort', sortBy);
+    params.set('status', filters.status);
+    if (filters.minBudget) params.set('minBudget', filters.minBudget);
+    if (filters.maxBudget) params.set('maxBudget', filters.maxBudget);
+    if (filters.radius) params.set('maxDistance', filters.radius);
+    if (filters.urgentOnly) params.set('urgent', 'true');
+    if (filters.verifiedOnly) params.set('verified', 'true');
+    if (userLat != null && userLng != null) {
+      params.set('lat', String(userLat));
+      params.set('lng', String(userLng));
+    }
+    params.set('limit', String(PAGE_SIZE));
+    params.set('offset', String(offset));
+    return params;
+  }
+
+  /** Reflect the current query in the URL so results can be shared and restored. */
+  function syncUrl() {
+    const p = new URLSearchParams();
+    if (activeCategory !== 'All') p.set('category', activeCategory);
+    if (searchQuery) p.set('q', searchQuery);
+    if (sortBy !== 'distance') p.set('sort', sortBy);
+    if (filters.status !== 'open') p.set('status', filters.status);
+    if (filters.minBudget) p.set('minBudget', filters.minBudget);
+    if (filters.maxBudget) p.set('maxBudget', filters.maxBudget);
+    if (filters.radius) p.set('maxDistance', filters.radius);
+    if (filters.urgentOnly) p.set('urgent', 'true');
+    if (filters.verifiedOnly) p.set('verified', 'true');
+    const qs = p.toString();
+    history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
+  }
+
+  function restoreFromUrl() {
+    const p = new URLSearchParams(location.search);
+    activeCategory = p.get('category') || 'All';
+    searchQuery = p.get('q') || '';
+    sortBy = p.get('sort') || 'distance';
+    filters.status = p.get('status') || 'open';
+    filters.minBudget = p.get('minBudget') || '';
+    filters.maxBudget = p.get('maxBudget') || '';
+    filters.radius = p.get('maxDistance') || '';
+    filters.urgentOnly = p.get('urgent') === 'true';
+    filters.verifiedOnly = p.get('verified') === 'true';
+
+    (document.getElementById('search-input') as HTMLInputElement).value = searchQuery;
+    (document.getElementById('sort-select') as HTMLSelectElement).value = sortBy;
+    (document.getElementById('status-select') as HTMLSelectElement).value = filters.status;
+    (document.getElementById('min-budget') as HTMLInputElement).value = filters.minBudget;
+    (document.getElementById('max-budget') as HTMLInputElement).value = filters.maxBudget;
+    (document.getElementById('radius-select') as HTMLSelectElement).value = filters.radius;
+    (document.getElementById('urgent-only') as HTMLInputElement).checked = filters.urgentOnly;
+    (document.getElementById('verified-only') as HTMLInputElement).checked = filters.verifiedOnly;
+
+    document.querySelectorAll('.cat-btn').forEach((b) => {
+      const isActive = (b as HTMLElement).dataset.cat === activeCategory;
+      b.classList.toggle('bg-primary', isActive);
+      b.classList.toggle('text-on-primary', isActive);
+      b.classList.toggle('border-primary', isActive);
+      b.classList.toggle('bg-canvas', !isActive);
+      b.classList.toggle('text-body', !isActive);
+      b.classList.toggle('border-hairline', !isActive);
+    });
+    if (searchQuery) document.getElementById('search-clear')!.classList.remove('hidden');
+    if (activeFilterCount() > 0) document.getElementById('filter-panel')!.classList.remove('hidden');
+    updateFilterBadge();
+  }
+
+  function updateFilterBadge() {
+    const n = activeFilterCount();
+    const badge = document.getElementById('filter-count')!;
+    badge.textContent = String(n);
+    badge.classList.toggle('hidden', n === 0);
+  }
+
+  function setLoadingSkeleton() {
+    document.getElementById('tasks-grid')!.innerHTML = Array.from({ length: 6 }).map(() => `
+      <div class="p-5 bg-canvas rounded-lg border border-hairline animate-pulse">
+        <div class="flex items-center justify-between mb-3">
+          <div class="h-5 w-24 bg-canvas-soft-2 rounded-full"></div>
+          <div class="h-5 w-14 bg-canvas-soft-2 rounded"></div>
+        </div>
+        <div class="h-4 w-3/4 bg-canvas-soft-2 rounded mb-2"></div>
+        <div class="h-3 w-full bg-canvas-soft-2 rounded mb-1.5"></div>
+        <div class="h-3 w-2/3 bg-canvas-soft-2 rounded"></div>
+        <div class="mt-4 pt-3 border-t border-hairline flex items-center justify-between">
+          <div class="h-3 w-20 bg-canvas-soft-2 rounded"></div>
+          <div class="h-4 w-12 bg-canvas-soft-2 rounded-full"></div>
+        </div>
+      </div>`).join('');
+  }
+
+  /** `reset` starts a new query; otherwise the next page is appended. */
+  async function loadTasks(reset = true) {
+    if (loading) return;
+    loading = true;
+    const seq = ++reqSeq;
+
+    if (reset) {
+      offset = 0;
+      allTasks = [];
+      setLoadingSkeleton();
+      document.getElementById('empty-state')!.classList.add('hidden');
+      document.getElementById('load-more')!.classList.add('hidden');
+    } else {
+      document.getElementById('load-more')!.classList.add('hidden');
+      document.getElementById('loading-more')!.classList.remove('hidden');
+    }
+
+    try {
+      const res = await fetch(`/api/tasks?${buildParams()}`);
+      // A newer request has been issued; discard this stale response.
+      if (seq !== reqSeq) return;
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const page = await res.json();
+      total = parseInt(res.headers.get('X-Total-Count') || '0', 10);
+      hasMore = res.headers.get('X-Has-More') === 'true';
+
+      allTasks = reset ? page : allTasks.concat(page);
+      offset = allTasks.length;
+      renderTasks();
+    } catch (e) {
+      if (seq !== reqSeq) return;
+      document.getElementById('tasks-grid')!.innerHTML =
+        `<p class="col-span-full text-center text-sm text-error py-12">Couldn't load tasks. <button id="retry-btn" class="underline font-medium">Retry</button></p>`;
+      document.getElementById('retry-btn')?.addEventListener('click', () => loadTasks(true));
+    } finally {
+      if (seq === reqSeq) {
+        loading = false;
+        document.getElementById('loading-more')!.classList.add('hidden');
+      }
+    }
   }
 
   function renderTasks() {
-    let tasks = [...allTasks];
-
-    // Search filter
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      tasks = tasks.filter((t: any) =>
-        t.title.toLowerCase().includes(q) ||
-        t.location.toLowerCase().includes(q) ||
-        t.description?.toLowerCase().includes(q) ||
-        t.category.toLowerCase().includes(q) ||
-        t.posterName?.toLowerCase().includes(q)
-      );
-    }
-
-    // Sort
-    tasks.sort((a: any, b: any) => {
-      switch (sortBy) {
-        case 'newest': return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        case 'budget_high': return b.budget - a.budget;
-        case 'budget_low': return a.budget - b.budget;
-        case 'urgent': return (b.urgent || 0) - (a.urgent || 0);
-        case 'distance':
-        default:
-          if (a.distance == null && b.distance == null) return 0;
-          if (a.distance == null) return 1;
-          if (b.distance == null) return -1;
-          return a.distance - b.distance;
-      }
-    });
-
     const grid = document.getElementById('tasks-grid')!;
     const empty = document.getElementById('empty-state')!;
+    const count = document.getElementById('result-count')!;
+    const loadMore = document.getElementById('load-more')!;
 
-    if (tasks.length === 0) { grid.innerHTML = ''; empty.classList.remove('hidden'); return; }
+    if (allTasks.length === 0) {
+      grid.innerHTML = '';
+      count.textContent = '';
+      loadMore.classList.add('hidden');
+      const filtered = activeFilterCount() > 0 || !!searchQuery || activeCategory !== 'All';
+      document.getElementById('empty-text')!.textContent = filtered
+        ? 'No tasks match your search or filters.'
+        : 'No tasks yet. Be the first to post one!';
+      document.getElementById('empty-clear')!.classList.toggle('hidden', !filtered);
+      empty.classList.remove('hidden');
+      return;
+    }
+
     empty.classList.add('hidden');
+    count.textContent = `Showing ${allTasks.length} of ${total} task${total === 1 ? '' : 's'}` +
+      (searchQuery ? ` for “${searchQuery}”` : '');
+    loadMore.classList.toggle('hidden', !hasMore);
 
-    grid.innerHTML = tasks.map((t: any) => {
+    grid.innerHTML = allTasks.map((t: any) => {
       const time = (window as any).timeAgoIST(t.createdAt);
       const distText = t.distance != null ? `${t.distance < 1 ? (t.distance * 1000).toFixed(0) + ' m' : t.distance.toFixed(1) + ' km'} away` : '';
       const deadlineColor = t.deadline?.includes('hour') ? 'text-error' : 'text-mute';
-      return `<a href="/tasks/${t._id}" class="group p-5 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong hover:shadow-md shadow-[0px_1px_1px_#00000005,0px_2px_2px_#0000000a] transition-all">
+      return `<a href="/tasks/${encodeURIComponent(t._id)}" class="group p-5 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong hover:shadow-md shadow-[0px_1px_1px_#00000005,0px_2px_2px_#0000000a] transition-all">
         <div class="flex items-center justify-between mb-2">
           <div class="flex items-center gap-1.5 flex-wrap">
             <span class="px-2 py-0.5 text-xs font-medium text-body bg-canvas-soft-2 rounded-full">${esc(t.category)}</span>
             ${t.urgent ? '<span class="px-2 py-0.5 text-xs font-bold bg-error-soft text-error rounded-full">⚡ Urgent</span>' : ''}
             ${t.maxClaimers > 1 ? `<span class="px-2 py-0.5 text-xs font-medium bg-violet-soft text-violet-deep rounded-full">👥 ${t.maxClaimers}</span>` : ''}
+            ${t.attachmentCount > 0 ? `<span class="px-2 py-0.5 text-xs font-medium bg-canvas-soft-2 text-mute rounded-full" title="${t.attachmentCount} attachment${t.attachmentCount === 1 ? '' : 's'}">📎 ${t.attachmentCount}</span>` : ''}
           </div>
           <span class="text-lg font-bold text-ink">₹${t.budget}${t.maxClaimers > 1 ? '<span class="text-xs font-normal text-mute">/pp</span>' : ''}</span>
         </div>
@@ -173,15 +378,16 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
           ${distText ? `<span class="text-link font-medium">${distText}</span>` : ''}
           <span class="flex items-center gap-1 ${deadlineColor}">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            ${t.deadline || 'Today'}
+            ${esc(t.deadline || 'Today')}
           </span>
+          <span class="text-mute">${esc(time)}</span>
         </div>
         <div class="mt-3 pt-3 border-t border-hairline flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span class="w-5 h-5 rounded-full bg-canvas-soft-2 flex items-center justify-center text-[8px] font-bold text-body">${t.anonymous ? '?' : esc((t.posterName || 'U')[0].toUpperCase())}</span>
             <span class="text-xs text-body">${t.anonymous ? 'Anonymous' : esc(t.posterName || 'User')}${t.posterVerified ? ' <span class="text-link text-[10px]">✓</span>' : ''}</span>
           </div>
-          <span class="px-2 py-0.5 text-[10px] font-medium rounded-full ${t.status === 'open' ? 'bg-cyan-soft text-cyan-deep' : t.status === 'claimed' ? 'bg-warning-soft text-warning-deep' : 'bg-canvas-soft-2 text-mute'}">${t.status}</span>
+          <span class="px-2 py-0.5 text-[10px] font-medium rounded-full ${t.status === 'open' ? 'bg-cyan-soft text-cyan-deep' : t.status === 'claimed' ? 'bg-warning-soft text-warning-deep' : 'bg-canvas-soft-2 text-mute'}">${esc(t.status)}</span>
         </div>
       </a>`;
     }).join('');
@@ -220,7 +426,7 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
         userLat = pos.coords.latitude;
         userLng = pos.coords.longitude;
         showActiveState('your current location');
-        loadTasks(activeCategory);
+        loadTasks(true);
       },
       () => {
         // GPS denied — check if logged-in user has city
@@ -249,7 +455,7 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
         userLat = pos.coords.latitude;
         userLng = pos.coords.longitude;
         showActiveState('your live location');
-        loadTasks(activeCategory);
+        loadTasks(true);
       },
       () => { btn.textContent = '📍 Use Live Location'; alert('Location access denied. To enable:\n\n• Android Chrome: Tap the lock icon (🔒) in address bar → Site settings → Location → Allow\n\n• iPhone Safari: Settings → Safari → Location → Allow\n\n• Desktop: Click the lock icon in address bar → Location → Allow'); },
       { timeout: 10000 }
@@ -267,8 +473,9 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
     const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5`);
     const data = await res.json();
     if (data.length === 0) { cityResults.classList.add('hidden'); return; }
+    // Nominatim results are third-party content, so escape before rendering.
     cityResults.innerHTML = data.map((r: any) =>
-      `<div class="px-3 py-2.5 text-sm text-body hover:bg-canvas-soft cursor-pointer border-b border-hairline last:border-0" data-lat="${r.lat}" data-lng="${r.lon}" data-name="${r.display_name.split(',')[0]}">${r.display_name}</div>`
+      `<div class="px-3 py-2.5 text-sm text-body hover:bg-canvas-soft cursor-pointer border-b border-hairline last:border-0" data-lat="${esc(r.lat)}" data-lng="${esc(r.lon)}" data-name="${esc(String(r.display_name).split(',')[0])}">${esc(r.display_name)}</div>`
     ).join('');
     cityResults.classList.remove('hidden');
     cityResults.querySelectorAll('div').forEach(el => {
@@ -277,7 +484,7 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
         userLng = parseFloat(el.dataset.lng!);
         showActiveState(el.dataset.name!);
         cityResults.classList.add('hidden');
-        loadTasks(activeCategory);
+        loadTasks(true);
       });
     });
   }
@@ -289,7 +496,7 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
       userLat = parseFloat(data[0].lat);
       userLng = parseFloat(data[0].lon);
       showActiveState(city);
-      loadTasks(activeCategory);
+      loadTasks(true);
     } else {
       showCityInput();
     }
@@ -308,21 +515,102 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
     }
   });
 
-  // Search
+  // Search — debounced, and now refetches from the server so results are not
+  // limited to the rows already on screen.
   let searchTimeout: any;
-  document.getElementById('search-input')!.addEventListener('input', (e) => {
+  const searchInput = document.getElementById('search-input') as HTMLInputElement;
+  searchInput.addEventListener('input', () => {
     clearTimeout(searchTimeout);
+    document.getElementById('search-clear')!.classList.toggle('hidden', !searchInput.value);
     searchTimeout = setTimeout(() => {
-      searchQuery = (e.target as HTMLInputElement).value.trim();
-      renderTasks();
-    }, 300);
+      searchQuery = searchInput.value.trim();
+      syncUrl();
+      loadTasks(true);
+    }, 350);
+  });
+
+  // Enter searches immediately instead of waiting out the debounce.
+  searchInput.addEventListener('keydown', (e) => {
+    if ((e as KeyboardEvent).key === 'Enter') {
+      clearTimeout(searchTimeout);
+      searchQuery = searchInput.value.trim();
+      syncUrl();
+      loadTasks(true);
+    }
+  });
+
+  document.getElementById('search-clear')!.addEventListener('click', () => {
+    searchInput.value = '';
+    searchQuery = '';
+    document.getElementById('search-clear')!.classList.add('hidden');
+    syncUrl();
+    loadTasks(true);
   });
 
   // Sort
   document.getElementById('sort-select')!.addEventListener('change', (e) => {
     sortBy = (e.target as HTMLSelectElement).value;
-    renderTasks();
+    syncUrl();
+    loadTasks(true);
   });
+
+  // Filter panel
+  document.getElementById('filter-toggle')!.addEventListener('click', () => {
+    const panel = document.getElementById('filter-panel')!;
+    const nowOpen = panel.classList.toggle('hidden') === false;
+    document.getElementById('filter-toggle')!.setAttribute('aria-expanded', String(nowOpen));
+  });
+
+  function applyFilters() {
+    filters.minBudget = (document.getElementById('min-budget') as HTMLInputElement).value;
+    filters.maxBudget = (document.getElementById('max-budget') as HTMLInputElement).value;
+    filters.radius = (document.getElementById('radius-select') as HTMLSelectElement).value;
+    filters.status = (document.getElementById('status-select') as HTMLSelectElement).value;
+    filters.urgentOnly = (document.getElementById('urgent-only') as HTMLInputElement).checked;
+    filters.verifiedOnly = (document.getElementById('verified-only') as HTMLInputElement).checked;
+    updateFilterBadge();
+    syncUrl();
+    loadTasks(true);
+  }
+
+  let filterTimeout: any;
+  ['min-budget', 'max-budget'].forEach((id) => {
+    document.getElementById(id)!.addEventListener('input', () => {
+      clearTimeout(filterTimeout);
+      filterTimeout = setTimeout(applyFilters, 400);
+    });
+  });
+  ['radius-select', 'status-select', 'urgent-only', 'verified-only'].forEach((id) => {
+    document.getElementById(id)!.addEventListener('change', applyFilters);
+  });
+
+  function clearAllFilters() {
+    (document.getElementById('min-budget') as HTMLInputElement).value = '';
+    (document.getElementById('max-budget') as HTMLInputElement).value = '';
+    (document.getElementById('radius-select') as HTMLSelectElement).value = '';
+    (document.getElementById('status-select') as HTMLSelectElement).value = 'open';
+    (document.getElementById('urgent-only') as HTMLInputElement).checked = false;
+    (document.getElementById('verified-only') as HTMLInputElement).checked = false;
+    applyFilters();
+  }
+  document.getElementById('clear-filters')!.addEventListener('click', clearAllFilters);
+  document.getElementById('empty-clear')!.addEventListener('click', () => {
+    searchInput.value = '';
+    searchQuery = '';
+    document.getElementById('search-clear')!.classList.add('hidden');
+    clearAllFilters();
+  });
+
+  // Load more
+  document.getElementById('load-more')!.addEventListener('click', () => loadTasks(false));
+
+  // Infinite scroll: prefetch the next page as the button nears the viewport.
+  const sentinel = document.getElementById('load-more')!;
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasMore && !loading) loadTasks(false);
+    }, { rootMargin: '300px' }).observe(sentinel);
+  }
 
   // Category filter
   document.querySelectorAll('.cat-btn').forEach(btn => {
@@ -334,24 +622,27 @@ const categories = ["All", "Simple Survey", "Task", "Document Submission", "Phot
       btn.classList.add('bg-primary', 'text-on-primary', 'border-primary', 'active');
       btn.classList.remove('bg-canvas', 'text-body', 'border-hairline');
       activeCategory = (btn as HTMLElement).dataset.cat || 'All';
-      loadTasks(activeCategory);
+      syncUrl();
+      loadTasks(true);
     });
   });
 
-  // Init: check if logged in and has city
+  // Init: restore any shared query, then resolve location
   async function init() {
+    restoreFromUrl();
+
     const authRes = await fetch('/api/auth/me');
     if (authRes.ok) {
       const { user } = await authRes.json();
       currentUser = user;
       if (user.city) {
-        // Auto-sort by user's registered city
+        // Auto-sort by the user's registered city. geocodeCity loads tasks itself.
         geocodeCity(user.city);
         return;
       }
     }
-    // Not logged in or no city — load without sorting, API uses CF IP
-    loadTasks();
+    // Not logged in or no city — the API falls back to Cloudflare IP geolocation.
+    loadTasks(true);
   }
 
   init();
