@@ -125,6 +125,9 @@ export const GET: APIRoute = async ({ url, cookies, request }) => {
     }
     where.push('(t.poster_id = ? OR t.claimed_by = ?)');
     args.push(session, session);
+  } else {
+    // Public feed: exclude private tasks
+    where.push("(t.visibility IS NULL OR t.visibility = 'public')");
   }
 
   if (status !== 'all') { where.push('t.status = ?'); args.push(status); }
@@ -263,10 +266,15 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     if (dataUrl) attachments.push(dataUrl);
   }
 
+  // Visibility: 'public' (default) or 'private' (only accessible via invite link)
+  const visibilityRaw = (formData.get('visibility') as string || 'public').toLowerCase();
+  const visibility = visibilityRaw === 'private' ? 'private' : 'public';
+  const inviteCode = visibility === 'private' ? genId().slice(0, 10) : null;
+
   const id = genId();
   await db.prepare(
-    "INSERT INTO tasks (id, title, description, category, budget, deadline, location, city, anonymous, urgent, lat, lng, max_claimers, attachments, poster_id, poster_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-  ).bind(id, title, description, category, budgetNum, deadline, location, user?.city || '', anonymous, urgent, lat, lng, maxClaimers, JSON.stringify(attachments), session, user?.name || 'User').run();
+    "INSERT INTO tasks (id, title, description, category, budget, deadline, location, city, anonymous, urgent, lat, lng, max_claimers, attachments, poster_id, poster_name, visibility, invite_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+  ).bind(id, title, description, category, budgetNum, deadline, location, user?.city || '', anonymous, urgent, lat, lng, maxClaimers, JSON.stringify(attachments), session, user?.name || 'User', visibility, inviteCode).run();
 
-  return new Response(JSON.stringify({ id }), { status: 201 });
+  return new Response(JSON.stringify({ id, visibility, inviteCode }), { status: 201 });
 };

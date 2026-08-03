@@ -50,6 +50,8 @@ CREATE TABLE IF NOT EXISTS tasks (
   urgent INTEGER DEFAULT 0,
   lat REAL DEFAULT NULL,
   lng REAL DEFAULT NULL,
+  visibility TEXT DEFAULT 'public',    -- public | private
+  invite_code TEXT UNIQUE,             -- short code for private task sharing
   max_claimers INTEGER DEFAULT 1,
   claimed_by TEXT,
   claimed_by_name TEXT,

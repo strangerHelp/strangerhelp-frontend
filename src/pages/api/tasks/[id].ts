@@ -4,12 +4,33 @@ import { genId, fileToDataUrl } from '../../../lib/db';
 import { createNotification } from '../notifications';
 import { getSessionUserId } from '../../../lib/auth';
 
-export const GET: APIRoute = async ({ params }) => {
+export const GET: APIRoute = async ({ params, url, cookies }) => {
   const db = (env as any).DB as D1Database;
   const task: any = await db.prepare(
     "SELECT t.*, up.verified as poster_verified, uc.verified as claimer_verified FROM tasks t LEFT JOIN users up ON t.poster_id = up.id LEFT JOIN users uc ON t.claimed_by = uc.id WHERE t.id = ?"
   ).bind(params.id).first();
   if (!task) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
+
+  // Access control for private tasks:
+  // Allowed if: task is public, user is poster, user is claimer, or valid invite code provided
+  if (task.visibility === 'private') {
+    const session = await getSessionUserId(cookies);
+    const inviteParam = url.searchParams.get('invite');
+    const isOwner = session && task.poster_id === session;
+    const isClaimer = session && task.claimed_by === session;
+    const hasValidInvite = inviteParam && task.invite_code && inviteParam === task.invite_code;
+
+    // Also check group task claimers
+    let isGroupClaimer = false;
+    if (session && !isOwner && !isClaimer && (task.max_claimers || 1) > 1) {
+      const cu: any = await db.prepare("SELECT id FROM claimed_users WHERE task_id = ? AND user_id = ?").bind(params.id, session).first();
+      isGroupClaimer = !!cu;
+    }
+
+    if (!isOwner && !isClaimer && !isGroupClaimer && !hasValidInvite) {
+      return new Response(JSON.stringify({ error: 'This is a private task. You need an invite link to access it.' }), { status: 403 });
+    }
+  }
 
   // Get claimed users for group tasks only (avoid extra query for normal tasks)
   let claimedUsers: any[] = [];
@@ -34,6 +55,8 @@ export const GET: APIRoute = async ({ params }) => {
     helperLng: task.helper_lng,
     completionProof: JSON.parse(task.completion_proof || '[]'),
     attachments: JSON.parse(task.attachments || '[]'), createdAt: task.created_at,
+    visibility: task.visibility || 'public',
+    inviteCode: task.invite_code || null,
   }));
 };
 
@@ -289,10 +312,15 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
   if (!session) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   const db = (env as any).DB as D1Database;
   const user: any = await db.prepare("SELECT is_admin FROM users WHERE id = ?").bind(session).first();
-  const task: any = await db.prepare("SELECT poster_id FROM tasks WHERE id = ?").bind(params.id).first();
+  const task: any = await db.prepare("SELECT poster_id, status FROM tasks WHERE id = ?").bind(params.id).first();
   if (!task) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
   if (task.poster_id !== session && !user?.is_admin) {
     return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+  }
+  // Posters cannot delete once someone has claimed — the claimer has a
+  // legitimate interest in the task. Only an admin can remove it at that point.
+  if (task.status !== 'open' && !user?.is_admin) {
+    return new Response(JSON.stringify({ error: 'Cannot delete a task that has been claimed or completed. Contact support if needed.' }), { status: 400 });
   }
   await db.prepare("DELETE FROM tasks WHERE id = ?").bind(params.id).run();
   return new Response(JSON.stringify({ ok: true }));

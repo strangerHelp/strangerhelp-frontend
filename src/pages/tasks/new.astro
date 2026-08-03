@@ -146,6 +146,15 @@ import Navbar from "../../components/Navbar.astro";
           <input type="checkbox" id="anonymous" name="anonymous" class="w-5 h-5 rounded border-hairline" />
         </div>
 
+        <!-- Private task toggle -->
+        <div class="flex items-center justify-between p-4 bg-canvas-soft rounded-md border border-hairline">
+          <div>
+            <p class="text-sm font-medium text-ink">🔒 Private Task</p>
+            <p class="text-xs text-mute mt-0.5">Only people with the invite link can see this task.</p>
+          </div>
+          <input type="checkbox" id="visibility-private" name="visibility-private" class="w-5 h-5 rounded border-hairline" />
+        </div>
+
         <!-- Terms acceptance -->
         <div class="flex items-start gap-3 p-4 bg-canvas-soft rounded-md border border-hairline">
           <input type="checkbox" id="terms-accept" required class="w-5 h-5 mt-0.5 rounded border-hairline shrink-0" />
@@ -307,6 +316,7 @@ import Navbar from "../../components/Navbar.astro";
     fd.append('location', (document.getElementById('location') as HTMLInputElement).value);
     fd.append('anonymous', (document.getElementById('anonymous') as HTMLInputElement).checked ? 'true' : 'false');
     fd.append('urgent', urgentCheckbox.checked ? 'true' : 'false');
+    fd.append('visibility', (document.getElementById('visibility-private') as HTMLInputElement).checked ? 'private' : 'public');
     const maxClaimers = (document.getElementById('max-claimers') as HTMLInputElement).value;
     if (categorySelect.value === 'Event / Group Work') fd.append('max_claimers', maxClaimers);
     if (latInput.value) fd.append('lat', latInput.value);
@@ -326,9 +336,14 @@ import Navbar from "../../components/Navbar.astro";
         errorMsg.textContent = data.error || 'Failed to post task';
         errorMsg.classList.remove('hidden');
       } else {
-        successMsg.textContent = 'Task posted successfully! Redirecting...';
+        if (data.visibility === 'private' && data.inviteCode) {
+          const inviteUrl = `https://strangerhelp.com/tasks/${data.id}?invite=${data.inviteCode}`;
+          successMsg.innerHTML = `✅ Private task posted! Share this invite link:<br><code class="block mt-1 p-2 bg-canvas-soft-2 rounded text-xs break-all select-all">${inviteUrl}</code><p class="text-xs text-mute mt-1">Redirecting...</p>`;
+        } else {
+          successMsg.textContent = 'Task posted successfully! Redirecting...';
+        }
         successMsg.classList.remove('hidden');
-        setTimeout(() => window.location.href = `/tasks/${data.id}`, 1000);
+        setTimeout(() => window.location.href = `/tasks/${data.id}`, 2500);
       }
     } catch {
       errorMsg.textContent = 'Network error. Try again.';

@@ -83,6 +83,7 @@ import Footer from "../../components/Footer.astro";
 
 <script>
   const taskId = window.location.pathname.split('/tasks/')[1];
+  const inviteParam = new URLSearchParams(window.location.search).get('invite');
   let currentUser: any = null;
   let task: any = null;
 
@@ -93,7 +94,19 @@ import Footer from "../../components/Footer.astro";
       currentUser = d.user;
     }
 
-    const res = await fetch(`/api/tasks/${taskId}`);
+    const apiUrl = inviteParam ? `/api/tasks/${taskId}?invite=${encodeURIComponent(inviteParam)}` : `/api/tasks/${taskId}`;
+    const res = await fetch(apiUrl);
+    if (res.status === 403) {
+      const d = await res.json();
+      document.getElementById('task-content')!.innerHTML = `
+        <div class="text-center py-16">
+          <div class="text-4xl mb-4">🔒</div>
+          <p class="text-lg font-semibold text-ink">Private Task</p>
+          <p class="text-sm text-mute mt-2">${escapeHtml(d.error || 'You need an invite link to access this task.')}</p>
+          <a href="/tasks" class="mt-4 inline-flex h-9 items-center px-4 text-sm font-medium text-link">← Back to tasks</a>
+        </div>`;
+      return;
+    }
     if (!res.ok) {
       document.getElementById('task-content')!.classList.add('hidden');
       document.getElementById('not-found')!.classList.remove('hidden');
@@ -223,7 +236,7 @@ import Footer from "../../components/Footer.astro";
 
     // Delete + Report buttons
     let topActions = '';
-    if (isOwner || isAdmin) {
+    if (isAdmin || (isOwner && task.status === 'open')) {
       topActions += `<button id="delete-btn" class="h-8 px-3 text-xs font-medium text-error border border-error/30 rounded-md hover:bg-error-soft transition-colors">Delete Task</button>`;
     }
     if (isOwner && task.status === 'open') {
@@ -268,6 +281,7 @@ import Footer from "../../components/Footer.astro";
             <span class="px-2.5 py-0.5 text-xs font-medium bg-canvas-soft-2 text-body rounded-full">${escapeHtml(task.category)}</span>
             <span class="px-2.5 py-0.5 text-xs font-medium rounded-full ${task.status === 'open' ? 'bg-cyan-soft text-cyan-deep' : task.status === 'claimed' ? 'bg-warning-soft text-warning-deep' : 'bg-canvas-soft-2 text-mute'}">${task.status.charAt(0).toUpperCase() + task.status.slice(1)}</span>
             ${task.urgent ? '<span class="px-2.5 py-0.5 text-xs font-medium bg-error-soft text-error rounded-full">⚡ Urgent</span>' : ''}
+            ${task.visibility === 'private' ? '<span class="px-2.5 py-0.5 text-xs font-medium bg-canvas-soft-2 text-body rounded-full">🔒 Private</span>' : ''}
           </div>
           <div class="flex items-center gap-2">${topActions}</div>
         </div>
@@ -344,6 +358,18 @@ import Footer from "../../components/Footer.astro";
           WhatsApp
         </a>
       </div>
+      ${task.visibility === 'private' && isOwner && task.inviteCode ? `
+      <div class="mt-3 p-4 bg-canvas-soft rounded-lg border border-hairline">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-sm">🔒</span>
+          <p class="text-sm font-medium text-ink">Private Task — Invite Link</p>
+        </div>
+        <p class="text-xs text-mute mb-2">Only people with this link can view and claim this task.</p>
+        <div class="flex gap-2">
+          <input type="text" readonly value="https://strangerhelp.com/tasks/${taskId}?invite=${task.inviteCode}" class="flex-1 h-9 px-3 text-xs bg-canvas border border-hairline rounded-md select-all" />
+          <button id="copy-invite-btn" class="h-9 px-3 text-xs font-medium text-on-primary bg-primary rounded-md hover:opacity-90">Copy</button>
+        </div>
+      </div>` : ''}
       <div class="mt-4 p-4 bg-warning-soft rounded-lg border border-warning/20 flex items-start gap-3">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-warning-deep shrink-0 mt-0.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         <div>
@@ -380,6 +406,16 @@ import Footer from "../../components/Footer.astro";
     document.getElementById('edit-btn')?.addEventListener('click', openEditModal);
     document.getElementById('accept-completion-btn')?.addEventListener('click', acceptCompletion);
     document.getElementById('reject-completion-btn')?.addEventListener('click', rejectCompletion);
+
+    // Copy invite link
+    document.getElementById('copy-invite-btn')?.addEventListener('click', () => {
+      const url = `https://strangerhelp.com/tasks/${taskId}?invite=${task.inviteCode}`;
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = document.getElementById('copy-invite-btn')!;
+        btn.textContent = '✓ Copied';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+      });
+    });
 
     // Show file names when selected
     document.getElementById('proof-files')?.addEventListener('change', (e) => {
@@ -530,8 +566,10 @@ import Footer from "../../components/Footer.astro";
   }
 
   function setupShare() {
+    const shareUrl = task.visibility === 'private' && task.inviteCode
+      ? `https://strangerhelp.com/tasks/${taskId}?invite=${task.inviteCode}`
+      : `https://strangerhelp.com/tasks/${taskId}`;
     const shareText = `🆘 Task: ${task.title}\n💰 Earn ₹${task.budget}\n📍 ${task.location}\n⏰ ${task.deadline || 'Today'}\n\nComplete this task nearby and earn money on StrangerHelp!`;
-    const shareUrl = `https://strangerhelp.com/tasks/${taskId}`;
 
     // WhatsApp share
     const waBtn = document.getElementById('whatsapp-share') as HTMLAnchorElement;
