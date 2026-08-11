@@ -84,46 +84,52 @@ const navLinks = [
       </button>
     </div>
   </nav>
-
-  <!-- Mobile fullscreen drawer. Uses bg-brand (constant navy in both themes)
-       plus an inline fallback so the panel is never transparent even if the
-       stylesheet is slow to apply. -->
-  <div id="mobile-menu" class="hidden fixed inset-0 z-[9999] bg-brand overflow-y-auto" style="background-color: #101828;">
-    <div class="flex items-center justify-between px-4 h-16 border-b border-white/10">
-      <a href="/" class="flex items-center gap-2.5" aria-label="StrangerHelp home">
-        <img src="/logo-icon.jpeg" alt="" aria-hidden="true" class="h-9 w-auto rounded-lg" />
-        <span class="font-heading text-lg font-bold tracking-tight leading-none">
-          <span class="text-white">Stranger</span><span class="text-accent">Help</span>
-        </span>
-      </a>
-      <button id="mobile-menu-close" class="p-2 text-white" aria-label="Close menu">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
-    </div>
-    <div class="px-6 py-8 space-y-1">
-      {navLinks.map((link) => (
-        <a href={link.href} class="block py-3 text-lg font-medium text-white/90 hover:text-white border-b border-white/10">{link.label}</a>
-      ))}
-      <a href="/meets" class="block py-3 text-lg font-medium text-white/90 hover:text-white border-b border-white/10">Strangers Meet</a>
-      <a href="/path" class="block py-3 text-lg font-medium text-white/90 hover:text-white border-b border-white/10">Path</a>
-    </div>
-    <div id="mobile-auth" class="px-6 pt-4 flex flex-col gap-3">
-      <a href="/tasks/new" class="w-full text-center py-3 text-sm font-semibold text-on-accent bg-accent rounded-lg">Post a Task</a>
-      <a href="/login" class="w-full text-center py-3 text-sm font-medium text-white border border-white/30 rounded-lg">Log In</a>
-      <a href="/register" class="w-full text-center py-3 text-sm font-medium text-primary bg-white rounded-lg">Sign Up</a>
-    </div>
-  </div>
 </header>
+
+<!-- Mobile fullscreen drawer.
+     MUST stay outside <header>. The header uses backdrop-blur, and an element
+     with backdrop-filter becomes the containing block for position:fixed
+     descendants and creates its own stacking context. Nested inside, this
+     drawer's `fixed inset-0` resolved against the header's 64px box instead of
+     the viewport, so it opened as a clipped strip and no z-index could lift it
+     out. Keeping it as a sibling makes `fixed` resolve against the viewport. -->
+<div id="mobile-menu" class="hidden fixed inset-0 z-[9999] bg-brand overflow-y-auto" style="background-color: #101828;">
+  <div class="flex items-center justify-between px-4 h-16 border-b border-white/10">
+    <a href="/" class="flex items-center gap-2.5" aria-label="StrangerHelp home">
+      <img src="/logo-icon.jpeg" alt="" aria-hidden="true" class="h-9 w-auto rounded-lg" />
+      <span class="font-heading text-lg font-bold tracking-tight leading-none">
+        <span class="text-white">Stranger</span><span class="text-accent">Help</span>
+      </span>
+    </a>
+    <button id="mobile-menu-close" class="p-2 text-white" aria-label="Close menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="px-6 py-8 space-y-1">
+    {navLinks.map((link) => (
+      <a href={link.href} class="block py-3 text-lg font-medium text-white/90 hover:text-white border-b border-white/10">{link.label}</a>
+    ))}
+    <a href="/meets" class="block py-3 text-lg font-medium text-white/90 hover:text-white border-b border-white/10">Strangers Meet</a>
+    <a href="/path" class="block py-3 text-lg font-medium text-white/90 hover:text-white border-b border-white/10">Path</a>
+  </div>
+  <div id="mobile-auth" class="px-6 pt-4 pb-8 flex flex-col gap-3">
+    <a href="/tasks/new" class="w-full text-center py-3 text-sm font-semibold text-on-accent bg-accent rounded-lg">Post a Task</a>
+    <a href="/login" class="w-full text-center py-3 text-sm font-medium text-white border border-white/30 rounded-lg">Log In</a>
+    <a href="/register" class="w-full text-center py-3 text-sm font-medium text-primary bg-white rounded-lg">Sign Up</a>
+  </div>
+</div>
 
 <script>
   // Mobile menu open/close
-  document.getElementById("mobile-menu-btn")?.addEventListener("click", () => {
-    document.getElementById("mobile-menu")?.classList.remove("hidden");
-    document.body.style.overflow = "hidden";
-  });
-  document.getElementById("mobile-menu-close")?.addEventListener("click", () => {
-    document.getElementById("mobile-menu")?.classList.add("hidden");
-    document.body.style.overflow = "";
+  const mobileMenu = document.getElementById("mobile-menu");
+  function setMenu(open: boolean) {
+    mobileMenu?.classList.toggle("hidden", !open);
+    document.body.style.overflow = open ? "hidden" : "";
+  }
+  document.getElementById("mobile-menu-btn")?.addEventListener("click", () => setMenu(true));
+  document.getElementById("mobile-menu-close")?.addEventListener("click", () => setMenu(false));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !mobileMenu?.classList.contains("hidden")) setMenu(false);
   });
 
   // Dark mode toggle
