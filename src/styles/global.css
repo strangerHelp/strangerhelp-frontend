@@ -9,6 +9,12 @@
   --color-body: #344054;
   --color-mute: #667085;
 
+  /* Brand navy — CONSTANT in both light and dark mode.
+     For brand surfaces (footer, mobile drawer) that must stay navy regardless
+     of theme. --color-primary inverts in dark mode; this deliberately does not. */
+  --color-brand: #101828;
+  --color-on-brand: #ffffff;
+
   /* Accent: Marigold saffron — CTAs, highlights, active states ONLY */
   --color-accent: #F5A623;
   --color-accent-hover: #E09000;
