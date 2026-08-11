@@ -248,7 +248,7 @@ import Footer from "../../components/Footer.astro";
 
     let attachmentsHtml = '';
     if (task.attachments?.length > 0) {
-      attachmentsHtml = `<div class="mt-4"><p class="text-xs text-mute font-mono uppercase mb-2">Attachments</p><div class="flex gap-2 flex-wrap">${task.attachments.map((a: string, i: number) => {
+      attachmentsHtml = `<div class="mt-4"><p class="text-xs text-mute font-medium uppercase mb-2">Attachments</p><div class="flex gap-2 flex-wrap">${task.attachments.map((a: string, i: number) => {
         const url = safeUrl(a);
         if (!url) return '';
         const isImage = url.startsWith('data:image') || url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
@@ -289,15 +289,15 @@ import Footer from "../../components/Footer.astro";
         ${task.description ? `<p class="mt-4 text-sm text-body leading-relaxed">${escapeHtml(task.description)}</p>` : ''}
         ${attachmentsHtml}
         <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-mono uppercase">Budget</p><p class="mt-1 text-lg font-semibold text-ink">₹${task.budget}${task.maxClaimers > 1 ? '<span class="text-xs font-normal text-mute">/person</span>' : ''}</p></div>
-          <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-mono uppercase">Deadline</p><p class="mt-1 text-sm font-medium text-ink">${escapeHtml(task.deadline || 'Today')}</p></div>
-          <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-mono uppercase">Location</p><p class="mt-1 text-sm font-medium text-ink">${escapeHtml(task.location)}</p></div>
-          <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-mono uppercase">Posted</p><p class="mt-1 text-sm font-medium text-ink">${time}</p></div>
+          <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-medium uppercase">Budget</p><p class="mt-1 text-lg font-semibold text-ink">₹${task.budget}${task.maxClaimers > 1 ? '<span class="text-xs font-normal text-mute">/person</span>' : ''}</p></div>
+          <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-medium uppercase">Deadline</p><p class="mt-1 text-sm font-medium text-ink">${escapeHtml(task.deadline || 'Today')}</p></div>
+          <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-medium uppercase">Location</p><p class="mt-1 text-sm font-medium text-ink">${escapeHtml(task.location)}</p></div>
+          <div class="p-3 bg-canvas-soft rounded-md"><p class="text-xs text-mute font-medium uppercase">Posted</p><p class="mt-1 text-sm font-medium text-ink">${time}</p></div>
         </div>
         ${task.maxClaimers > 1 ? `
         <div class="mt-4 p-4 bg-canvas-soft rounded-md border border-hairline">
           <div class="flex items-center justify-between mb-2">
-            <p class="text-xs font-mono uppercase text-mute">Group Task — ${task.claimedUsers?.length || 0}/${task.maxClaimers} helpers joined</p>
+            <p class="text-xs font-medium uppercase text-mute">Group Task — ${task.claimedUsers?.length || 0}/${task.maxClaimers} helpers joined</p>
             <span class="px-2 py-0.5 text-xs font-medium rounded-full ${(task.claimedUsers?.length || 0) >= task.maxClaimers ? 'bg-error-soft text-error' : 'bg-cyan-soft text-cyan-deep'}">${(task.claimedUsers?.length || 0) >= task.maxClaimers ? 'Full' : 'Open'}</span>
           </div>
           <div class="w-full h-2 bg-hairline rounded-full overflow-hidden"><div class="h-full bg-cyan-deep rounded-full" style="width:${Math.round(((task.claimedUsers?.length || 0) / task.maxClaimers) * 100)}%"></div></div>
@@ -487,12 +487,12 @@ import Footer from "../../components/Footer.astro";
         // Logo (draw the StrangerHelp icon)
         const logoX = 12, logoY = canvas.height - barH + 12;
         // Logo background circle
-        ctx.fillStyle = '#171717';
+        ctx.fillStyle = '#101828';
         ctx.beginPath(); ctx.arc(logoX + 18, logoY + 18, 18, 0, Math.PI * 2); ctx.fill();
         // Cyan dots (eyes)
-        ctx.fillStyle = '#50e3c2';
+        ctx.fillStyle = '#2A9D8F';
         ctx.beginPath(); ctx.arc(logoX + 12, logoY + 14, 4, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#00dfd8';
+        ctx.fillStyle = '#2A9D8F';
         ctx.beginPath(); ctx.arc(logoX + 24, logoY + 14, 4, 0, Math.PI * 2); ctx.fill();
         // Mouth line
         ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.lineCap = 'round';
@@ -504,7 +504,7 @@ import Footer from "../../components/Footer.astro";
         ctx.font = 'bold 16px system-ui';
         ctx.fillText('StrangerHelp', textX, canvas.height - barH + 22);
         ctx.font = '11px system-ui';
-        ctx.fillStyle = '#50e3c2';
+        ctx.fillStyle = '#2A9D8F';
         ctx.fillText('Verified Completion Proof', textX, canvas.height - barH + 38);
 
         // Location + time
@@ -562,7 +562,7 @@ import Footer from "../../components/Footer.astro";
       zoom: 14,
       interactive: true,
     });
-    new maplibregl.Marker({ color: '#171717' }).setLngLat([lng, lat]).addTo(map);
+    new maplibregl.Marker({ color: '#101828' }).setLngLat([lng, lat]).addTo(map);
   }
 
   function setupShare() {

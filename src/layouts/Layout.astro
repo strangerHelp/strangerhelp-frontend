@@ -25,7 +25,7 @@ const canonicalUrl = canonical || new URL(Astro.url.pathname, "https://strangerh
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/jpeg" href="/favicon.jpeg" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="canonical" href={canonicalUrl} />
 
@@ -52,7 +52,7 @@ const canonicalUrl = canonical || new URL(Astro.url.pathname, "https://strangerh
     <meta name="twitter:image" content={image} />
 
     <!-- Mobile -->
-    <meta name="theme-color" content="#171717" />
+    <meta name="theme-color" content="#101828" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -68,16 +68,16 @@ const canonicalUrl = canonical || new URL(Astro.url.pathname, "https://strangerh
       gtag('config', 'G-X1JKCFHJ3D');
     </script>
 
-    <!-- Geist Font -->
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <!-- Google Fonts: Space Grotesk (headings) + Inter (body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <script is:inline>
       const t = localStorage.getItem("theme");
       if (t === "dark" || (!t && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
         document.documentElement.classList.add("dark");
       }
     </script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-mono/style.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
 
     <script src="/escape.js" is:inline></script>
     <script src="/compress.js" is:inline></script>

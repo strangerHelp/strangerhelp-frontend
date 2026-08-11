@@ -166,11 +166,34 @@ describe('task deletion', () => {
     expect((await del(OUTSIDER)).status).toBe(403);
   });
 
-  it('allows the poster', async () => {
+  it('allows the poster to delete an open task', async () => {
     expect((await del(POSTER)).status).toBe(200);
   });
 
   it('allows an admin', async () => {
+    await seedTask({ id: TASK }); // re-seed after previous test deleted it
+    expect((await del('admin_1')).status).toBe(200);
+  });
+
+  it('blocks the poster from deleting a claimed task', async () => {
+    await DB().prepare("UPDATE tasks SET status = 'claimed', claimed_by = ? WHERE id = ?")
+      .bind(CLAIMER, TASK).run();
+    const res = await del(POSTER);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toMatch(/claimed/i);
+    // task must still exist
+    const row = await DB().prepare("SELECT id FROM tasks WHERE id = ?").bind(TASK).first();
+    expect(row).not.toBeNull();
+  });
+
+  it('blocks the poster from deleting a completed task', async () => {
+    await DB().prepare("UPDATE tasks SET status = 'completed' WHERE id = ?").bind(TASK).run();
+    expect((await del(POSTER)).status).toBe(400);
+  });
+
+  it('allows an admin to delete a claimed task', async () => {
+    await DB().prepare("UPDATE tasks SET status = 'claimed' WHERE id = ?").bind(TASK).run();
     expect((await del('admin_1')).status).toBe(200);
   });
 });

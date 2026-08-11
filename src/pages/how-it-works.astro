@@ -10,7 +10,7 @@ import Footer from "../components/Footer.astro";
     <!-- Hero -->
     <section class="bg-canvas border-b border-hairline">
       <div class="mx-auto max-w-[1400px] px-4 py-20 md:px-6 md:py-28 text-center">
-        <p class="font-mono text-xs text-mute uppercase tracking-wide mb-3">How it works</p>
+        <p class="font-medium text-xs text-mute uppercase tracking-wide mb-3">How it works</p>
         <h1 class="text-3xl md:text-[48px] font-semibold leading-tight md:leading-[48px] tracking-[-2.4px] text-ink max-w-2xl mx-auto">
           Simple. Safe. Fast.
         </h1>
@@ -32,7 +32,7 @@ import Footer from "../components/Footer.astro";
             { step: "04", title: "Verify & pay", desc: "Helper submits photo proof. You verify and release escrow payment." },
           ].map((item) => (
             <div>
-              <div class="text-2xl font-mono font-semibold text-hairline-strong mb-3">{item.step}</div>
+              <div class="text-2xl font-medium font-semibold text-hairline-strong mb-3">{item.step}</div>
               <h3 class="text-base font-semibold text-ink">{item.title}</h3>
               <p class="mt-2 text-sm text-body leading-relaxed">{item.desc}</p>
             </div>
@@ -53,7 +53,7 @@ import Footer from "../components/Footer.astro";
             { step: "04", title: "Get paid instantly", desc: "Payment released from escrow to your wallet. Build your Trust Score." },
           ].map((item) => (
             <div>
-              <div class="text-2xl font-mono font-semibold text-hairline-strong mb-3">{item.step}</div>
+              <div class="text-2xl font-medium font-semibold text-hairline-strong mb-3">{item.step}</div>
               <h3 class="text-base font-semibold text-ink">{item.title}</h3>
               <p class="mt-2 text-sm text-body leading-relaxed">{item.desc}</p>
             </div>

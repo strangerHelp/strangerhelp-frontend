@@ -17,7 +17,7 @@ import Navbar from "../components/Navbar.astro";
             <span class="relative inline-flex rounded-full h-3 w-3 bg-cyan-deep"></span>
           </span>
           <h1 class="text-sm font-semibold text-ink">Live Pulse</h1>
-          <span class="ml-auto text-xs text-mute font-mono" id="online-count">0 online</span>
+          <span class="ml-auto text-xs text-mute font-medium" id="online-count">0 online</span>
         </div>
         <p class="text-xs text-body mb-3">Real-time view of helpers and open tasks near you.</p>
 
@@ -96,7 +96,7 @@ import Navbar from "../components/Navbar.astro";
           var el = document.createElement('div');
           el.style.cssText = 'width:16px;height:16px;background:#f5a623;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);cursor:pointer;';
           var popup = new maplibregl.Popup({ offset: 12 }).setHTML(
-            '<div style="font-size:13px;font-weight:600;">' + esc(t.title) + '</div><div style="font-size:11px;color:#666;">₹' + t.budget + ' · ' + esc(t.location) + '</div><a href="/tasks/' + t._id + '" style="font-size:11px;color:#0070f3;">View Task →</a>'
+            '<div style="font-size:13px;font-weight:600;">' + esc(t.title) + '</div><div style="font-size:11px;color:#666;">₹' + t.budget + ' · ' + esc(t.location) + '</div><a href="/tasks/' + t._id + '" style="font-size:11px;color:#101828;">View Task →</a>'
           );
           var marker = new maplibregl.Marker({ element: el }).setLngLat([t.lng, t.lat]).setPopup(popup).addTo(map);
           taskMarkers.push(marker);

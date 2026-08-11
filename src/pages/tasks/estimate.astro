@@ -7,7 +7,7 @@ import Navbar from "../../components/Navbar.astro";
   <Navbar />
   <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
     <div class="max-w-lg mx-auto">
-      <p class="font-mono text-xs text-mute uppercase tracking-wide mb-2">AI-Powered</p>
+      <p class="font-medium text-xs text-mute uppercase tracking-wide mb-2">AI-Powered</p>
       <h1 class="text-2xl font-semibold text-ink tracking-[-0.96px]">Fair Price Estimator.</h1>
       <p class="mt-2 text-sm text-body">Our AI suggests the right price based on distance, time, difficulty, and market rates. No more guessing.</p>
 
@@ -45,7 +45,7 @@ import Navbar from "../../components/Navbar.astro";
       <!-- Result (hidden by default) -->
       <div id="estimate-result" class="hidden mt-8">
         <div class="p-6 bg-canvas rounded-xl border border-hairline shadow-[0px_2px_2px_#0000000a,0px_8px_16px_-4px_#0000000a]">
-          <p class="text-xs font-mono text-mute uppercase mb-1">Suggested Price</p>
+          <p class="text-xs font-medium text-mute uppercase mb-1">Suggested Price</p>
           <div class="flex items-baseline gap-2">
             <span class="text-3xl font-semibold text-ink" id="price-main">₹280</span>
             <span class="text-sm text-mute">± ₹50</span>
@@ -53,7 +53,7 @@ import Navbar from "../../components/Navbar.astro";
 
           <!-- Breakdown -->
           <div class="mt-5 pt-5 border-t border-hairline space-y-3">
-            <p class="text-xs font-mono text-mute uppercase mb-2">Price Breakdown</p>
+            <p class="text-xs font-medium text-mute uppercase mb-2">Price Breakdown</p>
             <div class="flex justify-between text-sm">
               <span class="text-body flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-gradient-develop-start"></span>Base rate (Document)
@@ -82,7 +82,7 @@ import Navbar from "../../components/Navbar.astro";
 
           <!-- Comparison -->
           <div class="mt-5 pt-5 border-t border-hairline">
-            <p class="text-xs font-mono text-mute uppercase mb-2">Market Comparison</p>
+            <p class="text-xs font-medium text-mute uppercase mb-2">Market Comparison</p>
             <div class="flex items-center gap-3 text-xs">
               <div class="flex-1 p-2 bg-error-soft rounded text-center">
                 <p class="text-error-deep font-medium">₹500+</p>

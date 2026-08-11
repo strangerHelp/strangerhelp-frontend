@@ -69,7 +69,7 @@ import Layout from "../../layouts/Layout.astro";
 
       <!-- Today's Activity -->
       <div class="mt-6 p-4 bg-cyan-soft/20 rounded-lg border border-cyan/20">
-        <p class="text-xs font-mono uppercase text-cyan-deep mb-2">📈 Today's Activity</p>
+        <p class="text-xs font-medium uppercase text-cyan-deep mb-2">📈 Today's Activity</p>
         <div class="grid grid-cols-3 gap-4">
           <div><p class="text-xl font-bold text-ink">${stats.todayUsers}</p><p class="text-xs text-mute">New Users</p></div>
           <div><p class="text-xl font-bold text-ink">${stats.todayTasks}</p><p class="text-xs text-mute">Tasks Posted</p></div>
@@ -90,22 +90,22 @@ import Layout from "../../layouts/Layout.astro";
       <!-- Core Stats -->
       <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
         <div class="p-4 bg-canvas rounded-lg border border-hairline">
-          <p class="text-xs text-mute font-mono uppercase">Users</p>
+          <p class="text-xs text-mute font-medium uppercase">Users</p>
           <p class="mt-1 text-2xl font-semibold text-ink">${stats.users}</p>
           <p class="text-xs text-cyan-deep">${stats.verifiedUsers} verified</p>
         </div>
         <div class="p-4 bg-canvas rounded-lg border border-hairline">
-          <p class="text-xs text-mute font-mono uppercase">Total Tasks</p>
+          <p class="text-xs text-mute font-medium uppercase">Total Tasks</p>
           <p class="mt-1 text-2xl font-semibold text-ink">${stats.tasks}</p>
           <p class="text-xs text-mute">Avg ₹${stats.avgBudget}/task</p>
         </div>
         <div class="p-4 bg-canvas rounded-lg border border-hairline">
-          <p class="text-xs text-mute font-mono uppercase">Messages</p>
+          <p class="text-xs text-mute font-medium uppercase">Messages</p>
           <p class="mt-1 text-2xl font-semibold text-ink">${stats.messages}</p>
           <p class="text-xs text-mute">${stats.conversations} conversations</p>
         </div>
         <div class="p-4 bg-canvas rounded-lg border border-hairline">
-          <p class="text-xs text-mute font-mono uppercase">GMV</p>
+          <p class="text-xs text-mute font-medium uppercase">GMV</p>
           <p class="mt-1 text-2xl font-semibold text-ink">₹${stats.totalGMV.toLocaleString()}</p>
           <p class="text-xs text-mute">Completed tasks value</p>
         </div>
@@ -113,7 +113,7 @@ import Layout from "../../layouts/Layout.astro";
 
       <!-- Task Pipeline -->
       <div class="mt-4">
-        <p class="text-xs font-mono uppercase text-mute mb-2">Task Pipeline</p>
+        <p class="text-xs font-medium uppercase text-mute mb-2">Task Pipeline</p>
         <div class="grid grid-cols-4 gap-3">
           <div class="p-3 bg-canvas rounded-lg border border-hairline text-center">
             <p class="text-lg font-bold text-cyan-deep">${stats.openTasks}</p>

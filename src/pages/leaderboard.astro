@@ -22,7 +22,7 @@ const leaders = [
   <main class="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
     <div class="max-w-3xl mx-auto">
       <div class="text-center mb-10">
-        <p class="font-mono text-xs text-mute uppercase tracking-wide mb-3">Community</p>
+        <p class="font-medium text-xs text-mute uppercase tracking-wide mb-3">Community</p>
         <h1 class="text-2xl md:text-[32px] font-semibold text-ink tracking-[-1.28px]">Top Helpers</h1>
         <p class="mt-2 text-sm text-body">The most trusted and active helpers across India.</p>
       </div>
@@ -31,7 +31,7 @@ const leaders = [
       <div class="grid grid-cols-3 gap-3 mb-8">
         {leaders.slice(0, 3).map((l) => (
           <div class={`p-5 rounded-lg text-center border ${l.rank === 1 ? "bg-primary text-on-primary border-primary" : "bg-canvas border-hairline"}`}>
-            <div class={`text-2xl font-mono font-semibold mb-2 ${l.rank === 1 ? "text-warning" : "text-hairline-strong"}`}>#{l.rank}</div>
+            <div class={`text-2xl font-medium font-semibold mb-2 ${l.rank === 1 ? "text-warning" : "text-hairline-strong"}`}>#{l.rank}</div>
             <p class={`text-sm font-semibold ${l.rank === 1 ? "" : "text-ink"}`}>{l.name}</p>
             <p class={`text-xs mt-0.5 ${l.rank === 1 ? "opacity-70" : "text-mute"}`}>{l.city}</p>
             <p class={`text-lg font-semibold mt-2 ${l.rank === 1 ? "" : "text-ink"}`}>{l.score.toLocaleString()}</p>
@@ -45,17 +45,17 @@ const leaders = [
         <table class="w-full">
           <thead>
             <tr class="border-b border-hairline bg-canvas-soft">
-              <th class="text-left px-4 py-3 text-xs font-mono uppercase text-mute">#</th>
-              <th class="text-left px-4 py-3 text-xs font-mono uppercase text-mute">Helper</th>
-              <th class="text-left px-4 py-3 text-xs font-mono uppercase text-mute hidden sm:table-cell">Badge</th>
-              <th class="text-right px-4 py-3 text-xs font-mono uppercase text-mute">Score</th>
-              <th class="text-right px-4 py-3 text-xs font-mono uppercase text-mute hidden sm:table-cell">Tasks</th>
+              <th class="text-left px-4 py-3 text-xs font-medium uppercase text-mute">#</th>
+              <th class="text-left px-4 py-3 text-xs font-medium uppercase text-mute">Helper</th>
+              <th class="text-left px-4 py-3 text-xs font-medium uppercase text-mute hidden sm:table-cell">Badge</th>
+              <th class="text-right px-4 py-3 text-xs font-medium uppercase text-mute">Score</th>
+              <th class="text-right px-4 py-3 text-xs font-medium uppercase text-mute hidden sm:table-cell">Tasks</th>
             </tr>
           </thead>
           <tbody>
             {leaders.map((l) => (
               <tr class="border-b border-hairline last:border-0 hover:bg-canvas-soft transition-colors">
-                <td class="px-4 py-3 text-sm font-mono text-mute">{l.rank}</td>
+                <td class="px-4 py-3 text-sm font-medium text-mute">{l.rank}</td>
                 <td class="px-4 py-3">
                   <p class="text-sm font-medium text-ink">{l.name}</p>
                   <p class="text-xs text-mute">{l.city}</p>

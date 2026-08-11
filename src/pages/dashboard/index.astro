@@ -56,7 +56,7 @@ import AccountLayout from "../../layouts/AccountLayout.astro";
 
     document.getElementById('stats')!.innerHTML = stats.map(s =>
       `<div class="p-4 bg-canvas rounded-lg border border-hairline">
-        <p class="text-xs text-mute font-mono uppercase">${s.label}</p>
+        <p class="text-xs text-mute font-medium uppercase">${s.label}</p>
         <p class="mt-1 text-2xl font-semibold text-ink">${s.value}</p>
       </div>`
     ).join('');

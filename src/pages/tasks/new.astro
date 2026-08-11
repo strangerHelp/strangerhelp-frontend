@@ -105,7 +105,7 @@ import Navbar from "../../components/Navbar.astro";
             <div id="voice-recording" class="hidden flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-error animate-pulse"></span>
-                <span id="voice-timer" class="text-xs font-mono text-error">00:00</span>
+                <span id="voice-timer" class="text-xs font-medium text-error">00:00</span>
               </div>
               <button type="button" id="voice-stop" class="h-8 px-3 text-xs font-medium text-error border border-error/30 rounded-full hover:bg-error-soft">Stop</button>
             </div>
@@ -411,7 +411,7 @@ import Navbar from "../../components/Navbar.astro";
       zoom: 14,
     });
     if (marker) marker.remove();
-    marker = new maplibregl.Marker({ color: '#171717' }).setLngLat([lng, lat]).addTo(miniMap);
+    marker = new maplibregl.Marker({ color: '#101828' }).setLngLat([lng, lat]).addTo(miniMap);
     miniMap.on('click', (e: any) => {
       const { lng: newLng, lat: newLat } = e.lngLat;
       marker.setLngLat([newLng, newLat]);
