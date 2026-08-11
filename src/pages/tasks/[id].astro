@@ -470,7 +470,7 @@ import Footer from "../../components/Footer.astro";
 
       // Draw watermark on canvas
       const img = new Image();
-      img.onload = () => {
+      img.onload = async () => {
         const canvas = document.getElementById('proof-canvas') as HTMLCanvasElement;
         const maxW = 1200;
         const scale = img.width > maxW ? maxW / img.width : 1;
@@ -481,30 +481,33 @@ import Footer from "../../components/Footer.astro";
 
         // Watermark bar
         const barH = 80;
-        ctx.fillStyle = 'rgba(23,23,23,0.85)';
+        ctx.fillStyle = 'rgba(16,24,40,0.88)';
         ctx.fillRect(0, canvas.height - barH, canvas.width, barH);
 
-        // Logo (draw the StrangerHelp icon)
-        const logoX = 12, logoY = canvas.height - barH + 12;
-        // Logo background circle
-        ctx.fillStyle = '#101828';
-        ctx.beginPath(); ctx.arc(logoX + 18, logoY + 18, 18, 0, Math.PI * 2); ctx.fill();
-        // Cyan dots (eyes)
-        ctx.fillStyle = '#2A9D8F';
-        ctx.beginPath(); ctx.arc(logoX + 12, logoY + 14, 4, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#2A9D8F';
-        ctx.beginPath(); ctx.arc(logoX + 24, logoY + 14, 4, 0, Math.PI * 2); ctx.fill();
-        // Mouth line
-        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(logoX + 14, logoY + 24); ctx.lineTo(logoX + 22, logoY + 24); ctx.stroke();
+        // Load and draw the actual logo icon
+        const logoImg = new Image();
+        logoImg.crossOrigin = 'anonymous';
+        logoImg.src = '/logo-icon.jpeg';
+        await new Promise<void>((r) => { logoImg.onload = () => r(); logoImg.onerror = () => r(); });
+        const logoSize = 36;
+        const logoX = 12, logoY = canvas.height - barH + (barH - logoSize) / 2;
+        // Draw white circle behind logo for contrast
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(logoX + logoSize/2, logoY + logoSize/2, logoSize/2 + 2, 0, Math.PI * 2); ctx.fill();
+        if (logoImg.complete && logoImg.naturalWidth > 0) {
+          ctx.save();
+          ctx.beginPath(); ctx.arc(logoX + logoSize/2, logoY + logoSize/2, logoSize/2, 0, Math.PI * 2); ctx.clip();
+          ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+          ctx.restore();
+        }
 
         // Text next to logo
-        const textX = logoX + 44;
+        const textX = logoX + logoSize + 12;
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 16px system-ui';
         ctx.fillText('StrangerHelp', textX, canvas.height - barH + 22);
         ctx.font = '11px system-ui';
-        ctx.fillStyle = '#2A9D8F';
+        ctx.fillStyle = '#F5A623';
         ctx.fillText('Verified Completion Proof', textX, canvas.height - barH + 38);
 
         // Location + time
