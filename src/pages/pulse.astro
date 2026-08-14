@@ -50,6 +50,9 @@ import Navbar from "../components/Navbar.astro";
     </div>
   </main>
   <script is:inline src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <style>
+    @keyframes pulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(2); opacity: 0; } }
+  </style>
   <script is:inline>
     var map, isOnline = false, watchId = null, helperMarkers = [], taskMarkers = [];
 
@@ -83,8 +86,9 @@ import Navbar from "../components/Navbar.astro";
 
         helpers.forEach(function(h) {
           var el = document.createElement('div');
-          el.style.cssText = 'width:16px;height:16px;background:#29bc9b;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);cursor:pointer;';
-          var popup = new maplibregl.Popup({ offset: 12 }).setHTML(
+          el.style.cssText = 'width:24px;height:24px;position:relative;';
+          el.innerHTML = '<div style="position:absolute;inset:-4px;background:rgba(42,157,143,0.3);border-radius:50%;animation:pulse 2s infinite;"></div><div style="width:24px;height:24px;background:#2A9D8F;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);position:relative;z-index:1;"></div>';
+          var popup = new maplibregl.Popup({ offset: 14 }).setHTML(
             '<div style="font-size:13px;font-weight:600;">' + esc(h.name) + '</div><div style="font-size:11px;color:#666;">' + esc(h.city || 'Helper') + '</div>'
           );
           var marker = new maplibregl.Marker({ element: el }).setLngLat([h.lng, h.lat]).setPopup(popup).addTo(map);
@@ -129,8 +133,13 @@ import Navbar from "../components/Navbar.astro";
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+            }).then(function() {
+              // Refresh the map data immediately so the user sees their own dot
+              loadPulseData();
             });
-          }, function() { alert('Location access denied'); }, { enableHighAccuracy: true, maximumAge: 30000 });
+            // Center map on user's location
+            map.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 13 });
+          }, function() { alert('Location access denied. Please enable location services.'); isOnline = false; toggle.setAttribute('aria-pressed', 'false'); toggle.classList.remove('bg-primary'); toggle.classList.add('bg-hairline'); toggle.querySelector('span').classList.remove('translate-x-4'); }, { enableHighAccuracy: true, maximumAge: 30000 });
         }
       } else {
         if (watchId !== null) navigator.geolocation.clearWatch(watchId);

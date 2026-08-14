@@ -67,13 +67,74 @@ export const PATCH: APIRoute = async ({ cookies, request }) => {
   else if (action === 'verify_user') await db.prepare("UPDATE users SET verified = 1, verification_status = 'approved' WHERE id = ?").bind(id).run();
   else if (action === 'reject_verification') await db.prepare("UPDATE users SET verification_status = '' WHERE id = ?").bind(id).run();
   else if (action === 'delete_user') {
-    await db.prepare("DELETE FROM messages WHERE sender_id = ?").bind(id).run();
-    await db.prepare("DELETE FROM conversations WHERE participant_1 = ? OR participant_2 = ?").bind(id, id).run();
-    await db.prepare("DELETE FROM tasks WHERE poster_id = ?").bind(id).run();
-    await db.prepare("DELETE FROM notifications WHERE user_id = ?").bind(id).run();
-    await db.prepare("DELETE FROM pulse WHERE user_id = ?").bind(id).run();
-    await db.prepare("DELETE FROM reports WHERE reporter_id = ?").bind(id).run();
-    await db.prepare("DELETE FROM users WHERE id = ?").bind(id).run();
+    try {
+      // Order matters: D1 enforces foreign keys, and the constraints are
+      // immediate (checked per statement), not deferred. Three FKs apply here:
+      //   tasks.poster_id        -> users.id
+      //   messages.conversation_id -> conversations.id
+      //   answers.question_id    -> questions.id
+      //
+      // So a child must be cleared by RELATIONSHIP, not just by author. Deleting
+      // only this user's messages and then their conversations left the OTHER
+      // participant's messages pointing at a deleted conversation, which is what
+      // raised SQLITE_CONSTRAINT_FOREIGNKEY. Same shape for answers/questions.
+      await db.batch([
+        // 1. Messages: clear every message in any conversation the user is part
+        //    of (including the other participant's and 'support' messages),
+        //    then any stray messages they sent elsewhere. Only then can the
+        //    conversations themselves go.
+        db.prepare(
+          "DELETE FROM messages WHERE conversation_id IN (SELECT id FROM conversations WHERE participant_1 = ? OR participant_2 = ?)"
+        ).bind(id, id),
+        db.prepare("DELETE FROM messages WHERE sender_id = ?").bind(id),
+        db.prepare("DELETE FROM conversations WHERE participant_1 = ? OR participant_2 = ?").bind(id, id),
+
+        // 2. Q&A: clear all answers and votes on the user's questions (authored
+        //    by anyone), plus the user's own answers/votes on other questions,
+        //    before removing the questions.
+        db.prepare(
+          "DELETE FROM answers WHERE question_id IN (SELECT id FROM questions WHERE poster_id = ?)"
+        ).bind(id),
+        db.prepare("DELETE FROM answers WHERE author_id = ?").bind(id),
+        db.prepare(
+          "DELETE FROM question_votes WHERE question_id IN (SELECT id FROM questions WHERE poster_id = ?)"
+        ).bind(id),
+        db.prepare("DELETE FROM question_votes WHERE user_id = ?").bind(id),
+        db.prepare("DELETE FROM questions WHERE poster_id = ?").bind(id),
+
+        // 3. Task-related rows. No FK on task_id, but clearing them avoids
+        //    dangling references to tasks that are about to be deleted.
+        db.prepare(
+          "DELETE FROM claimed_users WHERE user_id = ? OR task_id IN (SELECT id FROM tasks WHERE poster_id = ?)"
+        ).bind(id, id),
+        db.prepare(
+          "DELETE FROM claim_requests WHERE requester_id = ? OR task_id IN (SELECT id FROM tasks WHERE poster_id = ?)"
+        ).bind(id, id),
+        db.prepare(
+          "DELETE FROM reviews WHERE reviewer_id = ? OR reviewee_id = ? OR task_id IN (SELECT id FROM tasks WHERE poster_id = ?)"
+        ).bind(id, id, id),
+
+        // 4. Release tasks this user had claimed back to the pool rather than
+        //    leaving claimed_by pointing at a deleted account.
+        db.prepare(
+          "UPDATE tasks SET status = 'open', claimed_by = NULL, claimed_by_name = NULL, claimed_at = NULL, completion_status = '', completion_proof = '[]', tracking_active = 0, helper_lat = NULL, helper_lng = NULL WHERE claimed_by = ?"
+        ).bind(id),
+
+        // 5. Remaining user-owned rows, then the tasks they posted (satisfying
+        //    tasks.poster_id -> users.id), then the account itself.
+        db.prepare("DELETE FROM meet_attendees WHERE user_id = ?").bind(id),
+        db.prepare("DELETE FROM push_subscriptions WHERE user_id = ?").bind(id),
+        db.prepare("DELETE FROM email_tokens WHERE user_id = ?").bind(id),
+        db.prepare("DELETE FROM paths WHERE user_id = ?").bind(id),
+        db.prepare("DELETE FROM notifications WHERE user_id = ?").bind(id),
+        db.prepare("DELETE FROM pulse WHERE user_id = ?").bind(id),
+        db.prepare("DELETE FROM reports WHERE reporter_id = ?").bind(id),
+        db.prepare("DELETE FROM tasks WHERE poster_id = ?").bind(id),
+        db.prepare("DELETE FROM users WHERE id = ?").bind(id),
+      ]);
+    } catch (e: any) {
+      return new Response(JSON.stringify({ error: 'Delete failed: ' + (e?.message || 'unknown error') }), { status: 500 });
+    }
   }
   else return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400 });
 

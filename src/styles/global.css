@@ -36,9 +36,9 @@
   --color-hairline-strong: #98A2B3;
 
   /* Semantic (mapped to the 5-color system) */
-  --color-link: #101828;
-  --color-link-deep: #101828;
-  --color-link-bg-soft: #F5F3EF;
+  --color-link: #2A9D8F;
+  --color-link-deep: #1F7A6F;
+  --color-link-bg-soft: #E6F5F3;
   --color-success: #2A9D8F;
   --color-error: #D92D20;
   --color-error-soft: #FEE4E2;
@@ -135,9 +135,9 @@
     --color-hairline: #2D333B;
     --color-hairline-strong: #444C56;
 
-    --color-link: #F0F0F0;
-    --color-link-deep: #FFFFFF;
-    --color-link-bg-soft: #1C2128;
+    --color-link: #3DBDAD;
+    --color-link-deep: #5EDCCC;
+    --color-link-bg-soft: #1A2F2B;
     --color-success: #3DBDAD;
     --color-error: #F85149;
     --color-error-soft: #3D1515;
