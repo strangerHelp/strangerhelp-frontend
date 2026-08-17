@@ -11,7 +11,7 @@ export const POST: APIRoute = async ({ request }) => {
   }
   const { token, password } = await request.json();
   if (!token || !password) return new Response(JSON.stringify({ error: 'Token and password required' }), { status: 400 });
-  if (password.length < 8) return new Response(JSON.stringify({ error: 'Password must be at least 8 characters' }), { status: 400 });
+  if (password.length < 10) return new Response(JSON.stringify({ error: 'Password must be at least 10 characters' }), { status: 400 });
 
   const db = (env as any).DB as D1Database;
   const result = await verifyEmailToken(db, token, 'reset');

@@ -96,7 +96,8 @@ export async function sendResetEmail(db: D1Database, userId: string, email: stri
 /** Send email verification */
 export async function sendVerificationEmail(db: D1Database, userId: string, email: string) {
   const token = await createEmailToken(db, userId, email, 'verify');
-  const link = `${BASE_URL}/verify-email?token=${token}`;
+  // Link must go to the API handler which verifies the token and redirects to the page
+  const link = `${BASE_URL}/api/auth/verify-email?token=${token}`;
 
   await sendEmail(email, 'Verify Your Email — StrangerHelp', `
     <div style="font-family:system-ui;max-width:480px;margin:0 auto;padding:24px;">

@@ -26,10 +26,20 @@ export const GET: APIRoute = async ({ url, cookies }) => {
     if (myPrivate) meets = [...meets, ...myPrivate.filter((m: any) => !meets.some((p: any) => p.id === m.id))];
   }
 
-  // Get attendee counts
+  // Get attendee counts and sanitize response
   const meetsWithCounts = await Promise.all(meets.map(async (m: any) => {
     const count: any = await db.prepare("SELECT COUNT(*) as c FROM meet_attendees WHERE meet_id = ?").bind(m.id).first();
-    return { ...m, attendeeCount: count?.c || 0 };
+    const mapped: any = { ...m, attendeeCount: count?.c || 0 };
+    // [2.1] Strip host_id from anonymous meets
+    if (m.anonymous) {
+      mapped.host_id = null;
+      mapped.host_name = 'Anonymous';
+    }
+    // [2.4] Never expose invite_code in the list — only the host sees it on detail
+    if (m.visibility === 'private') {
+      delete mapped.invite_code;
+    }
+    return mapped;
   }));
 
   return new Response(JSON.stringify(meetsWithCounts));

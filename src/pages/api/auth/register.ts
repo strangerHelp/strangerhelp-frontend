@@ -6,6 +6,30 @@ import { createSession } from '../../../lib/session';
 import { isRateLimited } from '../../../lib/ratelimit';
 import { setSessionCookie } from '../../../lib/cookies';
 
+/** Top common passwords + patterns that must be rejected */
+const COMMON_PASSWORDS = new Set([
+  'password', 'password1', 'password12', 'password123', 'password1234',
+  '1234567890', '12345678901', '123456789012', '0123456789',
+  'qwerty1234', 'qwertyuiop', 'asdfghjkl', 'zxcvbnm123',
+  'iloveyou12', 'letmein1234', 'welcome123', 'monkey12345',
+  'dragon1234', 'master1234', 'login12345', 'princess123',
+  'admin12345', 'administrator', 'changeme123', 'trustno1234',
+  'abcdefghij', 'abcde12345', 'abc1234567', '1q2w3e4r5t',
+  'qwerty12345', 'password!23', 'iloveyou123', 'sunshine123',
+  'football123', 'baseball123', 'shadow12345', 'michael1234',
+  'strangerhelp', 'stranger123', 'helpme1234',
+]);
+
+function isCommonPassword(pw: string): boolean {
+  const lower = pw.toLowerCase();
+  if (COMMON_PASSWORDS.has(lower)) return true;
+  // Block all-same-char (aaaaaaaaaa) and sequential digits
+  if (/^(.)\1{9,}$/.test(pw)) return true;
+  // Block pure sequential numbers
+  if (/^\d+$/.test(pw) && pw.length <= 12) return true;
+  return false;
+}
+
 export const POST: APIRoute = async ({ request, cookies, url }) => {
   try {
     if (await isRateLimited(request, 'register')) {
@@ -29,11 +53,15 @@ export const POST: APIRoute = async ({ request, cookies, url }) => {
     if (typeof rawEmail !== 'string' || typeof name !== 'string' || typeof password !== 'string') {
       return new Response(JSON.stringify({ error: 'Invalid input' }), { status: 400 });
     }
-    if (password.length < 8) {
-      return new Response(JSON.stringify({ error: 'Password must be at least 8 characters' }), { status: 400 });
+    if (password.length < 10) {
+      return new Response(JSON.stringify({ error: 'Password must be at least 10 characters' }), { status: 400 });
     }
     if (password.length > 200) {
       return new Response(JSON.stringify({ error: 'Password too long' }), { status: 400 });
+    }
+    // Block common/trivially weak passwords
+    if (isCommonPassword(password)) {
+      return new Response(JSON.stringify({ error: 'Password is too common. Please choose a stronger one.' }), { status: 400 });
     }
     if (name.length > 100) return new Response(JSON.stringify({ error: 'Name too long' }), { status: 400 });
     // Reject control characters, null bytes, and non-printable chars

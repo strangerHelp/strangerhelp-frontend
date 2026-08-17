@@ -9,7 +9,17 @@ export const GET: APIRoute = async ({ url }) => {
   const category = url.searchParams.get('category');
   const query = category ? "SELECT * FROM questions WHERE category = ? ORDER BY created_at DESC LIMIT 20" : "SELECT * FROM questions ORDER BY created_at DESC LIMIT 20";
   const { results } = category ? await db.prepare(query).bind(category).all() : await db.prepare(query).all();
-  const questions = (results || []).map((q: any) => ({ ...q, _id: q.id, posterId: q.poster_id, createdAt: q.created_at }));
+  const questions = (results || []).map((q: any) => {
+    const mapped: any = { ...q, _id: q.id, createdAt: q.created_at };
+    // Never leak poster_id for anonymous content
+    if (q.anonymous) {
+      delete mapped.poster_id;
+      mapped.posterId = null;
+    } else {
+      mapped.posterId = q.poster_id;
+    }
+    return mapped;
+  });
   return new Response(JSON.stringify(questions));
 };
 

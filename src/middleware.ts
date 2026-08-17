@@ -57,9 +57,6 @@ export const onRequest = defineMiddleware(async ({ cookies, url, redirect, reque
     const cacheDuration = CACHE_RULES.find(([path]) => url.pathname.startsWith(path))?.[1];
     if (cacheDuration) {
       const isPersonalized = url.searchParams.get('mine') === 'true';
-      // Never serve or populate the shared edge cache for a signed-in request:
-      // /api/tasks varies by session, so a cached copy could otherwise be
-      // handed to a different user.
       if (!isPersonalized && !userId) {
         const cache = caches.default;
         const cacheKey = new Request(url.toString(), { method: "GET" });
@@ -69,14 +66,41 @@ export const onRequest = defineMiddleware(async ({ cookies, url, redirect, reque
         const response = await next();
         const res = new Response(response.body, response);
         res.headers.set("Cache-Control", `public, s-maxage=${cacheDuration}, stale-while-revalidate=${cacheDuration * 2}`);
-        // Don't cache error responses
         if (res.status === 200) {
           cache.put(cacheKey, res.clone());
         }
-        return res;
+        return addSecurityHeaders(res);
       }
     }
   }
 
-  return next();
+  const response = await next();
+  return addSecurityHeaders(response);
 });
+
+/** Append security response headers to every response. */
+function addSecurityHeaders(response: Response): Response {
+  const res = new Response(response.body, response);
+  // HSTS: enforce HTTPS for 6 months, include subdomains
+  res.headers.set("Strict-Transport-Security", "max-age=15552000; includeSubDomains");
+  // Prevent clickjacking
+  res.headers.set("X-Frame-Options", "DENY");
+  // Prevent MIME-sniffing
+  res.headers.set("X-Content-Type-Options", "nosniff");
+  // Limit referrer leakage
+  res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  // Restrict browser features
+  res.headers.set("Permissions-Policy", "camera=(self), microphone=(self), geolocation=(self), payment=()");
+  // CSP: allow own scripts + Google Translate + Google Analytics + MapLibre + Nominatim
+  res.headers.set("Content-Security-Policy",
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://translate.google.com https://translate.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com https://unpkg.com; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com https://translate.googleapis.com; " +
+    "font-src 'self' https://fonts.gstatic.com; " +
+    "img-src 'self' data: blob: https://*.openstreetmap.org https://tiles.openfreemap.org https://translate.google.com https://www.google-analytics.com; " +
+    "connect-src 'self' https://nominatim.openstreetmap.org https://tiles.openfreemap.org https://api.brevo.com https://www.google-analytics.com https://translate.googleapis.com; " +
+    "frame-src https://translate.google.com; " +
+    "frame-ancestors 'none';"
+  );
+  return res;
+}

@@ -9,7 +9,10 @@ import Layout from "../../layouts/Layout.astro";
     <aside id="admin-sidebar" class="hidden md:flex w-56 border-r border-hairline bg-canvas shrink-0 flex-col fixed md:static inset-0 z-50 md:z-auto">
       <div class="p-4 border-b border-hairline flex items-center justify-between">
         <div>
-          <a href="/" class="text-ink font-semibold text-sm">StrangerHelp</a>
+          <a href="/" class="flex items-center gap-2">
+            <img src="/logo-icon.jpeg" alt="" aria-hidden="true" class="h-6 w-auto rounded-md" />
+            <span class="font-heading text-sm font-bold"><span class="text-ink">Stranger</span><span class="text-accent">Help</span></span>
+          </a>
           <p class="text-xs text-mute mt-0.5">Admin Panel</p>
         </div>
         <button id="close-sidebar" class="md:hidden p-1 text-mute hover:text-ink">
